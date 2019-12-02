@@ -68,6 +68,18 @@ For config [example](./config.yaml)
 2) Download the binary
 https://github.com/similarweb/finala/releases
 
+## Dynamic parameters
+
+By default all the data will save in sqlite in local folder
+
+```
+    --clear-storage                      Clear storage data (default true)
+-c, --config string                      config file path
+-h, --help                               help for finala
+    --storage-connection-string string   Storage connection string. Default will be DB.db (default "DB.db")
+    --storage-driver string              Storage driver. (Options: mysql,postgres,sqlite3,mssql) (default "sqlite3")
+```
+
 
 ## Running the tests
 
@@ -85,8 +97,3 @@ $ make test-html
 ## Contributing
 
 All pull requests and issues are more then welcome!
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-

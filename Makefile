@@ -5,7 +5,7 @@ GOCLEAN=$(GOCMD) clean
 GOTOOL=$(GOCMD) tool
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
-
+GOARCH=$(shell go env GOARCH)
 
 BINARY_NAME=finala
 BINARY_LINUX=$(BINARY_NAME)_linux
@@ -25,9 +25,21 @@ test: ## Run tests for the project
 		
 test-html: test ## Run tests with HTML for the project
 		$(GOTOOL) cover -html=cover.out
+
+release: releasebin ## Build and release all platforms builds to nexus
+
+releasebin: ## Create release with platforms
+	@go get github.com/mitchellh/gox
+	@sh -c "$(CURDIR)/build-support/build.sh ${APPLICATION_NAME}"
 		
 build-linux: ## Build Cross Platform Binary
-		CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) -o $(BINARY_LINUX) -v
+		CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) $(GOBUILD) -o $(BINARY_NAME)_linux -v
+
+build-osx: ## Build Mac Binary
+		CGO_ENABLED=0 GOOS=darwin GOARCH=$(GOARCH) $(GOBUILD) -o $(BINARY_NAME)_osx -v
+
+build-windows: ## Build Windows Binary
+		CGO_ENABLED=0 GOOS=windows GOARCH=$(GOARCH) $(GOBUILD) -o $(BINARY_NAME)_windows -v
 
 build-docker: ## BUild Docker image file
 		$(DOCKER) build -t $(DOCKER_IMAGE):$(DOCKER_TAG) .

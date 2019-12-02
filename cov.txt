@@ -1,0 +1,9 @@
+?   	finala	[no test files]
+?   	finala/cmd	[no test files]
+ok  	finala/config	0.008s	coverage: 88.9% of statements
+ok  	finala/expression	0.007s	coverage: 87.5% of statements
+ok  	finala/provider/aws	0.018s	coverage: 75.3% of statements
+?   	finala/storage	[no test files]
+?   	finala/structs	[no test files]
+?   	finala/testutils	[no test files]
+ok  	finala/visibility	0.007s	coverage: 100.0% of statements

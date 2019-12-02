@@ -1,0 +1,34 @@
+---
+log_level: info
+
+providers:
+  aws:
+    accounts: 
+      - name: <ACCOUNT_NAME>
+        access_key: <ACCESS_KEY>
+        secret_key: <SECRET_KEY>
+        regions:
+          - us-east-1
+          - us-west-2
+    metrics:
+      rds:
+        - description: Database connection count
+          metrics:
+            - name: DatabaseConnections
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "=="
+            value: 0
+      docDB:
+        - description: Database connection count
+          metrics:
+            - name: DatabaseConnections
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "=="
+            value: 0
+      

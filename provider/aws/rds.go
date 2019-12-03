@@ -70,7 +70,7 @@ func NewRDSManager(client RDSClientDescreptor, storage storage.Storage, cloudWat
 // Detect check with RDS is under utilization
 func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 
-	log.Info("Start RDS")
+	log.Info("analyze RDS")
 	detected := []DetectedAWSRDS{}
 	instances, err := r.DescribeInstances()
 	if err != nil {

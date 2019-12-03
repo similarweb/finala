@@ -1,8 +1,11 @@
 package aws
 
 import (
+	"encoding/json"
 	"finala/config"
+	"finala/printers"
 	"finala/storage"
+	"finala/structs"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -73,9 +76,24 @@ func (app *Analyze) AnalyzeEC2Instances(storage storage.Storage, sess *session.S
 	}
 
 	ec2 := NewEC2Manager(ec2.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
-	ec2.Detect()
+	response, err := ec2.Detect()
 
-	return nil
+	if err == nil {
+		b, _ := json.Marshal(response)
+		config := []structs.PrintTableConfig{
+			{Header: "ID", Key: "ResourceID"},
+			{Header: "Name", Key: "Name"},
+			{Header: "Metric", Key: "Metric"},
+			{Header: "Region", Key: "Region"},
+			{Header: "Instance Type", Key: "InstanceType"},
+			{Header: "Price Per Hour", Key: "PricePerHour"},
+			{Header: "Price Per Month", Key: "PricePerMonth"},
+		}
+		printers.Table(config, b, nil)
+		return nil
+	}
+
+	return err
 }
 
 // AnalyzeELB will analyzes elastic load balancer resources
@@ -86,9 +104,22 @@ func (app *Analyze) AnalyzeELB(storage storage.Storage, sess *session.Session, c
 	}
 
 	elb := NewELBManager(elb.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
-	elb.Detect()
+	response, err := elb.Detect()
 
-	return nil
+	if err == nil {
+		b, _ := json.Marshal(response)
+		config := []structs.PrintTableConfig{
+			{Header: "ID", Key: "ResourceID"},
+			{Header: "Metric", Key: "Metric"},
+			{Header: "Region", Key: "Region"},
+			{Header: "Price Per Hour", Key: "PricePerHour"},
+			{Header: "Price Per Month", Key: "PricePerMonth"},
+		}
+		printers.Table(config, b, nil)
+		return nil
+	}
+
+	return err
 }
 
 // AnalyzeElasticache will analyzes elasticache resources
@@ -99,9 +130,25 @@ func (app *Analyze) AnalyzeElasticache(storage storage.Storage, sess *session.Se
 	}
 
 	elasticacheCLient := NewElasticacheManager(elasticache.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
-	elasticacheCLient.Detect()
+	response, err := elasticacheCLient.Detect()
 
-	return nil
+	if err == nil {
+		b, _ := json.Marshal(response)
+		config := []structs.PrintTableConfig{
+			{Header: "ID", Key: "ResourceID"},
+			{Header: "Metric", Key: "Metric"},
+			{Header: "Region", Key: "Region"},
+			{Header: "Engine", Key: "CacheEngine"},
+			{Header: "Node Type", Key: "CacheNodeType"},
+			{Header: "Nodes", Key: "CacheNodes"},
+			{Header: "Price Per Hour", Key: "PricePerHour"},
+			{Header: "Price Per Month", Key: "PricePerMonth"},
+		}
+		printers.Table(config, b, nil)
+		return nil
+	}
+
+	return err
 }
 
 // AnalyzeRDS will analyzes rds resources
@@ -110,10 +157,28 @@ func (app *Analyze) AnalyzeRDS(storage storage.Storage, sess *session.Session, c
 	if !found {
 		return nil
 	}
-	rds := NewRDSManager(rds.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
-	rds.Detect()
 
-	return nil
+	rds := NewRDSManager(rds.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	response, err := rds.Detect()
+
+	if err == nil {
+		b, _ := json.Marshal(response)
+		config := []structs.PrintTableConfig{
+			{Header: "ID", Key: "ResourceID"},
+			{Header: "Metric", Key: "Metric"},
+			{Header: "Region", Key: "Region"},
+			{Header: "Instance Type", Key: "InstanceType"},
+			{Header: "Multi AZ", Key: "MultiAZ"},
+			{Header: "Engine", Key: "Engine"},
+			{Header: "Price Per Hour", Key: "PricePerHour"},
+			{Header: "Price Per Month", Key: "PricePerMonth"},
+		}
+		printers.Table(config, b, nil)
+		return nil
+	}
+
+	return err
+
 }
 
 // AnalyzeDynamoDB will  analyzes dynamoDB resources
@@ -124,9 +189,23 @@ func (app *Analyze) AnalyzeDynamoDB(storage storage.Storage, sess *session.Sessi
 	}
 
 	dynamoDB := NewDynamoDBManager(dynamodb.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
-	dynamoDB.Detect()
+	response, err := dynamoDB.Detect()
 
-	return nil
+	if err == nil {
+		b, _ := json.Marshal(response)
+		config := []structs.PrintTableConfig{
+			{Header: "Table Name", Key: "Name"},
+			{Header: "Metric", Key: "Metric"},
+			{Header: "Region", Key: "Region"},
+			{Header: "Price Per Hour", Key: "PricePerHour"},
+			{Header: "Price Per Month", Key: "PricePerMonth"},
+		}
+		printers.Table(config, b, nil)
+		return nil
+	}
+
+	return err
+
 }
 
 // AnalyzeDocdb will analyzes documentDB resources
@@ -137,7 +216,23 @@ func (app *Analyze) AnalyzeDocdb(storage storage.Storage, sess *session.Session,
 	}
 
 	docDB := NewDocDBManager(docdb.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
-	docDB.Detect()
+	response, err := docDB.Detect()
+
+	if err == nil {
+		b, _ := json.Marshal(response)
+		config := []structs.PrintTableConfig{
+			{Header: "ID", Key: "ResourceID"},
+			{Header: "Metric", Key: "Metric"},
+			{Header: "Region", Key: "Region"},
+			{Header: "Instance Type", Key: "InstanceType"},
+			{Header: "MultiA Z", Key: "MultiAZ"},
+			{Header: "Engine", Key: "Engine"},
+			{Header: "Price Per Hour", Key: "PricePerHour"},
+			{Header: "Price Per Month", Key: "PricePerMonth"},
+		}
+		printers.Table(config, b, nil)
+		return err
+	}
 
 	return nil
 }

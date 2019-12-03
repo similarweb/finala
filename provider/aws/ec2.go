@@ -68,7 +68,7 @@ func NewEC2Manager(client EC2ClientDescreptor, storage storage.Storage, cloudWat
 
 // Detect check with ELB  instance is under utilization
 func (r *EC2Manager) Detect() ([]DetectedEC2, error) {
-	log.Info("Start detect EC2")
+	log.Info("Analyze EC2")
 	detectedEC2 := []DetectedEC2{}
 
 	instances, err := r.DescribeInstances()
@@ -162,13 +162,11 @@ func (r *EC2Manager) Detect() ([]DetectedEC2, error) {
 					},
 				}
 				detectedEC2 = append(detectedEC2, ec2)
-
 				r.storage.Create(&ec2)
 
 			}
 
 		}
-
 	}
 
 	return detectedEC2, nil

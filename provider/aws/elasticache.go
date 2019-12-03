@@ -38,7 +38,7 @@ type ElasticacheManager struct {
 type DetectedElasticache struct {
 	Region        string
 	Metric        string
-	cacheEngine   string
+	CacheEngine   string
 	CacheNodeType string
 	CacheNodes    int
 	structs.BaseDetectedRaw
@@ -69,7 +69,7 @@ func NewElasticacheManager(client ElasticCacheClientDescreptor, storage storage.
 
 // Detect check with elasticache instance is under utilization
 func (r *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
-	log.Info("Start detect")
+	log.Info("Analyze elasticache")
 	detectedelasticache := []DetectedElasticache{}
 
 	instances, err := r.DescribeInstances()
@@ -145,7 +145,7 @@ func (r *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 				es := DetectedElasticache{
 					Region:        r.region,
 					Metric:        metric.Description,
-					cacheEngine:   *instance.Engine,
+					CacheEngine:   *instance.Engine,
 					CacheNodeType: *instance.CacheNodeType,
 					CacheNodes:    len(instance.CacheNodes),
 

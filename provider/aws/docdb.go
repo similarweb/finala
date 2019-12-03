@@ -70,7 +70,7 @@ func NewDocDBManager(client DocumentDBClientDescreptor, storage storage.Storage,
 // Detect check with documentDB is under utilization
 func (r *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 
-	log.Info("Start DocDB")
+	log.Info("Analyze documentDB")
 	detectedDocDB := []DetectedDocumentDB{}
 	instances, err := r.DescribeInstances()
 	if err != nil {

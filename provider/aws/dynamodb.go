@@ -76,7 +76,7 @@ func NewDynamoDBManager(client DynamoDBClientescreptor, storage storage.Storage,
 // Detect will go over on all dynamoDB tables an check if some of the metric configuration happend
 func (r *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 
-	log.Info("Start DynamoDB")
+	log.Info("Analyze dynamoDB")
 	detectedTables := []DetectedAWSDynamoDB{}
 	tables, err := r.DescribeTables()
 	now := time.Now()

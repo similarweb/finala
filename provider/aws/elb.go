@@ -68,7 +68,7 @@ func NewELBManager(client ELBClientDescreptor, storage storage.Storage, cloudWat
 
 // Detect check with ELB  instance is under utilization
 func (r *ELBManager) Detect() ([]DetectedELB, error) {
-	log.Info("Start detect ELB")
+	log.Info("Analyze ELB")
 	detectedELB := []DetectedELB{}
 
 	instances, err := r.DescribeLoadbalancers()

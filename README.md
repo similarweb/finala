@@ -5,6 +5,14 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 
 Currently it is implemented for AWS resources (RDS, EC2 instances, DynamoDB, ElasticCache, documentDB, ELB) and can be easily extended.
 
+
++-------------------------------------------------------------------------------------------------+
+| ID           | REGION    | INSTANCE TYPE | MULTI AZ | ENGINE | PRICE PER HOUR | PRICE PER MONTH |
++-------------------------------------------------------------------------------------------------+
+| arn:aws:rds: | us-east-1 | db.m3.medium  | true     | mysql  | 0.18           | 1,129.6         |
+| arn:aws:rds: | us-east-1 | db.t2.medium  | false    | mysql  | 0.068          | 600.96          |
++-------------------------------------------------------------------------------------------------+
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.

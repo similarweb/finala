@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
 
@@ -62,6 +63,7 @@ func (app *Analyze) All() {
 			app.AnalyzeEC2Instances(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeElasticache(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeDocdb(app.storage, sess, cloudWatchCLient, pricing)
+			app.AnalyzeLambda(app.storage, sess, cloudWatchCLient)
 
 		}
 	}
@@ -229,6 +231,31 @@ func (app *Analyze) AnalyzeDocdb(storage storage.Storage, sess *session.Session,
 			{Header: "Engine", Key: "Engine"},
 			{Header: "Price Per Hour", Key: "PricePerHour"},
 			{Header: "Price Per Month", Key: "PricePerMonth"},
+		}
+		printers.Table(config, b, nil)
+		return err
+	}
+
+	return nil
+}
+
+// AnalyzeLambda will analyzes lambda resources
+func (app *Analyze) AnalyzeLambda(storage storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager) error {
+	metrics, found := app.metrics["lambda"]
+	if !found {
+		return nil
+	}
+
+	docDB := NewLambdaManager(lambda.New(sess), storage, cloudWatchCLient, metrics, *sess.Config.Region)
+	response, err := docDB.Detect()
+
+	if err == nil {
+		b, _ := json.Marshal(response)
+		config := []structs.PrintTableConfig{
+			{Header: "ID", Key: "ResourceID"},
+			{Header: "Metric", Key: "Metric"},
+			{Header: "Region", Key: "Region"},
+			{Header: "Name Type", Key: "Name"},
 		}
 		printers.Table(config, b, nil)
 		return err

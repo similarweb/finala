@@ -220,7 +220,7 @@ func TestDetectRDS(t *testing.T) {
 		}
 
 		if len(mockStorage.MockRaw) != 1 {
-			t.Fatalf("unexpected elb storage save, got %d expected %d", len(mockStorage.MockRaw), 1)
+			t.Fatalf("unexpected rds storage save, got %d expected %d", len(mockStorage.MockRaw), 1)
 		}
 
 	})

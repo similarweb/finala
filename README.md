@@ -3,7 +3,7 @@
 A resource cloud scanner that analyzes and reports about wasteful and unused resources to cut unwanted expenses.
 The tool is based on yaml definitions (no code), by default configuration OR given yaml file and the report output will be saved in a given storage.
 
-Currently it is implemented for AWS resources (RDS, EC2 instances, DynamoDB, ElasticCache, documentDB, ELB) and can be easily extended.
+Currently it is implemented for AWS resources (RDS, EC2 instances, DynamoDB, ElasticCache, documentDB, ELB and etc) and can be easily extended.
 
 ```
 +-------------------------------------------------------------------------------------------------+

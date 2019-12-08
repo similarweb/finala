@@ -94,11 +94,11 @@ func TestDetectEC2(t *testing.T) {
 	response, _ := ec2Manager.Detect()
 
 	if len(response) != 1 {
-		t.Fatalf("unexpected elb detected, got %d expected %d", len(response), 1)
+		t.Fatalf("unexpected ec2 detected, got %d expected %d", len(response), 1)
 	}
 
 	if len(mockStorage.MockRaw) != 1 {
-		t.Fatalf("unexpected elb storage save, got %d expected %d", len(mockStorage.MockRaw), 1)
+		t.Fatalf("unexpected ec2 storage save, got %d expected %d", len(mockStorage.MockRaw), 1)
 	}
 
 }

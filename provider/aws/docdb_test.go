@@ -89,16 +89,16 @@ func TestDetectDocdb(t *testing.T) {
 		responseDescribeDBInstances: defaultDocdbMock,
 	}
 
-	ec2Manager := aws.NewDocDBManager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	documentDBManager := aws.NewDocDBManager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
 
-	response, _ := ec2Manager.Detect()
+	response, _ := documentDBManager.Detect()
 
 	if len(response) != 1 {
-		t.Fatalf("unexpected elb detected, got %d expected %d", len(response), 1)
+		t.Fatalf("unexpected documentDB detected, got %d expected %d", len(response), 1)
 	}
 
 	if len(mockStorage.MockRaw) != 1 {
-		t.Fatalf("unexpected elb storage save, got %d expected %d", len(mockStorage.MockRaw), 1)
+		t.Fatalf("unexpected documentDB storage save, got %d expected %d", len(mockStorage.MockRaw), 1)
 	}
 
 }

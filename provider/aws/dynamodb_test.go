@@ -132,11 +132,11 @@ func TestDetectDynamoDB(t *testing.T) {
 	response, _ := dynamoDBManager.Detect()
 
 	if len(response) != 1 {
-		t.Fatalf("unexpected elb detected, got %d expected %d", len(response), 1)
+		t.Fatalf("unexpected dynamoDB detected, got %d expected %d", len(response), 1)
 	}
 
 	if len(mockStorage.MockRaw) != 1 {
-		t.Fatalf("unexpected elb storage save, got %d expected %d", len(mockStorage.MockRaw), 1)
+		t.Fatalf("unexpected dynamoDB storage save, got %d expected %d", len(mockStorage.MockRaw), 1)
 	}
 
 }

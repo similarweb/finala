@@ -86,3 +86,13 @@ providers:
             formula: ConsumedWriteCapacityUnits / ProvisionedWriteCapacityUnits * 100 
             operator: "<"
             value: 10
+      lambda:
+        - description: Lambda invocations count
+          metrics:
+            - name: Invocations
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "=="
+            value: 0

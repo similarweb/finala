@@ -98,6 +98,80 @@ $ make test
 $ make test-html
 ```
 
+## Use-cases:
+
+The full working example can be found in [config.yaml](./config.yaml). 
+<hr>
+
+1. Find EC2 instances has less that 5% CPU usage.
+```yaml
+ec2:
+    - description: EC2 CPU utilization 
+        metrics:
+        - name: CPUUtilization
+            statistic: Maximum
+        period: 24h 
+        start_time: 168h # 24h * 7d
+        constraint:
+        operator: "<"
+        value: 5
+```
+
+2. Find RDS DB's that had zero connections in the last week. Maybe we can destroy the DB :)? 
+
+```yaml
+rds:
+    - description: Database connection count
+        metrics: 
+        ### Start: Cloudwatch metrics ###
+        - name: DatabaseConnections
+            statistic: Sum
+        period: 24h  
+        start_time: 168h # 24h * 7d
+        ### End: Cloudwatch metrics ###
+        constraint:
+        operator: "=="
+        value: 0
+```
+
+2. Find ELB's that had zero traffic (requests) in the last week. Maybe we can destroy the ELB :)? 
+
+```yaml
+elb:
+    - description: Loadbalancer requests count
+        ### Start: Cloudwatch metrics ###
+        metrics:
+        - name: RequestCount
+            statistic: Sum
+        period: 24h 
+        start_time: 168h # 24h * 7d 
+        ### End: Cloudwatch metrics ###
+        constraint:
+        operator: "=="
+        value: 0   
+```
+
+3. Display the actual capacity usage VS the capacity requested (in percentage). 
+```yaml
+dynamodb:
+    - description: Provisioned read capacity units
+        ### Start: Cloudwatch metrics ###
+        metrics:
+        - name: ConsumedReadCapacityUnits
+            statistic: Sum
+        - name: ProvisionedReadCapacityUnits
+            statistic: Sum
+        period: 24h 
+        start_time: 168h # 24h * 7d
+        ### End: Cloudwatch metrics ###
+        constraint:
+        formula: ConsumedReadCapacityUnits / ProvisionedReadCapacityUnits * 100 # specify any formula 
+        operator: "<"
+        value: 10
+```
+
+
+
 ## Built With
 
 * [GO](https://golang.org/)

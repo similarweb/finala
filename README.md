@@ -38,7 +38,7 @@ providers:
 
 ### For example: 
 
-If you want to test RDS resources that had no zero connections in the last week: 
+If you want to test RDS resources that had zero connections in the last week: 
 
 ```yaml
 rds:

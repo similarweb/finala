@@ -9,8 +9,8 @@ Currently it is implemented for AWS resources (RDS, EC2 instances, DynamoDB, Ela
 +-------------------------------------------------------------------------------------------------+
 | ID           | REGION    | INSTANCE TYPE | MULTI AZ | ENGINE | PRICE PER HOUR | PRICE PER MONTH |
 +-------------------------------------------------------------------------------------------------+
-| arn:aws:rds: | us-east-1 | db.m3.medium  | true     | mysql  | 0.18           | 1,129.6         |
-| arn:aws:rds: | us-east-1 | db.t2.medium  | false    | mysql  | 0.068          | 600.96          |
+| arn:aws:rds: | us-east-1 | db.m3.medium  | true     | mysql  | 0.18           | 129.6           |
+| arn:aws:rds: | us-east-1 | db.t2.medium  | false    | mysql  | 0.068          | 48.96           |
 +-------------------------------------------------------------------------------------------------+
 ```
 

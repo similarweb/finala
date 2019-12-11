@@ -74,7 +74,7 @@ $ Git clone git@github.com:kaplanelad/finala.git
 $ make build
 ```
 
-To run:
+To run (with environment variables)
 ```
 $ export AWS_ACCESS_KEY_ID=...
 $ export AWS_SECRET_ACCESS_KEY=...
@@ -83,9 +83,26 @@ $ export AWS_SECURITY_TOKEN=...
 
 $  ./finala aws -c ${PWD}/config.yaml
 ```
-or
+
+With aws-vault:
 ```shell
 $  aws-vault exec aws-account-profile -- ./finala aws -c ${PWD}/config.yaml
+```
+
+With Docker (untested):
+```shell
+$ export AWS_ACCESS_KEY_ID=...
+$ export AWS_SECRET_ACCESS_KEY=...
+$ export AWS_SESSION_TOKEN=...
+$ export AWS_SECURITY_TOKEN=...
+
+$ docker run -it --rm \
+  -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \ 
+  -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
+  -e AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN}" \
+  -e AWS_SECURITY_TOKEN="${AWS_SECURITY_TOKEN}" \
+  -v ${PWD}/config.yaml:config.yaml:ro \
+  dockerhub_id/image_name
 ```
 
 For config [example](./config.yaml)

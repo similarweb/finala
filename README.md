@@ -21,25 +21,19 @@ These instructions will get you a copy of the project up and running on your loc
 ### How To Use
 
 All the logic is contained inside [config.yaml](./config.yaml). 
-1. Define AWS credentials in environment variables (or use [aws-vault](https://github.com/99designs/aws-vault)):
-```shell
-export AWS_ACCESS_KEY_ID=...
-export AWS_SECRET_ACCESS_KEY=...
-export AWS_SESSION_TOKEN=...
-export AWS_SECURITY_TOKEN=...
-```
-2. Setup your Cloud provider (currently AWS only) credentials and accounts you want to analyze. 
+1. Setup your Cloud provider (currently AWS only) credentials and accounts you want to analyze. 
 
 ```yaml
 providers:
   aws:
   - name: <ACCOUNT_NAME>
-    # access_key: <ACCESS_KEY>
-    # secret_key: <SECRET_KEY>
+    # Environment variables will be used in case if these variables are absent
+    access_key: <ACCESS_KEY>
+    secret_key: <SECRET_KEY>
     regions:
       - <REGION>
 ```
-3. Let it [run](#Installing)! 
+2. Let it [run](#Installing)! 
 
 *Optional:* There are defaults but, You can specify your own resources to analyze and change the metrics thresholds.
 
@@ -69,13 +63,18 @@ rds:
 
 1) Build from source
 
-```
-$ Git clone git@github.com:kaplanelad/finala.git
+```shell
+$ git clone git@github.com:kaplanelad/finala.git
 $ make build
 ```
 
-To run (with environment variables)
+To run (with static AWS credentials defined in config.yaml):
+```shell
+$  ./finala aws -c ${PWD}/config.yaml
 ```
+
+With environment variables:
+```shell
 $ export AWS_ACCESS_KEY_ID=...
 $ export AWS_SECRET_ACCESS_KEY=...
 $ export AWS_SESSION_TOKEN=...
@@ -84,12 +83,12 @@ $ export AWS_SECURITY_TOKEN=...
 $  ./finala aws -c ${PWD}/config.yaml
 ```
 
-With aws-vault:
+With [aws-vault](https://github.com/99designs/aws-vault):
 ```shell
-$  aws-vault exec aws-account-profile -- ./finala aws -c ${PWD}/config.yaml
+$ aws-vault exec aws-account-profile -- ./finala aws -c ${PWD}/config.yaml
 ```
 
-With Docker (untested):
+With Docker and environment variables (untested):
 ```shell
 $ export AWS_ACCESS_KEY_ID=...
 $ export AWS_SECRET_ACCESS_KEY=...

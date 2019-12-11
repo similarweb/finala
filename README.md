@@ -21,18 +21,25 @@ These instructions will get you a copy of the project up and running on your loc
 ### How To Use
 
 All the logic is contained inside [config.yaml](./config.yaml). 
-1. Setup your Cloud provider (currently AWS only) credentials and accounts you want to analyze.
+1. Define AWS credentials in environment variables (or use [aws-vault](https://github.com/99designs/aws-vault)):
+```shell
+export AWS_ACCESS_KEY_ID=...
+export AWS_SECRET_ACCESS_KEY=...
+export AWS_SESSION_TOKEN=...
+export AWS_SECURITY_TOKEN=...
+```
+2. Setup your Cloud provider (currently AWS only) credentials and accounts you want to analyze. 
 
 ```yaml
 providers:
   aws:
   - name: <ACCOUNT_NAME>
-    access_key: <ACCESS_KEY>
-    secret_key: <SECRET_KEY>
+    # access_key: <ACCESS_KEY>
+    # secret_key: <SECRET_KEY>
     regions:
       - <REGION>
 ```
-2. Let it [run](#Installing)! 
+3. Let it [run](#Installing)! 
 
 *Optional:* There are defaults but, You can specify your own resources to analyze and change the metrics thresholds.
 
@@ -69,7 +76,16 @@ $ make build
 
 To run:
 ```
+$ export AWS_ACCESS_KEY_ID=...
+$ export AWS_SECRET_ACCESS_KEY=...
+$ export AWS_SESSION_TOKEN=...
+$ export AWS_SECURITY_TOKEN=...
+
 $  ./finala aws -c ${PWD}/config.yaml
+```
+or
+```shell
+$  aws-vault exec aws-account-profile -- ./finala aws -c ${PWD}/config.yaml
 ```
 
 For config [example](./config.yaml)

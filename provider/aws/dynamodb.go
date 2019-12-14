@@ -56,13 +56,13 @@ func (DetectedAWSDynamoDB) TableName() string {
 }
 
 // NewDynamoDBManager implements AWS GO SDK
-func NewDynamoDBManager(client DynamoDBClientescreptor, storage storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *DynamoDBManager {
+func NewDynamoDBManager(client DynamoDBClientescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *DynamoDBManager {
 
-	storage.AutoMigrate(&DetectedAWSDynamoDB{})
+	st.AutoMigrate(&DetectedAWSDynamoDB{})
 
 	return &DynamoDBManager{
 		client:           client,
-		storage:          storage,
+		storage:          st,
 		cloudWatchClient: cloudWatchClient,
 		pricingClient:    pricing,
 		metrics:          metrics,
@@ -232,15 +232,15 @@ func (r *DynamoDBManager) DescribeTables() ([]*dynamodb.TableDescription, error)
 		return nil, err
 	}
 
-	instances := []*dynamodb.TableDescription{}
+	tables := []*dynamodb.TableDescription{}
 	for _, tableName := range resp.TableNames {
 		resp, err := r.client.DescribeTable(&dynamodb.DescribeTableInput{TableName: tableName})
 		if err != nil {
 			return nil, err
 		}
 
-		instances = append(instances, resp.Table)
+		tables = append(tables, resp.Table)
 	}
 
-	return instances, nil
+	return tables, nil
 }

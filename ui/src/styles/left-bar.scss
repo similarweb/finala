@@ -1,0 +1,36 @@
+#left-bar{
+   
+    position: sticky;
+    z-index: 1000;
+    height: calc(100vh - 4rem);
+    background-color: $color-left-bar;
+    padding-top: $padding-page-top;
+    height: 100%;
+    padding-right: 15px;
+
+    border-right: 1px solid $color-title-border;
+    font-size: 18px;
+    .title{
+        font-weight: 500;
+        margin-bottom: 10px;
+        border-bottom: 1px solid $color-title-border;
+    }
+    .option{
+        font-size: 90%;
+        font-weight: 300;
+        padding-bottom: 5px;
+        float: left;
+        width: 100%;
+        .loader-dots{
+            width: 38px;
+            margin-left: 10px;
+        }
+        .failed{
+            width: 10px;
+            position: relative;
+            top: 7px;
+            margin-right: 5px;
+        }
+    }
+}
+

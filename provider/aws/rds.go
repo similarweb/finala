@@ -50,13 +50,13 @@ func (DetectedAWSRDS) TableName() string {
 }
 
 // NewRDSManager implements AWS GO SDK
-func NewRDSManager(client RDSClientDescreptor, storage storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *RDSManager {
+func NewRDSManager(client RDSClientDescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *RDSManager {
 
-	storage.AutoMigrate(&DetectedAWSRDS{})
+	st.AutoMigrate(&DetectedAWSRDS{})
 
 	return &RDSManager{
 		client:           client,
-		storage:          storage,
+		storage:          st,
 		cloudWatchClient: cloudWatchClient,
 		pricingClient:    pricing,
 		metrics:          metrics,

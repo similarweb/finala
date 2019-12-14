@@ -82,11 +82,12 @@ https://github.com/similarweb/finala/releases
 By default all the data will save in sqlite in local folder
 
 ```
-    --clear-storage                      Clear storage data (default true)
 -c, --config string                      config file path
--h, --help                               help for finala
+    --disable-clear-storage              Clear storage data
+    --disable-ui                         Disable UI dashboard view
     --storage-connection-string string   Storage connection string. Default will be DB.db (default "DB.db")
     --storage-driver string              Storage driver. (Options: mysql,postgres,sqlite3,mssql) (default "sqlite3")
+    --ui-port int                        UI port. default 9090 (default 9090)
 ```
 
 

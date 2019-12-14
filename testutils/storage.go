@@ -1,6 +1,9 @@
 package testutils
 
-import "reflect"
+import (
+	"finala/storage"
+	"reflect"
+)
 
 type MockStorage struct {
 	MockTabels map[string]bool
@@ -33,4 +36,18 @@ func (s *MockStorage) DropTable(value interface{}) error {
 	}
 
 	return nil
+}
+
+func (m *MockStorage) GetSummary() (*map[string]storage.Summary, error) {
+
+	data := &map[string]storage.Summary{}
+	return data, nil
+
+}
+
+func (m *MockStorage) GetTableData(name string) ([]map[string]interface{}, error) {
+
+	data := []map[string]interface{}{}
+	return data, nil
+
 }

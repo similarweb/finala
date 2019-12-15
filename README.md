@@ -21,12 +21,13 @@ These instructions will get you a copy of the project up and running on your loc
 ### How To Use
 
 All the logic is contained inside [config.yaml](./config.yaml). 
-1. Setup your Cloud provider (currently AWS only) credentials and accounts you want to analyze.
+1. Setup your Cloud provider (currently AWS only) credentials and accounts you want to analyze. 
 
 ```yaml
 providers:
   aws:
   - name: <ACCOUNT_NAME>
+    # Environment variables will be used in case if these variables are absent
     access_key: <ACCESS_KEY>
     secret_key: <SECRET_KEY>
     regions:
@@ -62,14 +63,45 @@ rds:
 
 1) Build from source
 
-```
-$ Git clone git@github.com:kaplanelad/finala.git
+```shell
+$ git clone git@github.com:kaplanelad/finala.git
 $ make build
 ```
 
-To run:
-```
+To run (with static AWS credentials defined in config.yaml):
+```shell
 $  ./finala aws -c ${PWD}/config.yaml
+```
+
+With environment variables:
+```shell
+$ export AWS_ACCESS_KEY_ID=...
+$ export AWS_SECRET_ACCESS_KEY=...
+$ export AWS_SESSION_TOKEN=...
+$ export AWS_SECURITY_TOKEN=...
+
+$  ./finala aws -c ${PWD}/config.yaml
+```
+
+With [aws-vault](https://github.com/99designs/aws-vault):
+```shell
+$ aws-vault exec aws-account-profile -- ./finala aws -c ${PWD}/config.yaml
+```
+
+With Docker and environment variables (untested):
+```shell
+$ export AWS_ACCESS_KEY_ID=...
+$ export AWS_SECRET_ACCESS_KEY=...
+$ export AWS_SESSION_TOKEN=...
+$ export AWS_SECURITY_TOKEN=...
+
+$ docker run -it --rm \
+  -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \ 
+  -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
+  -e AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN}" \
+  -e AWS_SECURITY_TOKEN="${AWS_SECURITY_TOKEN}" \
+  -v ${PWD}/config.yaml:config.yaml:ro \
+  dockerhub_id/image_name
 ```
 
 For config [example](./config.yaml)

@@ -7,6 +7,7 @@ import TextUtils from "utils/Text";
 import LoaderDots from "components/Loader/Dots";
 import SVG from 'react-inlinesvg';
 import XSVG from "styles/icons/x.svg"
+import NumberUtils from "utils/Number"
 
 @connect(state => ({
   resources: state.resources,
@@ -37,6 +38,7 @@ export default class LeftBar extends React.Component {
                   
                   {this.props.resources[resource].Status == 1 && <span title={this.props.resources[resource].Description}><SVG src={XSVG} className="failed pull-left"/></span>}
                   <Link className="pull-left" to={`/resource/${resource}`}>{TextUtils.ParseName(resource)} ({this.props.resources[resource].ResourceCount}) </Link> 
+                  <p title="Total spent per month" className="pull-right total-spent">${NumberUtils.Format(this.props.resources[resource].TotalSpent,2)}</p>
                   {this.props.resources[resource].Status == 0 && <div className="pull-left"><LoaderDots /></div>}
                 </li>
               )}

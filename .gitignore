@@ -1,3 +1,6 @@
+.DS_STORE
+
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -26,3 +29,7 @@ finala
 config_test.yaml
 pkg/
 cov.txt
+
+
+node_modules
+*.log*

@@ -17,8 +17,11 @@ DOCKER_TAG=dev
 
 all: build
 
-build: ## Download dependecies and Build the default binary 	 
+build: build-ui ## Download dependecies and Build the default binary
 		$(GOBUILD) -o $(BINARY_NAME) -v
+
+build-ui: ## Build applicaiton UI
+		cd ui && npm run build && cd ..
 
 test: ## Run tests for the project
 		$(GOTEST) -coverprofile=cover.out -short -cover -failfast ./... | tee cov.txt
@@ -26,7 +29,7 @@ test: ## Run tests for the project
 test-html: test ## Run tests with HTML for the project
 		$(GOTOOL) cover -html=cover.out
 
-release: releasebin ## Build and release all platforms builds to nexus
+release: build-ui releasebin ## Build and release all platforms builds to nexus
 
 releasebin: ## Create release with platforms
 	@go get github.com/mitchellh/gox

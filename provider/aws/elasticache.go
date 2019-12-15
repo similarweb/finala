@@ -50,13 +50,13 @@ func (DetectedElasticache) TableName() string {
 }
 
 // NewElasticacheManager implements AWS GO SDK
-func NewElasticacheManager(client ElasticCacheClientDescreptor, storage storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ElasticacheManager {
+func NewElasticacheManager(client ElasticCacheClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ElasticacheManager {
 
-	storage.AutoMigrate(&DetectedElasticache{})
+	st.AutoMigrate(&DetectedElasticache{})
 
 	return &ElasticacheManager{
 		client:           client,
-		storage:          storage,
+		storage:          st,
 		cloudWatchCLient: cloudWatchCLient,
 		pricingClient:    pricing,
 		metrics:          metrics,

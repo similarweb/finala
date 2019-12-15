@@ -1,0 +1,37 @@
+{
+    "parser": "babel-eslint",
+    "parserOptions": {
+      "ecmaFeatures": {
+        "legacyDecorators": true
+      }
+    },
+    "plugins": [
+        "react"
+    ],
+    "rules":{
+     
+    },
+    "globals": {
+        "Promise":true,
+        "document":true,
+        "window":true, 
+        "fetch":true,
+        "console":true,
+        "module":true,
+        "setTimeout":true,
+        "clearTimeout":true
+    },
+    "env": {
+        "amd": true
+      },
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended"
+    ],
+    "settings": {
+        "react": {
+          "pragma": "React",
+          "version": "16.6.0"
+        }
+      }
+  }

@@ -1,0 +1,21 @@
+#header-login{
+    color:$color-white;
+    nav{
+        &.bg-light{
+            background-color: $color-header !important;
+        }
+    }
+   
+    a {
+        color: $color-white;
+        svg{
+            vertical-align: baseline;
+            width: 44px;
+            height: 44px;
+            position: relative;
+            top: 7px;
+        }
+        
+    }
+}
+

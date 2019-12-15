@@ -5,6 +5,13 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 
 Currently it is implemented for AWS resources (RDS, EC2 instances, DynamoDB, ElasticCache, documentDB, ELB and etc) and can be easily extended.
 
+### Example: Unused RDS report
+![alt Resources](./resource.jpg)
+
+### Example: Summary of all resources
+![alt Summary](./symmary.jpg)
+
+
 ```
 +-------------------------------------------------------------------------------------------------+
 | ID           | REGION    | INSTANCE TYPE | MULTI AZ | ENGINE | PRICE PER HOUR | PRICE PER MONTH |
@@ -58,6 +65,7 @@ rds:
 
 1. AWS access key and secret key (with readonly access) 
 2. Optional: Docker
+3. Browser (for the Dashboard UI)
 
 ### Installing
 
@@ -109,16 +117,47 @@ For config [example](./config.yaml)
 2) Download the binary
 https://github.com/similarweb/finala/releases
 
-## Dynamic parameters
+
+### Release New Version
+
+To release a new version run the command: 
+
+```shell
+$ make release
+```
+
+### Development
+
+To run Finala from the source code run the command:
+
+
+```shell
+$ go run main.go aws -c ./config.yaml
+```
+
+To run Finala UI with run the command:
+
+```shell
+$ cd ui
+$ npm install
+$ npm run dev
+```
+
+Then browse to: http://127.0.0.1:8081/static/
+
+
+### Dynamic parameters
 
 By default all the data will save in sqlite in local folder
 
 ```
-    --clear-storage                      Clear storage data (default true)
 -c, --config string                      config file path
+    --disable-clear-storage              Clear storage data
+    --disable-ui                         Disable UI dashboard view
 -h, --help                               help for finala
     --storage-connection-string string   Storage connection string. Default will be DB.db (default "DB.db")
     --storage-driver string              Storage driver. (Options: mysql,postgres,sqlite3,mssql) (default "sqlite3")
+    --ui-port int                        UI port. default 9090 (default 9090)
 ```
 
 
@@ -201,8 +240,6 @@ dynamodb:
         operator: "<"
         value: 10
 ```
-
-
 
 ## Built With
 

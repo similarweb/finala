@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/pricing"
-	"github.com/jinzhu/gorm"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -37,7 +36,6 @@ type ELBManager struct {
 
 // DetectedELB define the detected AWS ELB instances
 type DetectedELB struct {
-	gorm.Model
 	Metric string
 	Region string
 	structs.BaseDetectedRaw
@@ -49,13 +47,13 @@ func (DetectedELB) TableName() string {
 }
 
 // NewELBManager implements AWS GO SDK
-func NewELBManager(client ELBClientDescreptor, storage storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ELBManager {
+func NewELBManager(client ELBClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ELBManager {
 
-	storage.AutoMigrate(&DetectedELB{})
+	st.AutoMigrate(&DetectedELB{})
 
 	return &ELBManager{
 		client:           client,
-		storage:          storage,
+		storage:          st,
 		cloudWatchCLient: cloudWatchCLient,
 		metrics:          metrics,
 		pricingClient:    pricing,

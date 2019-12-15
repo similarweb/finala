@@ -46,17 +46,17 @@ type DetectedDocumentDB struct {
 
 // TableName will set the table name to storage interface
 func (DetectedDocumentDB) TableName() string {
-	return "aws_docdb"
+	return "aws_documentDB"
 }
 
 // NewDocDBManager implements AWS GO SDK
-func NewDocDBManager(client DocumentDBClientDescreptor, storage storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *DocumentDBManager {
+func NewDocDBManager(client DocumentDBClientDescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *DocumentDBManager {
 
-	storage.AutoMigrate(&DetectedDocumentDB{})
+	st.AutoMigrate(&DetectedDocumentDB{})
 
 	return &DocumentDBManager{
 		client:           client,
-		storage:          storage,
+		storage:          st,
 		cloudWatchClient: cloudWatchClient,
 		pricingClient:    pricing,
 		metrics:          metrics,

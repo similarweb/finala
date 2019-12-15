@@ -49,13 +49,13 @@ func (DetectedEC2) TableName() string {
 }
 
 // NewEC2Manager implements AWS GO SDK
-func NewEC2Manager(client EC2ClientDescreptor, storage storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *EC2Manager {
+func NewEC2Manager(client EC2ClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *EC2Manager {
 
-	storage.AutoMigrate(&DetectedEC2{})
+	st.AutoMigrate(&DetectedEC2{})
 
 	return &EC2Manager{
 		client:           client,
-		storage:          storage,
+		storage:          st,
 		cloudWatchCLient: cloudWatchCLient,
 		metrics:          metrics,
 		pricingClient:    pricing,
@@ -80,7 +80,7 @@ func (r *EC2Manager) Detect() ([]DetectedEC2, error) {
 	for _, instance := range instances {
 		log.WithField("instance_id", *instance.InstanceId).Info("check ec2 instance")
 
-		//TODO:: check price of spot
+		//TODO:: check price for spot instances
 		price, _ := r.pricingClient.GetPrice(r.GetPricingFilterInput(instance), "")
 
 		for _, metric := range r.metrics {
@@ -251,7 +251,7 @@ func (r *EC2Manager) DescribeInstances() ([]*ec2.Instance, error) {
 
 	resp, err := r.client.DescribeInstances(input)
 	if err != nil {
-		log.WithField("error", err).Error("could not describe rds instances")
+		log.WithField("error", err).Error("could not describe ec2 instances")
 		return nil, err
 	}
 

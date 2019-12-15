@@ -57,27 +57,33 @@ func (app *Analyze) All() {
 
 			cloudWatchCLient := NewCloudWatchManager(cloudwatch.New(sess))
 
-			app.AnalyzeDynamoDB(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeRDS(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeELB(app.storage, sess, cloudWatchCLient, pricing)
-			app.AnalyzeEC2Instances(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeElasticache(app.storage, sess, cloudWatchCLient, pricing)
-			app.AnalyzeDocdb(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeLambda(app.storage, sess, cloudWatchCLient)
-
+			app.AnalyzeEC2Instances(app.storage, sess, cloudWatchCLient, pricing)
+			app.AnalyzeDocdb(app.storage, sess, cloudWatchCLient, pricing)
+			app.AnalyzeDynamoDB(app.storage, sess, cloudWatchCLient, pricing)
 		}
 	}
 
 }
 
 // AnalyzeEC2Instances will analyzes ec2 resources
-func (app *Analyze) AnalyzeEC2Instances(storage storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeEC2Instances(st storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
 	metrics, found := app.metrics["ec2"]
 	if !found {
 		return nil
 	}
 
-	ec2 := NewEC2Manager(ec2.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	table := &DetectedEC2{}
+
+	st.Create(&storage.ResourceStatus{
+		TableName: table.TableName(),
+		Status:    storage.Fetch,
+	})
+
+	ec2 := NewEC2Manager(ec2.New(sess), st, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 	response, err := ec2.Detect()
 
 	if err == nil {
@@ -92,20 +98,36 @@ func (app *Analyze) AnalyzeEC2Instances(storage storage.Storage, sess *session.S
 			{Header: "Price Per Month", Key: "PricePerMonth"},
 		}
 		printers.Table(config, b, nil)
-		return nil
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+	} else {
+		st.Create(&storage.ResourceStatus{
+			TableName:   table.TableName(),
+			Status:      storage.Error,
+			Description: err.Error(),
+		})
 	}
 
 	return err
 }
 
 // AnalyzeELB will analyzes elastic load balancer resources
-func (app *Analyze) AnalyzeELB(storage storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeELB(st storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
 	metrics, found := app.metrics["elb"]
 	if !found {
 		return nil
 	}
 
-	elb := NewELBManager(elb.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	table := &DetectedELB{}
+
+	st.Create(&storage.ResourceStatus{
+		TableName: table.TableName(),
+		Status:    storage.Fetch,
+	})
+
+	elb := NewELBManager(elb.New(sess), st, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 	response, err := elb.Detect()
 
 	if err == nil {
@@ -118,20 +140,36 @@ func (app *Analyze) AnalyzeELB(storage storage.Storage, sess *session.Session, c
 			{Header: "Price Per Month", Key: "PricePerMonth"},
 		}
 		printers.Table(config, b, nil)
-		return nil
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+	} else {
+		st.Create(&storage.ResourceStatus{
+			TableName:   table.TableName(),
+			Status:      storage.Error,
+			Description: err.Error(),
+		})
 	}
 
 	return err
 }
 
 // AnalyzeElasticache will analyzes elasticache resources
-func (app *Analyze) AnalyzeElasticache(storage storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeElasticache(st storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
 	metrics, found := app.metrics["elasticache"]
 	if !found {
 		return nil
 	}
 
-	elasticacheCLient := NewElasticacheManager(elasticache.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	table := &DetectedElasticache{}
+
+	st.Create(&storage.ResourceStatus{
+		TableName: table.TableName(),
+		Status:    storage.Fetch,
+	})
+
+	elasticacheCLient := NewElasticacheManager(elasticache.New(sess), st, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 	response, err := elasticacheCLient.Detect()
 
 	if err == nil {
@@ -147,20 +185,35 @@ func (app *Analyze) AnalyzeElasticache(storage storage.Storage, sess *session.Se
 			{Header: "Price Per Month", Key: "PricePerMonth"},
 		}
 		printers.Table(config, b, nil)
-		return nil
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+	} else {
+		st.Create(&storage.ResourceStatus{
+			TableName:   table.TableName(),
+			Status:      storage.Error,
+			Description: err.Error(),
+		})
 	}
 
 	return err
 }
 
 // AnalyzeRDS will analyzes rds resources
-func (app *Analyze) AnalyzeRDS(storage storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeRDS(st storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
 	metrics, found := app.metrics["rds"]
 	if !found {
 		return nil
 	}
 
-	rds := NewRDSManager(rds.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	table := &DetectedAWSRDS{}
+	st.Create(&storage.ResourceStatus{
+		TableName: table.TableName(),
+		Status:    storage.Fetch,
+	})
+
+	rds := NewRDSManager(rds.New(sess), st, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 	response, err := rds.Detect()
 
 	if err == nil {
@@ -176,7 +229,16 @@ func (app *Analyze) AnalyzeRDS(storage storage.Storage, sess *session.Session, c
 			{Header: "Price Per Month", Key: "PricePerMonth"},
 		}
 		printers.Table(config, b, nil)
-		return nil
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+	} else {
+		st.Create(&storage.ResourceStatus{
+			TableName:   table.TableName(),
+			Status:      storage.Error,
+			Description: err.Error(),
+		})
 	}
 
 	return err
@@ -184,13 +246,20 @@ func (app *Analyze) AnalyzeRDS(storage storage.Storage, sess *session.Session, c
 }
 
 // AnalyzeDynamoDB will  analyzes dynamoDB resources
-func (app *Analyze) AnalyzeDynamoDB(storage storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeDynamoDB(st storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
 	metrics, found := app.metrics["dynamodb"]
 	if !found {
 		return nil
 	}
 
-	dynamoDB := NewDynamoDBManager(dynamodb.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	table := &DetectedAWSDynamoDB{}
+
+	st.Create(&storage.ResourceStatus{
+		TableName: table.TableName(),
+		Status:    storage.Fetch,
+	})
+
+	dynamoDB := NewDynamoDBManager(dynamodb.New(sess), st, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 	response, err := dynamoDB.Detect()
 
 	if err == nil {
@@ -203,7 +272,16 @@ func (app *Analyze) AnalyzeDynamoDB(storage storage.Storage, sess *session.Sessi
 			{Header: "Price Per Month", Key: "PricePerMonth"},
 		}
 		printers.Table(config, b, nil)
-		return nil
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+	} else {
+		st.Create(&storage.ResourceStatus{
+			TableName:   table.TableName(),
+			Status:      storage.Error,
+			Description: err.Error(),
+		})
 	}
 
 	return err
@@ -211,16 +289,28 @@ func (app *Analyze) AnalyzeDynamoDB(storage storage.Storage, sess *session.Sessi
 }
 
 // AnalyzeDocdb will analyzes documentDB resources
-func (app *Analyze) AnalyzeDocdb(storage storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeDocdb(st storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
 	metrics, found := app.metrics["docDB"]
 	if !found {
 		return nil
 	}
 
-	docDB := NewDocDBManager(docdb.New(sess), storage, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	table := &DetectedDocumentDB{}
+	st.Create(&storage.ResourceStatus{
+		TableName: table.TableName(),
+		Status:    storage.Fetch,
+	})
+
+	docDB := NewDocDBManager(docdb.New(sess), st, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 	response, err := docDB.Detect()
 
 	if err == nil {
+
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+
 		b, _ := json.Marshal(response)
 		config := []structs.PrintTableConfig{
 			{Header: "ID", Key: "ResourceID"},
@@ -233,21 +323,37 @@ func (app *Analyze) AnalyzeDocdb(storage storage.Storage, sess *session.Session,
 			{Header: "Price Per Month", Key: "PricePerMonth"},
 		}
 		printers.Table(config, b, nil)
-		return err
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+	} else {
+		st.Create(&storage.ResourceStatus{
+			TableName:   table.TableName(),
+			Status:      storage.Error,
+			Description: err.Error(),
+		})
 	}
 
-	return nil
+	return err
 }
 
 // AnalyzeLambda will analyzes lambda resources
-func (app *Analyze) AnalyzeLambda(storage storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager) error {
+func (app *Analyze) AnalyzeLambda(st storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager) error {
 	metrics, found := app.metrics["lambda"]
 	if !found {
 		return nil
 	}
 
-	docDB := NewLambdaManager(lambda.New(sess), storage, cloudWatchCLient, metrics, *sess.Config.Region)
-	response, err := docDB.Detect()
+	table := &DetectedAWSLambda{}
+
+	st.Create(&storage.ResourceStatus{
+		TableName: table.TableName(),
+		Status:    storage.Fetch,
+	})
+
+	lambdaManager := NewLambdaManager(lambda.New(sess), st, cloudWatchCLient, metrics, *sess.Config.Region)
+	response, err := lambdaManager.Detect()
 
 	if err == nil {
 		b, _ := json.Marshal(response)
@@ -258,8 +364,17 @@ func (app *Analyze) AnalyzeLambda(storage storage.Storage, sess *session.Session
 			{Header: "Name Type", Key: "Name"},
 		}
 		printers.Table(config, b, nil)
-		return err
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+	} else {
+		st.Create(&storage.ResourceStatus{
+			TableName:   table.TableName(),
+			Status:      storage.Error,
+			Description: err.Error(),
+		})
 	}
 
-	return nil
+	return err
 }

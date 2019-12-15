@@ -46,13 +46,13 @@ func (DetectedAWSLambda) TableName() string {
 }
 
 // NewLambdaManager implements AWS GO SDK
-func NewLambdaManager(client LambdaClientDescreptor, storage storage.Storage, cloudWatchClient *CloudwatchManager, metrics []config.MetricConfig, region string) *LambdaManager {
+func NewLambdaManager(client LambdaClientDescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, metrics []config.MetricConfig, region string) *LambdaManager {
 
-	storage.AutoMigrate(&DetectedAWSLambda{})
+	st.AutoMigrate(&DetectedAWSLambda{})
 
 	return &LambdaManager{
 		client:           client,
-		storage:          storage,
+		storage:          st,
 		cloudWatchClient: cloudWatchClient,
 		metrics:          metrics,
 		region:           region,

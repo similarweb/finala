@@ -2,6 +2,7 @@ package structs
 
 import "time"
 
+// BaseDetectedRaw precent the common resources metadata
 type BaseDetectedRaw struct {
 	ResourceID      string
 	LaunchTime      time.Time
@@ -11,6 +12,7 @@ type BaseDetectedRaw struct {
 	Tags            string  `gorm:"type:TEXT" json:"-"`
 }
 
+// PrintTableConfig precent the stdout header configuration
 type PrintTableConfig struct {
 	Key    string
 	Header string

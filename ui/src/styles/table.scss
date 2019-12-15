@@ -1,0 +1,19 @@
+@import '../../node_modules/react-bootstrap-table/dist/react-bootstrap-table-all.min.css';
+
+.table{
+    th {
+        font-size: 14px;
+    }
+    tr{
+        font-size: 12px
+    }
+
+    td{
+        white-space: normal;
+    }
+    p{
+        margin: 0;
+        word-break: break-all;
+    }
+  
+}

@@ -17,7 +17,7 @@ export default class Header extends React.Component {
         <Navbar bg="light" variant="light">
           <Link className="navbar-brand" to={`/`}>Finala</Link>
           <Nav className="mr-auto">
-            <Nav.Link href="/">Dashboard</Nav.Link>
+            <Link to={`/`}>Dashboard</Link> 
           </Nav>
         </Navbar>
       </div>

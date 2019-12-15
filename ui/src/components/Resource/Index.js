@@ -106,7 +106,7 @@ export default class Resource extends React.Component {
           Object.keys(firstRow).map(function(key) {
             headers.push( {
               id: key,
-              text: TextUtils.ParseName(key),
+              text: TextUtils.ParseName(key).toUpperCase(),
               sort: true,
             })
           });

@@ -70,11 +70,13 @@ func Execute() {
 		os.Exit(1)
 	}
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt)
+	if webserverStopper != nil {
+		stop := make(chan os.Signal, 1)
+		signal.Notify(stop, os.Interrupt)
 
-	<-stop // block until we are requested to stop
-	webserverStopper()
+		<-stop // block until we are requested to stop
+		webserverStopper()
+	}
 
 }
 

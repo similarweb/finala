@@ -49,7 +49,11 @@ body {
 	}
 
 	#content-page{
-		padding-top: $padding-page-top
+		padding-top: $padding-page-top;
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		margin: 0px;
 	}
 
 	.center{

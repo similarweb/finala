@@ -37,6 +37,7 @@ providers:
     # Environment variables will be used in case if these variables are absent
     access_key: <ACCESS_KEY>
     secret_key: <SECRET_KEY>
+    session_token: ""
     regions:
       - <REGION>
 ```

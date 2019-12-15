@@ -8,14 +8,14 @@ import (
 )
 
 // CreateNewSession return new AWS session
-func CreateNewSession(accessKey, secretKey, region string) *session.Session {
+func CreateNewSession(accessKey, secretKey, sessionToken, region string) *session.Session {
 	var credentialsAWS *credentials.Credentials
 
 	// Use separate call for AWS credentials defined in config.yaml
 	// Otherwise environment variables will be used
 	if accessKey != "" && secretKey != "" {
 		log.Info("Using AccessKey or SecretKey defined in config.yaml")
-		credentialsAWS = credentials.NewStaticCredentials(accessKey, secretKey, "")
+		credentialsAWS = credentials.NewStaticCredentials(accessKey, secretKey, sessionToken)
 	}
 
 	sess := session.Must(session.NewSession(&awsClient.Config{

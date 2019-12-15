@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2019-15-11
+### Added
+-  Add AWS token session as optional parameter for session authentication.
+
 ## [0.1.2] - 2019-12-11
 ### Added
 -  Add a possibility to use environment variables for AWS credentials instead of storing key/secret in config.yaml. Before that it was impossible to use STS session (temporary) credentials. You can use aws-vault for running command.

@@ -43,7 +43,7 @@ func (app *Analyze) All() {
 	for _, account := range app.awsAccounts {
 
 		// The pricing aws api working only with us-east-1
-		priceSession := CreateNewSession(account.AccessKey, account.SecretKey, "us-east-1")
+		priceSession := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, "us-east-1")
 		pricing := NewPricingManager(pricing.New(priceSession), "us-east-1")
 
 		for _, region := range account.Regions {
@@ -53,7 +53,7 @@ func (app *Analyze) All() {
 			}).Info("Start to analyze resources")
 
 			// Creating a aws session
-			sess := CreateNewSession(account.AccessKey, account.SecretKey, region)
+			sess := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, region)
 
 			cloudWatchCLient := NewCloudWatchManager(cloudwatch.New(sess))
 

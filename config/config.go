@@ -11,10 +11,11 @@ import (
 
 // AWSAccount describe AWS account
 type AWSAccount struct {
-	Name      string   `yaml:"name"`
-	AccessKey string   `yaml:"access_key"`
-	SecretKey string   `yaml:"secret_key"`
-	Regions   []string `yaml:"regions"`
+	Name         string   `yaml:"name"`
+	AccessKey    string   `yaml:"access_key"`
+	SecretKey    string   `yaml:"secret_key"`
+	SessionToken string   `yaml:"session_token"`
+	Regions      []string `yaml:"regions"`
 }
 
 // MetricConstraintConfig describe the metric calculator

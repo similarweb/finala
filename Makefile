@@ -14,6 +14,7 @@ DOCKER=docker
 DOCKER_IMAGE=finala
 DOCKER_TAG=dev
 
+TEST_EXEC_CMD=$(GOTEST) -coverprofile=cover.out -short -cover -failfast ./... 
 
 all: build
 
@@ -24,9 +25,10 @@ build-ui: ## Build applicaiton UI
 		cd ui && npm install && npm run build && cd ..
 
 test: ## Run tests for the project
-		$(GOTEST) -coverprofile=cover.out -short -cover -failfast ./... | tee cov.txt
+		$(TEST_EXEC_CMD)
 		
-test-html: test ## Run tests with HTML for the project
+test-html:  ## Run tests with HTML for the project
+		$(TEST_EXEC_CMD) | true
 		$(GOTOOL) cover -html=cover.out
 
 release: build-ui releasebin ## Build and release all platforms builds to nexus

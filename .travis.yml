@@ -1,5 +1,6 @@
 language: go
-
+os:
+- linux
 # use the latest ubuntu environment (18.04) available on travis
 dist: bionic
 

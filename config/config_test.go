@@ -37,7 +37,3 @@ func TestKubernetes(t *testing.T) {
 	})
 
 }
-
-func TestFail(t *testing.T) {
-	t.Fatalf("unexpected error message when loading config file")
-}

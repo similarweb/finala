@@ -13,7 +13,5 @@ git:
 notifications:
   email: false
 
-before_script:
-  - echo "running"
 script:
   - make test

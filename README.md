@@ -66,6 +66,7 @@ rds:
 1. AWS access key and secret key (with readonly access) 
 2. Optional: Docker
 3. Browser (for the Dashboard UI)
+4. Tested NodeJS V12.13
 
 ### Installing
 

@@ -1,7 +1,7 @@
+language: go
+
 # use the latest ubuntu environment (18.04) available on travis
 dist: bionic
-
-language: go
 
 # Force-enable Go modules. Also force go to use the code in vendor/
 # These will both be unnecessary when Go 1.14 lands.
@@ -16,7 +16,7 @@ git:
 
 # Skip the install step. Don't `go get` dependencies. Only build with the code
 # in vendor/
-# install: true
+#install: true
 
 notifications:
   email: false

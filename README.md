@@ -8,10 +8,10 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 Currently it is implemented for AWS resources (RDS, EC2 instances, DynamoDB, ElasticCache, documentDB, ELB and etc) and can be easily extended.
 
 ### Example: Unused RDS report
-![alt Resources](./resource.jpg)
+![alt Resources](./docs/resource.jpg)
 
 ### Example: Summary of all resources
-![alt Summary](./symmary.jpg)
+![alt Summary](./docs/symmary.jpg)
 
 
 ```
@@ -252,4 +252,5 @@ dynamodb:
 
 ## Contributing
 
-All pull requests and issues are more then welcome!
+All pull requests and issues are more then welcome! 
+Please see [Contribution guidelines](./CONTRIBUTING.md). 

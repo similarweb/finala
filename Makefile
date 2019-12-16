@@ -21,7 +21,7 @@ build: build-ui ## Download dependecies and Build the default binary
 		$(GOBUILD) -o $(BINARY_NAME) -v
 
 build-ui: ## Build applicaiton UI
-		cd ui && npm run build && cd ..
+		cd ui && npm install && npm run build && cd ..
 
 test: ## Run tests for the project
 		$(GOTEST) -coverprofile=cover.out -short -cover -failfast ./... | tee cov.txt

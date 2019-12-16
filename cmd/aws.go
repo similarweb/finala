@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 )
-
+// test
 // awsCMS will present the aws analyze command
 var awsCMD = &cobra.Command{
 	Use:   "aws",

@@ -76,7 +76,8 @@ rds:
 1) Build from source
 
 ```shell
-$ git clone git@github.com:kaplanelad/finala.git
+$ git clone git@github.com:similarweb/finala
+$ cd finala
 $ make build
 ```
 

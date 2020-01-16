@@ -390,7 +390,7 @@ func (app *Analyze) AnalyzeVolumes(st storage.Storage, sess *session.Session, pr
 		Status:    storage.Fetch,
 	})
 
-	volumeManager := NewVolumesanager(ec2.New(sess), st, pricing, *sess.Config.Region)
+	volumeManager := NewVolumesManager(ec2.New(sess), st, pricing, *sess.Config.Region)
 	response, err := volumeManager.Detect()
 
 	if err == nil {

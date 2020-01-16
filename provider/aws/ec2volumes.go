@@ -10,14 +10,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// EC2VolumeClientDescreptor is an interface defining the AWS EC2
-type EC2VolumeClientDescreptor interface {
+// EC2VolumeClientDescriptor is an interface defining the AWS EC2
+type EC2VolumeClientDescriptor interface {
 	DescribeVolumes(input *ec2.DescribeVolumesInput) (*ec2.DescribeVolumesOutput, error)
 }
 
 // EC2VolumeManager describe EBS manager
 type EC2VolumeManager struct {
-	client             EC2VolumeClientDescreptor
+	client             EC2VolumeClientDescriptor
 	storage            storage.Storage
 	pricingClient      *PricingManager
 	region             string
@@ -40,8 +40,8 @@ func (DetectedAWSEC2Volume) TableName() string {
 	return "aws_ec2_volume"
 }
 
-// NewVolumesanager implements AWS GO SDK
-func NewVolumesanager(client EC2VolumeClientDescreptor, st storage.Storage, pricing *PricingManager, region string) *EC2VolumeManager {
+// NewVolumesManager implements AWS GO SDK
+func NewVolumesManager(client EC2VolumeClientDescriptor, st storage.Storage, pricing *PricingManager, region string) *EC2VolumeManager {
 
 	st.AutoMigrate(&DetectedAWSEC2Volume{})
 

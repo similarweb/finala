@@ -58,7 +58,7 @@ func TestDescribeVolumes(t *testing.T) {
 			responseDescribeInstances: defaultVolumeMock,
 		}
 
-		volumeManager := aws.NewVolumesanager(&mockClient, mockStorage, pricingManager, "us-east-1")
+		volumeManager := aws.NewVolumesManager(&mockClient, mockStorage, pricingManager, "us-east-1")
 		response, err := volumeManager.Describe()
 
 		if len(response) != 3 {
@@ -77,7 +77,7 @@ func TestDescribeVolumes(t *testing.T) {
 			err:                       errors.New("error"),
 		}
 
-		volumeManager := aws.NewVolumesanager(&mockClient, mockStorage, pricingManager, "us-east-1")
+		volumeManager := aws.NewVolumesManager(&mockClient, mockStorage, pricingManager, "us-east-1")
 		_, err := volumeManager.Describe()
 
 		if err == nil {
@@ -95,7 +95,7 @@ func TestDetectVolumes(t *testing.T) {
 		responseDescribeInstances: defaultVolumeMock,
 	}
 
-	volumeManager := aws.NewVolumesanager(&mockClient, mockStorage, pricingManager, "us-east-1")
+	volumeManager := aws.NewVolumesManager(&mockClient, mockStorage, pricingManager, "us-east-1")
 	response, _ := volumeManager.Detect()
 
 	if len(response) != 3 {
@@ -110,7 +110,7 @@ func TestDetectVolumes(t *testing.T) {
 
 func TestGetBasePricingFilterInput(t *testing.T) {
 	mockStorage := testutils.NewMockStorage()
-	volumeManager := aws.NewVolumesanager(nil, mockStorage, nil, "us-east-1")
+	volumeManager := aws.NewVolumesManager(nil, mockStorage, nil, "us-east-1")
 
 	vol := &ec2.Volume{
 		VolumeId:   awsClient.String("1"),

@@ -57,6 +57,7 @@ func (app *Analyze) All() {
 
 			cloudWatchCLient := NewCloudWatchManager(cloudwatch.New(sess))
 
+			app.AnalyzeVolumes(app.storage, sess, pricing)
 			app.AnalyzeRDS(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeELB(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeElasticache(app.storage, sess, cloudWatchCLient, pricing)
@@ -362,6 +363,44 @@ func (app *Analyze) AnalyzeLambda(st storage.Storage, sess *session.Session, clo
 			{Header: "Metric", Key: "Metric"},
 			{Header: "Region", Key: "Region"},
 			{Header: "Name Type", Key: "Name"},
+		}
+		printers.Table(config, b, nil)
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+	} else {
+		st.Create(&storage.ResourceStatus{
+			TableName:   table.TableName(),
+			Status:      storage.Error,
+			Description: err.Error(),
+		})
+	}
+
+	return err
+}
+
+// AnalyzeVolumes will analyzes EC22 volumes resources
+func (app *Analyze) AnalyzeVolumes(st storage.Storage, sess *session.Session, pricing *PricingManager) error {
+
+	table := &DetectedAWSEC2Volume{}
+
+	st.Create(&storage.ResourceStatus{
+		TableName: table.TableName(),
+		Status:    storage.Fetch,
+	})
+
+	volumeManager := NewVolumesManager(ec2.New(sess), st, pricing, *sess.Config.Region)
+	response, err := volumeManager.Detect()
+
+	if err == nil {
+		b, _ := json.Marshal(response)
+		config := []structs.PrintTableConfig{
+			{Header: "ID", Key: "ID"},
+			{Header: "Region", Key: "Region"},
+			{Header: "Type", Key: "Type"},
+			{Header: "Size", Key: "Size"},
+			{Header: "Price Per Month", Key: "PricePerMonth"},
 		}
 		printers.Table(config, b, nil)
 		st.Create(&storage.ResourceStatus{

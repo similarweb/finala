@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] 
+### Added
+-  Add AWS unused volumes detection.
+
 ## [0.1.3] - 2019-15-11
 ### Added
 -  Add AWS token session as optional parameter for session authentication.

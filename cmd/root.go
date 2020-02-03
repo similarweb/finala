@@ -49,7 +49,7 @@ var (
 	err error
 
 	// avilableStorageDrivers present the available storage driver types
-	avilableStorageDrivers = []string{"mysql", "postgres", "sqlite3", "mssql"}
+	avilableStorageDrivers = []string{"mysql", "sqlite3"}
 
 	webserverStopper serverutil.StopFunc
 )
@@ -133,17 +133,19 @@ func initCmd() {
 		os.Exit(1)
 	}
 
-	if !disableClearStorageData {
-		switch storageDriver {
-		case "sqlite3":
-			os.Remove(storageConnectionString)
-		default:
-			// TBD
-		}
+	visibility.SetLoggingLevel(Cfg.LogLevel)
+
+	if !disableClearStorageData && storageDriver == "sqlite3" {
+		os.Remove(storageConnectionString)
 	}
 
-	visibility.SetLoggingLevel(Cfg.LogLevel)
 	Storage = storage.NewStorageManager(storageDriver, storageConnectionString)
+
+	if !disableClearStorageData && storageDriver == "mysql" {
+		Storage.ClearTables()
+	}
+
+	Storage.AutoMigrate(&storage.ResourceStatus{})
 
 	if !disableUI {
 		webserverStopper = runWebserver(Storage, uiPort)

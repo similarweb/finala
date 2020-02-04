@@ -160,7 +160,7 @@ By default all the data will save in sqlite in local folder
     --disable-ui                         Disable UI dashboard view
 -h, --help                               help for finala
     --storage-connection-string string   Storage connection string. Default will be DB.db (default "DB.db")
-    --storage-driver string              Storage driver. (Options: mysql,postgres,sqlite3,mssql) (default "sqlite3")
+    --storage-driver string              Storage driver. (Options: mysql,sqlite3) (default "sqlite3")
     --ui-port int                        UI port. default 9090 (default 9090)
 ```
 

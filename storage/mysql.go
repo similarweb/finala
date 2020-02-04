@@ -2,10 +2,11 @@ package storage
 
 import (
 	"fmt"
-	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	log "github.com/sirupsen/logrus"
 )
@@ -67,9 +68,38 @@ func NewStorageManager(dialect, connection string) *MySQLManager {
 	mysqlManager := &MySQLManager{
 		db: db,
 	}
-	mysqlManager.AutoMigrate(&ResourceStatus{})
+
 	return mysqlManager
 
+}
+
+// GetAllTables return all table names
+func (s *MySQLManager) GetAllTables() ([]string, error) {
+
+	var names []string
+	err := s.db.Raw("show tables").Pluck("tables", &names).Error
+	if err != nil {
+		return names, err
+	}
+
+	return names, nil
+
+}
+
+// ClearTables will delete all tables contents
+func (s *MySQLManager) ClearTables() {
+
+	tables, err := s.GetAllTables()
+	if err != nil {
+		log.WithError(err).Error("Could empty tables contents")
+	}
+
+	for _, table := range tables {
+		if err := s.db.DropTable(table).Error; err != nil {
+			log.WithError(err).Error("Error when trying to drop table")
+		}
+
+	}
 }
 
 // Create will cerate a new DB record
@@ -102,7 +132,8 @@ func (s *MySQLManager) GetSummary() (*map[string]Summary, error) {
 
 	summary := map[string]Summary{}
 	resourcesStatus := &[]ResourceStatus{}
-	if err := s.db.Select("MAX(id), *").Group("table_name").Find(resourcesStatus).Error; err != nil {
+
+	if err := s.db.Select("status, description, table_name").Where("id IN (?)", s.db.Select("MAX(id)").Model(&ResourceStatus{}).Group("table_name").QueryExpr()).Find(resourcesStatus).Error; err != nil {
 		log.WithError(err).Error("MySQL: Error TODO::")
 		return &summary, err
 	}
@@ -129,34 +160,48 @@ func (s *MySQLManager) GetSummary() (*map[string]Summary, error) {
 func (s *MySQLManager) GetTableData(name string) ([]map[string]interface{}, error) {
 
 	var data []map[string]interface{}
-	rows, err := s.db.Table(name).Select("*").Rows()
 
+	rows, err := s.db.Table(name).Select("*").Rows()
+	columns, err := rows.Columns()
 	if err != nil {
 		return data, err
 	}
 
-	cols, err := rows.Columns()
-	if err != nil {
-		return data, err
+	count := len(columns)
+	values := make([]interface{}, count)
+	scanArgs := make([]interface{}, count)
+	for i := range values {
+		scanArgs[i] = &values[i]
 	}
 
 	for rows.Next() {
-
-		row := make([]interface{}, 0)
-		generic := reflect.TypeOf(row).Elem()
-
-		for _ = range cols {
-			row = append(row, reflect.New(generic).Interface())
+		err := rows.Scan(scanArgs...)
+		if err != nil {
+			continue
 		}
-		rows.Scan(row...)
-
 		rowMap := make(map[string]interface{})
+		for i, v := range values {
 
-		for i, col := range cols {
-			rowMap[col] = *(row[i].(*interface{}))
+			var x []byte
+
+			switch v.(type) {
+			case []uint8:
+				x = v.([]byte)
+			default:
+				x = []byte(fmt.Sprintf("%v", v.(interface{})))
+			}
+
+			if nx, ok := strconv.ParseFloat(string(x), 64); ok == nil {
+				rowMap[columns[i]] = nx
+			} else if b, ok := strconv.ParseBool(string(x)); ok == nil {
+				rowMap[columns[i]] = b
+			} else if "string" == fmt.Sprintf("%T", string(x)) {
+				rowMap[columns[i]] = string(x)
+			}
+
 		}
-
 		data = append(data, rowMap)
+
 	}
 
 	return data, err

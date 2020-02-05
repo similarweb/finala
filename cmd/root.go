@@ -27,8 +27,8 @@ var (
 	// storageConnectionString defind the storage connection string
 	storageConnectionString string
 
-	// disableClearStorageData will delete all historical storage data
-	disableClearStorageData bool
+	// clearStorage will delete all historical storage data
+	clearStorage bool
 
 	// Open UI dashboard with unutilized prepared dashboard
 	disableUI bool
@@ -96,12 +96,12 @@ func runWebserver(storage *storage.MySQLManager, port int) serverutil.StopFunc {
 func init() {
 
 	cobra.OnInitialize(initCmd)
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "config file path")
-	rootCmd.PersistentFlags().StringVar(&storageDriver, "storage-driver", "sqlite3", fmt.Sprintf("Storage driver. (Options: %s)", strings.Join(avilableStorageDrivers, ",")))
-	rootCmd.PersistentFlags().StringVar(&storageConnectionString, "storage-connection-string", "DB.db", "Storage connection string. Default will be DB.db")
-	rootCmd.PersistentFlags().BoolVar(&disableClearStorageData, "disable-clear-storage", false, "Clear storage data")
-	rootCmd.PersistentFlags().BoolVar(&disableUI, "disable-ui", false, "Disable UI dashboard view")
-	rootCmd.PersistentFlags().IntVar(&uiPort, "ui-port", 9090, "UI port. default 9090")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "path to the config file")
+	rootCmd.PersistentFlags().StringVar(&storageDriver, "storage-driver", "sqlite3", fmt.Sprintf("storage driver. (Options: %s)", strings.Join(avilableStorageDrivers, ",")))
+	rootCmd.PersistentFlags().StringVar(&storageConnectionString, "storage-connection-string", "DB.db", "storage connection string")
+	rootCmd.PersistentFlags().BoolVar(&clearStorage, "clear-storage", false, "delete the storage data on startup (drop all tables in database)")
+	rootCmd.PersistentFlags().BoolVar(&disableUI, "disable-ui", false, "disables the ui")
+	rootCmd.PersistentFlags().IntVar(&uiPort, "ui-port", 9090, "UI port")
 }
 
 // initCmd will prepare the configuration and validate the common flag parametes
@@ -135,13 +135,13 @@ func initCmd() {
 
 	visibility.SetLoggingLevel(Cfg.LogLevel)
 
-	if !disableClearStorageData && storageDriver == "sqlite3" {
+	if clearStorage && storageDriver == "sqlite3" {
 		os.Remove(storageConnectionString)
 	}
 
 	Storage = storage.NewStorageManager(storageDriver, storageConnectionString)
 
-	if !disableClearStorageData && storageDriver == "mysql" {
+	if clearStorage && storageDriver == "mysql" {
 		Storage.ClearTables()
 	}
 

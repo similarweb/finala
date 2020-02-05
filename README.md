@@ -5,15 +5,27 @@
 A resource cloud scanner that analyzes and reports about wasteful and unused resources to cut unwanted expenses.
 The tool is based on yaml definitions (no code), by default configuration OR given yaml file and the report output will be saved in a given storage.
 
-Currently it is implemented for AWS resources (RDS, EC2 instances, DynamoDB, ElasticCache, documentDB, ELB and etc) and can be easily extended.
+## Supported Services
 
-### Example: Unused RDS report
+AWS:
+* RDS
+* EC2 (ELB, EBS)
+* DynamoDB
+* ElasticCache
+* DocumentDB
+
+More to come...
+
+## Screenshots
+
+### Unused RDS report
 ![alt Resources](./docs/resource.jpg)
 
-### Example: Summary of all resources
+### Summary of all resources
 ![alt Summary](./docs/symmary.jpg)
 
 
+### CLI Format
 ```
 +-------------------------------------------------------------------------------------------------+
 | ID           | REGION    | INSTANCE TYPE | MULTI AZ | ENGINE | PRICE PER HOUR | PRICE PER MONTH |
@@ -29,8 +41,8 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### How To Use
 
-All the logic is contained inside [config.yaml](./config.yaml). 
-1. Setup your Cloud provider (currently AWS only) credentials and accounts you want to analyze. 
+All the configuration is contained inside [config.yaml](./config.yaml). 
+1. Setup your Cloud provider accounts and credentials you would like to analyze. 
 
 ```yaml
 providers:
@@ -45,7 +57,7 @@ providers:
 ```
 2. Let it [run](#Installing)! 
 
-*Optional:* There are defaults but, You can specify your own resources to analyze and change the metrics thresholds.
+*Note:* We've already implemented some queries to find out which resources are under utilized, feel free to add or change and contribute!
 
 ### For example: 
 
@@ -64,62 +76,39 @@ rds:
         value: 0
 ```
 
-### Prerequisites
+You can try and play with the query before in CloudWatch.
 
-1. AWS access key and secret key (with readonly access) 
-2. Optional: Docker
-3. Browser (for the Dashboard UI)
-4. Tested NodeJS V12.13
 
-### Installing
+### Install & Run
 
-1) Build from source
+1) Optional: Build from source
 
 ```shell
 $ git clone git@github.com:kaplanelad/finala.git
 $ make build
 ```
 
-To run (with static AWS credentials defined in config.yaml):
+2) Download the binary from https://github.com/similarweb/finala/releases
+
+3) Run it! (make sure to have the config file, you can take the one in this repository)
 ```shell
 $  ./finala aws -c ${PWD}/config.yaml
 ```
 
-With environment variables:
+You may use environment variables for AWS access instead of providing them in the config file.
 ```shell
 $ export AWS_ACCESS_KEY_ID=...
 $ export AWS_SECRET_ACCESS_KEY=...
 $ export AWS_SESSION_TOKEN=...
 $ export AWS_SECURITY_TOKEN=...
-
-$  ./finala aws -c ${PWD}/config.yaml
 ```
 
-With [aws-vault](https://github.com/99designs/aws-vault):
+You can even use [aws-vault](https://github.com/99designs/aws-vault):
 ```shell
 $ aws-vault exec aws-account-profile -- ./finala aws -c ${PWD}/config.yaml
 ```
 
-With Docker and environment variables (untested):
-```shell
-$ export AWS_ACCESS_KEY_ID=...
-$ export AWS_SECRET_ACCESS_KEY=...
-$ export AWS_SESSION_TOKEN=...
-$ export AWS_SECURITY_TOKEN=...
-
-$ docker run -it --rm \
-  -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID}" \ 
-  -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY}" \
-  -e AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN}" \
-  -e AWS_SECURITY_TOKEN="${AWS_SECURITY_TOKEN}" \
-  -v ${PWD}/config.yaml:config.yaml:ro \
-  dockerhub_id/image_name
-```
-
-For config [example](./config.yaml)
-
-2) Download the binary
-https://github.com/similarweb/finala/releases
+We suggest taking a look at the [example config](./config.yaml) file to see the available options.
 
 
 ### Release New Version
@@ -147,7 +136,7 @@ $ npm install
 $ npm run dev
 ```
 
-Then browse to: http://127.0.0.1:8081/static/
+Browse http://127.0.0.1:8081/static/ and enjoy! (we really appreciate contributes)
 
 
 ### Dynamic parameters
@@ -155,13 +144,13 @@ Then browse to: http://127.0.0.1:8081/static/
 By default all the data will save in sqlite in local folder
 
 ```
--c, --config string                      config file path
-    --disable-clear-storage              Clear storage data
-    --disable-ui                         Disable UI dashboard view
--h, --help                               help for finala
-    --storage-connection-string string   Storage connection string. Default will be DB.db (default "DB.db")
-    --storage-driver string              Storage driver. (Options: mysql,sqlite3) (default "sqlite3")
-    --ui-port int                        UI port. default 9090 (default 9090)
+-c, --config string                      path to the config file
+    --clear-storage                      clear the internal storage on startup
+    --disable-ui                         disables the ui
+-h, --help                               display this help
+    --storage-connection-string string   storage connection string. (default "DB.db")
+    --storage-driver string              storage driver. (Options: mysql, sqlite3) (default "sqlite3")
+    --ui-port int                        UI port. (default 9090)
 ```
 
 
@@ -173,12 +162,12 @@ $ make test
 $ make test-html
 ```
 
-## Use-cases:
+## Configuration samples explained:
 
 The full working example can be found in [config.yaml](./config.yaml). 
 <hr>
 
-1. Find EC2 instances has less that 5% CPU usage.
+1. Find EC2 instances has less that 5% CPU usage in the last week.
 ```yaml
 ec2:
     - description: EC2 CPU utilization 
@@ -192,7 +181,7 @@ ec2:
         value: 5
 ```
 
-2. Find RDS DB's that had zero connections in the last week. Maybe we can destroy the DB :)? 
+2. Find RDS DB's that had zero connections in the last week. 
 
 ```yaml
 rds:
@@ -209,7 +198,7 @@ rds:
         value: 0
 ```
 
-2. Find ELB's that had zero traffic (requests) in the last week. Maybe we can destroy the ELB :)? 
+3. Find ELB's that had zero traffic (requests) in the last week. 
 
 ```yaml
 elb:
@@ -226,7 +215,7 @@ elb:
         value: 0   
 ```
 
-3. Display the actual capacity usage VS the capacity requested (in percentage). 
+4. Find a difference of more than 10% between DynamoDB Provisioned RCUs to Consumed RCUs. 
 ```yaml
 dynamodb:
     - description: Provisioned read capacity units

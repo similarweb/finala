@@ -17,7 +17,7 @@ import (
 
 // ELBClientDescreptor is an interface defining the aws elbv2 client
 type ELBClientDescreptor interface {
-	DescribeLoadBalancers(*elbv2v2.DescribeLoadBalancersInput) (*elbv2v2.DescribeLoadBalancersOutput, error)
+	DescribeLoadBalancers(*elbv2.DescribeLoadBalancersInput) (*elbv2.DescribeLoadBalancersOutput, error)
 	DescribeTags(*elbv2.DescribeTagsInput) (*elbv2.DescribeTagsOutput, error)
 }
 

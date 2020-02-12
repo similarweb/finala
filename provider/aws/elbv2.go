@@ -16,14 +16,14 @@ import (
 )
 
 // ELBClientDescreptor is an interface defining the aws elbv2 client
-type ELBClientDescreptor interface {
+type ELBV2ClientDescreptor interface {
 	DescribeLoadBalancers(*elbv2.DescribeLoadBalancersInput) (*elbv2.DescribeLoadBalancersOutput, error)
 	DescribeTags(*elbv2.DescribeTagsInput) (*elbv2.DescribeTagsOutput, error)
 }
 
 // ELBManager describe TODO::appname ELB struct
-type ELBManager struct {
-	client           ELBClientDescreptor
+type ELBV2Manager struct {
+	client           ELBV2ClientDescreptor
 	storage          storage.Storage
 	cloudWatchCLient *CloudwatchManager
 	pricingClient    *PricingManager
@@ -35,23 +35,23 @@ type ELBManager struct {
 }
 
 // DetectedELB define the detected AWS ELB instances
-type DetectedELB struct {
+type DetectedELBV2 struct {
 	Metric string
 	Region string
 	structs.BaseDetectedRaw
 }
 
 // TableName will set the table name to storage interface
-func (DetectedELB) TableName() string {
+func (DetectedELBV2) TableName() string {
 	return "aws_elb"
 }
 
 // NewELBManager implements AWS GO SDK
-func NewELBManager(client ELBClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ELBManager {
+func NewELBV2Manager(client ELBV2ClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ELBManager {
 
-	st.AutoMigrate(&DetectedELB{})
+	st.AutoMigrate(&DetectedELBV2{})
 
-	return &ELBManager{
+	return &ELBV2Manager{
 		client:           client,
 		storage:          st,
 		cloudWatchCLient: cloudWatchCLient,
@@ -65,13 +65,13 @@ func NewELBManager(client ELBClientDescreptor, st storage.Storage, cloudWatchCLi
 }
 
 // Detect check with ELB  instance is under utilization
-func (r *ELBManager) Detect() ([]DetectedELB, error) {
-	log.Info("Analyze ELB")
-	detectedELB := []DetectedELB{}
+func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
+	log.Info("Analyze ELBV2")
+	detectedELB := []DetectedELBV2{}
 
 	instances, err := r.DescribeLoadbalancers()
 	if err != nil {
-		return detectedELB, err
+		return detectedELBV2, err
 	}
 
 	now := time.Now()
@@ -142,7 +142,7 @@ func (r *ELBManager) Detect() ([]DetectedELB, error) {
 					decodedTags, err = json.Marshal(&tags.TagDescriptions)
 				}
 
-				elb := DetectedELB{
+				elb := DetectedELBV2{
 					Region: r.region,
 					Metric: metric.Description,
 					BaseDetectedRaw: structs.BaseDetectedRaw{
@@ -154,7 +154,7 @@ func (r *ELBManager) Detect() ([]DetectedELB, error) {
 						Tags:            string(decodedTags),
 					},
 				}
-				detectedELB = append(detectedELB, elb)
+				detectedELBV2 = append(detectedELBV2, elb)
 				r.storage.Create(&elb)
 
 			}
@@ -162,12 +162,12 @@ func (r *ELBManager) Detect() ([]DetectedELB, error) {
 		}
 	}
 
-	return detectedELB, nil
+	return detectedELBV2, nil
 
 }
 
 // GetPricingFilterInput prepare document elb pricing filter
-func (r *ELBManager) GetPricingFilterInput() *pricing.GetProductsInput {
+func (r *ELBV2Manager) GetPricingFilterInput() *pricing.GetProductsInput {
 
 	return &pricing.GetProductsInput{
 		ServiceCode: &r.servicePricingCode,
@@ -199,7 +199,7 @@ func (r *ELBManager) GetPricingFilterInput() *pricing.GetProductsInput {
 }
 
 // DescribeLoadbalancers return list of load loadbalancers
-func (r *ELBManager) DescribeLoadbalancers() ([]*elbv2.LoadBalancerDescription, error) {
+func (r *ELBV2Manager) DescribeLoadbalancers() ([]*elbv2.LoadBalancerDescription, error) {
 
 	input := &elbv2.DescribeLoadBalancersInput{}
 

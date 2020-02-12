@@ -47,7 +47,7 @@ func (DetectedELBV2) TableName() string {
 }
 
 // NewELBManager implements AWS GO SDK
-func NewELBV2Manager(client ELBV2ClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ELBManager {
+func NewELBV2Manager(client ELBV2ClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ELBV2Manager {
 
 	st.AutoMigrate(&DetectedELBV2{})
 
@@ -67,7 +67,7 @@ func NewELBV2Manager(client ELBV2ClientDescreptor, st storage.Storage, cloudWatc
 // Detect check with ELB  instance is under utilization
 func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 	log.Info("Analyze ELBV2")
-	detectedELB := []DetectedELBV2{}
+	detectedELBV2 := []DetectedELBV2{}
 
 	instances, err := r.DescribeLoadbalancers()
 	if err != nil {
@@ -142,7 +142,7 @@ func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 					decodedTags, err = json.Marshal(&tags.TagDescriptions)
 				}
 
-				elb := DetectedELBV2{
+				elbv2 := DetectedELBV2{
 					Region: r.region,
 					Metric: metric.Description,
 					BaseDetectedRaw: structs.BaseDetectedRaw{
@@ -154,8 +154,8 @@ func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 						Tags:            string(decodedTags),
 					},
 				}
-				detectedELBV2 = append(detectedELBV2, elb)
-				r.storage.Create(&elb)
+				detectedELBV2 = append(detectedELBV2, elbv2)
+				r.storage.Create(&elbv2)
 
 			}
 

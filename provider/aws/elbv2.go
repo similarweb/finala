@@ -43,7 +43,7 @@ type DetectedELBV2 struct {
 
 // TableName will set the table name to storage interface
 func (DetectedELBV2) TableName() string {
-	return "aws_elb"
+	return "aws_elbv2"
 }
 
 // NewELBManager implements AWS GO SDK
@@ -77,6 +77,7 @@ func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 	now := time.Now()
 
 	for _, instance := range instances {
+
 		log.WithField("name", *instance.LoadBalancerName).Info("check ELB")
 
 		price, _ := r.pricingClient.GetPrice(r.GetPricingFilterInput(), "")
@@ -136,7 +137,7 @@ func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 
 				decodedTags := []byte{}
 				tags, err := r.client.DescribeTags(&elbv2.DescribeTagsInput{
-					LoadBalancerNames: []*string{instance.LoadBalancerName},
+					ResourceArns: []*string{instance.LoadBalancerArn},
 				})
 				if err == nil {
 					decodedTags, err = json.Marshal(&tags.TagDescriptions)
@@ -199,7 +200,7 @@ func (r *ELBV2Manager) GetPricingFilterInput() *pricing.GetProductsInput {
 }
 
 // DescribeLoadbalancers return list of load loadbalancers
-func (r *ELBV2Manager) DescribeLoadbalancers() ([]*elbv2.LoadBalancerDescription, error) {
+func (r *ELBV2Manager) DescribeLoadbalancers() ([]*elbv2.LoadBalancer, error) {
 
 	input := &elbv2.DescribeLoadBalancersInput{}
 
@@ -209,8 +210,8 @@ func (r *ELBV2Manager) DescribeLoadbalancers() ([]*elbv2.LoadBalancerDescription
 		return nil, err
 	}
 
-	instances := []*elbv2.LoadBalancerDescription{}
-	for _, instance := range resp.LoadBalancerDescriptions {
+	instances := []*elbv2.LoadBalancer{}
+	for _, instance := range resp.LoadBalancers {
 		instances = append(instances, instance)
 	}
 

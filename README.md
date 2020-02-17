@@ -9,7 +9,7 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 
 AWS:
 * RDS
-* EC2 (ELB, EBS)
+* EC2 (ELB, ALB, EBS)
 * DynamoDB
 * ElasticCache
 * DocumentDB
@@ -214,8 +214,22 @@ elb:
         operator: "=="
         value: 0   
 ```
+4. Find Application ELB's that had zero traffic (requests) in the last week. 
 
-4. Find a difference of more than 10% between DynamoDB Provisioned RCUs to Consumed RCUs. 
+```yaml
+elbv2:
+        - description: Application Loadbalancer RequestCount
+          metrics:
+          - name: RequestCount
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d 
+          constraint:
+          operator: "=="
+          value: 0    
+```
+
+5. Find a difference of more than 10% between DynamoDB Provisioned RCUs to Consumed RCUs. 
 ```yaml
 dynamodb:
     - description: Provisioned read capacity units

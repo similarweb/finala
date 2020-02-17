@@ -9,36 +9,36 @@ import (
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 )
 
-var defaultELBMock = elbv2.DescribeLoadBalancersOutput{
-	LoadBalancerDescriptions: []*elbv2.LoadBalancerDescription{
-		&elbv2.LoadBalancerDescription{
+var defaultELBV2Mock = elbv2.DescribeLoadBalancersOutput{
+	LoadBalancers: []*elbv2.LoadBalancer{
+		&elbv2.LoadBalancer{
 			LoadBalancerName: awsClient.String("i-1"),
 			CreatedTime:      testutils.TimePointer(time.Now()),
 		},
 	},
 }
 
-type MockAWSELBClient struct {
+type MockAWSELBV2Client struct {
 	responseDescribeLoadBalancers elbv2.DescribeLoadBalancersOutput
 	err                           error
 }
 
-func (r *MockAWSELBClient) DescribeLoadBalancers(*elbv2.DescribeLoadBalancersInput) (*elbv2.DescribeLoadBalancersOutput, error) {
+func (r *MockAWSELBV2Client) DescribeLoadBalancers(*elbv2.DescribeLoadBalancersInput) (*elbv2.DescribeLoadBalancersOutput, error) {
 
 	return &r.responseDescribeLoadBalancers, r.err
 
 }
 
-func (r *MockAWSELBClient) DescribeTags(*elbv2.DescribeTagsInput) (*elbv2.DescribeTagsOutput, error) {
+func (r *MockAWSELBV2Client) DescribeTags(*elbv2.DescribeTagsInput) (*elbv2.DescribeTagsOutput, error) {
 
 	return &elbv2.DescribeTagsOutput{}, r.err
 
 }
 
-func TestDescribeLoadBalancers(t *testing.T) {
+func TestDescribeLoadBalancersV2(t *testing.T) {
 
 	mockStorage := testutils.NewMockStorage()
 
@@ -46,27 +46,27 @@ func TestDescribeLoadBalancers(t *testing.T) {
 
 	t.Run("valid", func(t *testing.T) {
 
-		mockClient := MockAWSELBClient{
-			responseDescribeLoadBalancers: defaultELBMock,
+		mockClient := MockAWSELBV2Client{
+			responseDescribeLoadBalancers: defaultELBV2Mock,
 		}
 
-		elbManager := aws.NewELBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		elbManager := aws.NewELBV2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		result, _ := elbManager.DescribeLoadbalancers()
 
-		if len(result) != len(defaultELBMock.LoadBalancerDescriptions) {
-			t.Fatalf("unexpected elb instance count, got %d expected %d", len(result), len(defaultELBMock.LoadBalancerDescriptions))
+		if len(result) != len(defaultELBV2Mock.LoadBalancers) {
+			t.Fatalf("unexpected elb instance count, got %d expected %d", len(result), len(defaultELBV2Mock.LoadBalancers))
 		}
 	})
 
 	t.Run("error", func(t *testing.T) {
 
-		mockClient := MockAWSELBClient{
-			responseDescribeLoadBalancers: defaultELBMock,
+		mockClient := MockAWSELBV2Client{
+			responseDescribeLoadBalancers: defaultELBV2Mock,
 			err:                           errors.New("error"),
 		}
 
-		elbManager := aws.NewELBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		elbManager := aws.NewELBV2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		_, err := elbManager.DescribeLoadbalancers()
 
@@ -77,7 +77,7 @@ func TestDescribeLoadBalancers(t *testing.T) {
 
 }
 
-func TestDetectELB(t *testing.T) {
+func TestDetectELBV2(t *testing.T) {
 
 	mockStorage := testutils.NewMockStorage()
 	mockCloudwatchClient := MockAWSCloudwatchClient{
@@ -86,11 +86,11 @@ func TestDetectELB(t *testing.T) {
 	cloutwatchManager := aws.NewCloudWatchManager(&mockCloudwatchClient)
 	pricingManager := aws.NewPricingManager(&defaultPricingMock, "us-east-1")
 
-	mockClient := MockAWSELBClient{
-		responseDescribeLoadBalancers: defaultELBMock,
+	mockClient := MockAWSELBV2Client{
+		responseDescribeLoadBalancers: defaultELBV2Mock,
 	}
 
-	elbManager := aws.NewELBManager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	elbManager := aws.NewELBV2Manager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
 
 	response, _ := elbManager.Detect()
 

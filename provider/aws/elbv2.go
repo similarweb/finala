@@ -2,10 +2,13 @@ package aws
 
 import (
 	"encoding/json"
+	"errors"
 	"finala/config"
 	"finala/expression"
 	"finala/storage"
 	"finala/structs"
+	"regexp"
+	"strings"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -34,11 +37,54 @@ type ELBV2Manager struct {
 	servicePricingCode string
 }
 
+//
+type ARNManager struct {
+	Partition string
+	Service   string
+	Region    string
+	AccountID string
+	Resource  string
+}
+
 // DetectedELB define the detected AWS ELB instances
 type DetectedELBV2 struct {
 	Metric string
 	Region string
 	structs.BaseDetectedRaw
+}
+
+func ParseArn(arn string) (ARNManager, error) {
+	const (
+		arnDelimiter = ":"
+		arnSections  = 6
+		arnPrefix    = "arn:"
+
+		// zero-indexed
+		sectionPartition = 1
+		sectionService   = 2
+		sectionRegion    = 3
+		sectionAccountID = 4
+		sectionResource  = 5
+
+		// errors
+		invalidPrefix   = "arn: invalid prefix"
+		invalidSections = "arn: not enough sections"
+	)
+	if !strings.HasPrefix(arn, arnPrefix) {
+		return ARNManager{}, errors.New(invalidSections)
+	}
+	sections := strings.SplitN(arn, arnDelimiter, arnSections)
+	if len(sections) != arnSections {
+		return ARNManager{}, errors.New(invalidSections)
+	}
+	return ARNManager{
+		Partition: sections[sectionPartition],
+		Service:   sections[sectionService],
+		Region:    sections[sectionRegion],
+		AccountID: sections[sectionAccountID],
+		Resource:  sections[sectionResource],
+	}, nil
+
 }
 
 // TableName will set the table name to storage interface
@@ -90,7 +136,12 @@ func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 			}).Debug("check metric")
 
 			period := int64(metric.Period.Seconds())
+
 			metricEndTime := now.Add(time.Duration(-metric.StartTime))
+			parsedARN, err := ParseArn(*instance.LoadBalancerArn)
+			regx, _ := regexp.Compile(".*loadbalancer/")
+			resourseParsed := regx.ReplaceAllString(parsedARN.Resource, "")
+
 			metricInput := cloudwatch.GetMetricStatisticsInput{
 				Namespace:  &r.namespace,
 				MetricName: &metric.Description,
@@ -99,8 +150,8 @@ func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 				EndTime:    &now,
 				Dimensions: []*cloudwatch.Dimension{
 					&cloudwatch.Dimension{
-						Name:  awsClient.String("LoadBalancerName"),
-						Value: instance.LoadBalancerName,
+						Name:  awsClient.String("LoadBalancer"),
+						Value: &resourseParsed,
 					},
 				},
 			}

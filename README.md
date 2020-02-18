@@ -218,15 +218,15 @@ elb:
 
 ```yaml
 elbv2:
-        - description: Application Loadbalancer RequestCount
+        - description: Application Loadbalancer ActiveConnectionCount
           metrics:
-          - name: RequestCount
+          - name: ActiveConnectionCount
               statistic: Sum
           period: 24h 
           start_time: 168h # 24h * 7d 
           constraint:
-          operator: "=="
-          value: 0    
+          operator: "<"
+          value: 20    
 ```
 
 5. Find a difference of more than 10% between DynamoDB Provisioned RCUs to Consumed RCUs. 

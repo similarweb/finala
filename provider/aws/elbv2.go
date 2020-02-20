@@ -124,7 +124,7 @@ func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 
 	for _, instance := range instances {
 
-		log.WithField("name", *instance.LoadBalancerName).Info("check ELB")
+		log.WithField("name", *instance.LoadBalancerName).Info("check ELBV2")
 
 		price, _ := r.pricingClient.GetPrice(r.GetPricingFilterInput(), "")
 

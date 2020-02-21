@@ -77,6 +77,7 @@ func ParseArn(arn string) (ARNManager, error) {
 	if len(sections) != arnSections {
 		return ARNManager{}, errors.New(invalidSections)
 	}
+
 	return ARNManager{
 		Partition: sections[sectionPartition],
 		Service:   sections[sectionService],
@@ -139,6 +140,7 @@ func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 
 			metricEndTime := now.Add(time.Duration(-metric.StartTime))
 			parsedARN, err := ParseArn(*instance.LoadBalancerArn)
+
 			regx, _ := regexp.Compile(".*loadbalancer/")
 			resourseParsed := regx.ReplaceAllString(parsedARN.Resource, "")
 

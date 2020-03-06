@@ -18,13 +18,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ELBClientDescreptor is an interface defining the aws elbv2 client
+// ELBV2ClientDescreptor is an interface defining the aws elbv2 client
 type ELBV2ClientDescreptor interface {
 	DescribeLoadBalancers(*elbv2.DescribeLoadBalancersInput) (*elbv2.DescribeLoadBalancersOutput, error)
 	DescribeTags(*elbv2.DescribeTagsInput) (*elbv2.DescribeTagsOutput, error)
 }
 
-// ELBManager describe TODO::appname ELB struct
+// ELBV2Manager describe TODO::appname ELB struct
 type ELBV2Manager struct {
 	client           ELBV2ClientDescreptor
 	storage          storage.Storage
@@ -46,7 +46,7 @@ type ARNManager struct {
 	Resource  string
 }
 
-// DetectedELB define the detected AWS ELB instances
+// DetectedELBV2 define the detected AWS ELB instances
 type DetectedELBV2 struct {
 	Metric string
 	Region string
@@ -93,7 +93,7 @@ func (DetectedELBV2) TableName() string {
 	return "aws_elbv2"
 }
 
-// NewELBManager implements AWS GO SDK
+// NewELBV2Manager implements AWS GO SDK
 func NewELBV2Manager(client ELBV2ClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ELBV2Manager {
 
 	st.AutoMigrate(&DetectedELBV2{})
@@ -111,7 +111,7 @@ func NewELBV2Manager(client ELBV2ClientDescreptor, st storage.Storage, cloudWatc
 	}
 }
 
-// Detect check with ELB  instance is under utilization
+// Detect check with ELBV2 instance is under utilization
 func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 	log.Info("Analyze ELBV2")
 	detectedELBV2 := []DetectedELBV2{}

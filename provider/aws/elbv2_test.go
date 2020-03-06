@@ -51,12 +51,12 @@ func TestDescribeLoadBalancersV2(t *testing.T) {
 			responseDescribeLoadBalancers: defaultELBV2Mock,
 		}
 
-		elbManager := aws.NewELBV2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		elbv2Manager := aws.NewELBV2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		result, _ := elbManager.DescribeLoadbalancers()
+		result, _ := elbv2Manager.DescribeLoadbalancers()
 
 		if len(result) != len(defaultELBV2Mock.LoadBalancers) {
-			t.Fatalf("unexpected elb instance count, got %d expected %d", len(result), len(defaultELBV2Mock.LoadBalancers))
+			t.Fatalf("unexpected elbv2 instance count, got %d expected %d", len(result), len(defaultELBV2Mock.LoadBalancers))
 		}
 	})
 
@@ -67,9 +67,9 @@ func TestDescribeLoadBalancersV2(t *testing.T) {
 			err:                           errors.New("error"),
 		}
 
-		elbManager := aws.NewELBV2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		elbv2Manager := aws.NewELBV2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		_, err := elbManager.DescribeLoadbalancers()
+		_, err := elbv2Manager.DescribeLoadbalancers()
 
 		if err == nil {
 			t.Fatalf("unexpected describe Instances error, return empty")
@@ -91,16 +91,16 @@ func TestDetectELBV2(t *testing.T) {
 		responseDescribeLoadBalancers: defaultELBV2Mock,
 	}
 
-	elbManager := aws.NewELBV2Manager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	elbv2Manager := aws.NewELBV2Manager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
 
-	response, _ := elbManager.Detect()
+	response, _ := elbv2Manager.Detect()
 
 	if len(response) != 1 {
-		t.Fatalf("unexpected elb detected, got %d expected %d", len(response), 1)
+		t.Fatalf("unexpected elbv2 detected, got %d expected %d", len(response), 1)
 	}
 
 	if len(mockStorage.MockRaw) != 1 {
-		t.Fatalf("unexpected elb storage save, got %d expected %d", len(mockStorage.MockRaw), 1)
+		t.Fatalf("unexpected elbv2 storage save, got %d expected %d", len(mockStorage.MockRaw), 1)
 	}
 
 }

@@ -13,7 +13,7 @@
             "env": {},
             "args": ["aws","-c", "config.yaml"]
         },        {
-            "name": "Test",
+            "name": "elbv2_test.go",
             "type": "go",
             "request": "launch",
             "mode": "test",

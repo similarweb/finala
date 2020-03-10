@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	notifier "github.com/similarweb/client-notifier"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra"
@@ -52,6 +53,8 @@ var (
 	avilableStorageDrivers = []string{"mysql", "sqlite3"}
 
 	webserverStopper serverutil.StopFunc
+
+	mainVersion = "0.1.5"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -64,6 +67,21 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 
 // Execute will expose all cobra commands
 func Execute() {
+
+	params := &notifier.UpdaterParams{
+		Application: "finala",
+		Version:     mainVersion,
+	}
+
+	version, err := notifier.Get(params, notifier.RequestSetting{})
+
+	if err == nil && !version.Outdated {
+		log.Error(fmt.Sprintf("newer Finala version available. latest version %s, current version %s, link download %s", version.CurrentVersion, mainVersion, version.CurrentDownloadURL))
+
+		for _, notification := range version.Notifications {
+			log.Error(notification.Message)
+		}
+	}
 
 	if err := rootCmd.Execute(); err != nil {
 		log.WithError(err)

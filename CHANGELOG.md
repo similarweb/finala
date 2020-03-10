@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Notify when new Finala version release
 - Improve CI process
-- Add AWS ELBVw detection.
+- Add AWS ELBV2 detection.
 
 ## [0.1.5] 
 ### Added

@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -60,6 +61,7 @@ func (app *Analyze) All() {
 			app.AnalyzeVolumes(app.storage, sess, pricing)
 			app.AnalyzeRDS(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeELB(app.storage, sess, cloudWatchCLient, pricing)
+			app.AnalyzeELBV2(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeElasticache(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeLambda(app.storage, sess, cloudWatchCLient)
 			app.AnalyzeEC2Instances(app.storage, sess, cloudWatchCLient, pricing)
@@ -130,6 +132,48 @@ func (app *Analyze) AnalyzeELB(st storage.Storage, sess *session.Session, cloudW
 
 	elb := NewELBManager(elb.New(sess), st, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 	response, err := elb.Detect()
+
+	if err == nil {
+		b, _ := json.Marshal(response)
+		config := []structs.PrintTableConfig{
+			{Header: "ID", Key: "ResourceID"},
+			{Header: "Metric", Key: "Metric"},
+			{Header: "Region", Key: "Region"},
+			{Header: "Price Per Hour", Key: "PricePerHour"},
+			{Header: "Price Per Month", Key: "PricePerMonth"},
+		}
+		printers.Table(config, b, nil)
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+	} else {
+		st.Create(&storage.ResourceStatus{
+			TableName:   table.TableName(),
+			Status:      storage.Error,
+			Description: err.Error(),
+		})
+	}
+
+	return err
+}
+
+// AnalyzeELBV2 will analyzes elastic load balancer resources
+func (app *Analyze) AnalyzeELBV2(st storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+	metrics, found := app.metrics["elbv2"]
+	if !found {
+		return nil
+	}
+
+	table := &DetectedELBV2{}
+
+	st.Create(&storage.ResourceStatus{
+		TableName: table.TableName(),
+		Status:    storage.Fetch,
+	})
+
+	elbv2 := NewELBV2Manager(elbv2.New(sess), st, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	response, err := elbv2.Detect()
 
 	if err == nil {
 		b, _ := json.Marshal(response)

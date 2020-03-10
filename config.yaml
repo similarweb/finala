@@ -50,7 +50,17 @@ providers:
           start_time: 168h # 24h * 7d 
           constraint:
             operator: "=="
-            value: 0      
+            value: 0  
+      elbv2:
+        - description: Application Loadbalancer RequestCount
+          metrics:
+            - name: RequestCount
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d 
+          constraint:
+            operator: "=="
+            value: 0    
       ec2:
         - description: EC2 CPU utilization 
           metrics:

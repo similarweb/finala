@@ -1,6 +1,6 @@
 # Finala
 
-[![Build Status](https://travis-ci.org/similarweb/finala.svg?branch=master)](https://travis-ci.org/similarweb/finala)
+[![Build Status](https://travis-ci.org/similarweb/finala.svg?branch=develop)](https://travis-ci.org/similarweb/finala)
 
 A resource cloud scanner that analyzes and reports about wasteful and unused resources to cut unwanted expenses.
 The tool is based on yaml definitions (no code), by default configuration OR given yaml file and the report output will be saved in a given storage.
@@ -9,7 +9,7 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 
 AWS:
 * RDS
-* EC2 (ELB, EBS)
+* EC2 (ELB, ALB, EBS)
 * DynamoDB
 * ElasticCache
 * DocumentDB
@@ -84,7 +84,8 @@ You can try and play with the query before in CloudWatch.
 1) Optional: Build from source
 
 ```shell
-$ git clone git@github.com:kaplanelad/finala.git
+$ git clone git@github.com:similarweb/finala
+$ cd finala
 $ make build
 ```
 
@@ -214,8 +215,22 @@ elb:
         operator: "=="
         value: 0   
 ```
+4. Find Application ELB's that had zero traffic (requests) in the last week. 
 
-4. Find a difference of more than 10% between DynamoDB Provisioned RCUs to Consumed RCUs. 
+```yaml
+      elbv2:
+        - description: Application Loadbalancer RequestCount
+          metrics:
+            - name: RequestCount
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d 
+          constraint:
+            operator: "=="
+            value: 0    
+```
+
+5. Find a difference of more than 10% between DynamoDB Provisioned RCUs to Consumed RCUs. 
 ```yaml
 dynamodb:
     - description: Provisioned read capacity units

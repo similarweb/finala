@@ -3,8 +3,7 @@
 Everyone are welcome to contribute or even discuss the change you wish to make a priori via issue, email or any other method. 
 
 ## Pull Request Process
-All PR's are initally merged into `develop`, merging to `master` == new version release. 
-Think of `develop` branch as the stable development version. 
+All PR's are initally merged into `master`
 
 1. Open a PR and request to merge into `master`. 
 2. Update the README.md if documentation is required. 

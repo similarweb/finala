@@ -40,10 +40,18 @@ type MetricConfig struct {
 	Constraint  MetricConstraintConfig    `yaml:"constraint"`
 }
 
+// ResourceConfig describe resource configuration
+type ResourceConfig struct {
+	Description string                 `yaml:"description"`
+	Global      bool                   `yaml:"global"`
+	Constraint  MetricConstraintConfig `yaml:"constraint"`
+}
+
 // ProviderConfig describe the available providers
 type ProviderConfig struct {
-	Accounts []AWSAccount              `yaml:"accounts"`
-	Metrics  map[string][]MetricConfig `yaml:"metrics"`
+	Accounts  []AWSAccount              `yaml:"accounts"`
+	Metrics   map[string][]MetricConfig `yaml:"metrics"`
+	Resources map[string]ResourceConfig `yaml:"resources"`
 }
 
 // Config present the application config

@@ -52,7 +52,7 @@ func TestDescribeLoadBalancers(t *testing.T) {
 
 		elbManager := aws.NewELBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		result, _ := elbManager.DescribeLoadbalancers()
+		result, _ := elbManager.DescribeLoadbalancers(nil, nil)
 
 		if len(result) != len(defaultELBMock.LoadBalancerDescriptions) {
 			t.Fatalf("unexpected elb instance count, got %d expected %d", len(result), len(defaultELBMock.LoadBalancerDescriptions))
@@ -68,7 +68,7 @@ func TestDescribeLoadBalancers(t *testing.T) {
 
 		elbManager := aws.NewELBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		_, err := elbManager.DescribeLoadbalancers()
+		_, err := elbManager.DescribeLoadbalancers(nil, nil)
 
 		if err == nil {
 			t.Fatalf("unexpected describe Instances error, return empty")

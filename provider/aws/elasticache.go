@@ -72,7 +72,7 @@ func (r *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 	log.Info("Analyze elasticache")
 	detectedelasticache := []DetectedElasticache{}
 
-	instances, err := r.DescribeInstances()
+	instances, err := r.DescribeInstances(nil, nil)
 	if err != nil {
 		return detectedelasticache, err
 	}
@@ -190,10 +190,11 @@ func (r *ElasticacheManager) GetPricingFilterInput(instance *elasticache.CacheCl
 }
 
 // DescribeInstances return list of elasticache instances
-func (r *ElasticacheManager) DescribeInstances() ([]*elasticache.CacheCluster, error) {
+func (r *ElasticacheManager) DescribeInstances(Marker *string, elasticaches []*elasticache.CacheCluster) ([]*elasticache.CacheCluster, error) {
 
-	// limit := int64(20)
-	input := &elasticache.DescribeCacheClustersInput{}
+	input := &elasticache.DescribeCacheClustersInput{
+		Marker: Marker,
+	}
 
 	resp, err := r.client.DescribeCacheClusters(input)
 	if err != nil {
@@ -201,10 +202,17 @@ func (r *ElasticacheManager) DescribeInstances() ([]*elasticache.CacheCluster, e
 		return nil, err
 	}
 
-	instances := []*elasticache.CacheCluster{}
-	for _, instance := range resp.CacheClusters {
-		instances = append(instances, instance)
+	if elasticaches == nil {
+		elasticaches = []*elasticache.CacheCluster{}
 	}
 
-	return instances, nil
+	for _, elasticache := range resp.CacheClusters {
+		elasticaches = append(elasticaches, elasticache)
+	}
+
+	if resp.Marker != nil {
+		r.DescribeInstances(resp.Marker, elasticaches)
+	}
+
+	return elasticaches, nil
 }

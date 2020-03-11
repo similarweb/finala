@@ -56,7 +56,7 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 	log.Info("analyze IAM users last activity")
 	detected := []DetectedAWSLastActivity{}
 
-	users, err := im.GetUsers(nil)
+	users, err := im.GetUsers(nil, nil)
 	if err != nil {
 		log.WithError(err).Error("could not get iam users")
 		return detected, err
@@ -135,7 +135,7 @@ func (im *IAMManager) passDays(now, lastUsedDate time.Time, days float64, operat
 }
 
 // GetUsers return list of users
-func (im *IAMManager) GetUsers(marker *string) ([]*iam.User, error) {
+func (im *IAMManager) GetUsers(marker *string, users []*iam.User) ([]*iam.User, error) {
 
 	input := &iam.ListUsersInput{
 		Marker: marker,
@@ -146,14 +146,16 @@ func (im *IAMManager) GetUsers(marker *string) ([]*iam.User, error) {
 		return nil, err
 	}
 
-	users := []*iam.User{}
+	if users == nil {
+		users = []*iam.User{}
+	}
 
 	for _, user := range resp.Users {
 		users = append(users, user)
 	}
 
 	if resp.Marker != nil {
-		im.GetUsers(resp.Marker)
+		im.GetUsers(resp.Marker, users)
 	}
 
 	return users, nil

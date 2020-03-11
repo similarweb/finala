@@ -67,7 +67,7 @@ func TestDescribeUsers(t *testing.T) {
 	t.Run("valid", func(t *testing.T) {
 		mockClient := MockIAMClient{}
 		iamManager := aws.NewIAMUseranager(&mockClient, mockStorage)
-		response, _ := iamManager.GetUsers(nil)
+		response, _ := iamManager.GetUsers(nil, nil)
 
 		if len(response) != len(defaultUsersMock.Users) {
 			t.Fatalf("unexpected user count, got %d expected %d", len(response), len(defaultUsersMock.Users))
@@ -81,7 +81,7 @@ func TestDescribeUsers(t *testing.T) {
 		}
 
 		iamManager := aws.NewIAMUseranager(&mockClient, mockStorage)
-		_, err := iamManager.GetUsers(nil)
+		_, err := iamManager.GetUsers(nil, nil)
 
 		if err == nil {
 			t.Fatalf("unexpected describe Instances error, return empty")

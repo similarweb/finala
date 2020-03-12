@@ -218,5 +218,9 @@ func (r *DocumentDBManager) DescribeInstances(marker *string, instances []*docdb
 		instances = append(instances, instance)
 	}
 
+	if resp.Marker != nil {
+		r.DescribeInstances(marker, instances)
+	}
+
 	return instances, nil
 }

@@ -42,7 +42,7 @@ func (DetectedAWSLastActivity) TableName() string {
 // NewIAMUseranager implements AWS GO SDK
 func NewIAMUseranager(client IAMClientDescreptor, st storage.Storage) *IAMManager {
 
-	st.AutoMigrate(&DetectedAWSRDS{})
+	st.AutoMigrate(&DetectedAWSLastActivity{})
 
 	return &IAMManager{
 		client:  client,
@@ -105,12 +105,14 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 					"days_activity": lastActivity,
 				}).Info("user detected")
 
-				detected = append(detected, DetectedAWSLastActivity{
+				userData := DetectedAWSLastActivity{
 					UserName:     *user.UserName,
 					AccessKey:    *accessKeyData.AccessKeyId,
 					LastUsedDate: lastUsedDate,
 					LastActivity: lastActivity,
-				})
+				}
+				detected = append(detected, userData)
+				im.storage.Create(&userData)
 			}
 		}
 	}

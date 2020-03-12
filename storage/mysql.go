@@ -162,6 +162,9 @@ func (s *MySQLManager) GetTableData(name string) ([]map[string]interface{}, erro
 	var data []map[string]interface{}
 
 	rows, err := s.db.Table(name).Select("*").Rows()
+	if err != nil {
+		return data, err
+	}
 	columns, err := rows.Columns()
 	if err != nil {
 		return data, err

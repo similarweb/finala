@@ -5,8 +5,8 @@ providers:
   aws:
     accounts: 
       - name: <account_name>
-        access_key: <access_key>
-        secret_key: <secret_key>
+        # access_key: <access_key>
+        # secret_key: <secret_key>
         regions:
           - us-east-1
           - us-west-2

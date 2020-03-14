@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gobuffalo/packr"
@@ -73,7 +74,11 @@ func (server *Server) Serve() serverutil.StopFunc {
 // BindEndpoints sets up the router to handle API endpoints
 func (server *Server) BindEndpoints() {
 
-	box := packr.NewBox("../ui/build")
+	path, err := os.Getwd()
+	if err != nil {
+		log.WithError(err).Error("could not get working dir path")
+	}
+	box := packr.NewBox(fmt.Sprintf("%s/ui/build", path))
 	server.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(box)))
 	server.router.HandleFunc("/api/v1/summary", server.GetSummary).Methods("GET")               // HealthCheck
 	server.router.HandleFunc("/api/v1/resources/{type}", server.GetResourceData).Methods("GET") // return list of job deployments

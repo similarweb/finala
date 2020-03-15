@@ -72,7 +72,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 
 	log.Info("analyze RDS")
 	detected := []DetectedAWSRDS{}
-	instances, err := r.DescribeInstances()
+	instances, err := r.DescribeInstances(nil, nil)
 	if err != nil {
 		log.WithField("error", err).Error("could not describe rds instances")
 		return detected, err
@@ -216,9 +216,10 @@ func (r *RDSManager) GetPricingFilterInput(instance *rds.DBInstance) *pricing.Ge
 }
 
 // DescribeInstances return list of rds instances
-func (r *RDSManager) DescribeInstances() ([]*rds.DBInstance, error) {
+func (r *RDSManager) DescribeInstances(Marker *string, instances []*rds.DBInstance) ([]*rds.DBInstance, error) {
 
 	input := &rds.DescribeDBInstancesInput{
+		Marker:  Marker,
 		Filters: []*rds.Filter{},
 	}
 
@@ -227,14 +228,19 @@ func (r *RDSManager) DescribeInstances() ([]*rds.DBInstance, error) {
 		return nil, err
 	}
 
-	instances := []*rds.DBInstance{}
+	if instances == nil {
+		instances = []*rds.DBInstance{}
+	}
+
 	for _, instance := range resp.DBInstances {
 		// Bug in AWS api response. when filter RDS documentDB returned also.
-
 		if *instance.Engine != "docdb" {
 			instances = append(instances, instance)
 		}
+	}
 
+	if resp.Marker != nil {
+		r.DescribeInstances(resp.Marker, instances)
 	}
 
 	return instances, nil

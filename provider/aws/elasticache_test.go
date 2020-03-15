@@ -54,7 +54,7 @@ func TestDescribeCacheClusters(t *testing.T) {
 
 		rdsManager := aws.NewElasticacheManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		result, _ := rdsManager.DescribeInstances()
+		result, _ := rdsManager.DescribeInstances(nil, nil)
 
 		if len(result) != len(defaultElasticacheMock.CacheClusters) {
 			t.Fatalf("unexpected elasticache instance count, got %d expected %d", len(result), len(defaultElasticacheMock.CacheClusters))
@@ -70,7 +70,7 @@ func TestDescribeCacheClusters(t *testing.T) {
 
 		rdsManager := aws.NewElasticacheManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		_, err := rdsManager.DescribeInstances()
+		_, err := rdsManager.DescribeInstances(nil, nil)
 
 		if err == nil {
 			t.Fatalf("unexpected describe Instances error, return empty")

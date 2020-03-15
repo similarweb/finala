@@ -71,7 +71,7 @@ func (r *EC2Manager) Detect() ([]DetectedEC2, error) {
 	log.Info("Analyze EC2")
 	detectedEC2 := []DetectedEC2{}
 
-	instances, err := r.DescribeInstances()
+	instances, err := r.DescribeInstances(nil, nil)
 	if err != nil {
 		return detectedEC2, err
 	}
@@ -238,9 +238,10 @@ func (r *EC2Manager) GetPricingFilterInput(instance *ec2.Instance) *pricing.GetP
 }
 
 // DescribeInstances return list of running instance
-func (r *EC2Manager) DescribeInstances() ([]*ec2.Instance, error) {
+func (r *EC2Manager) DescribeInstances(nextToken *string, instances []*ec2.Instance) ([]*ec2.Instance, error) {
 
 	input := &ec2.DescribeInstancesInput{
+		NextToken: nextToken,
 		Filters: []*ec2.Filter{
 			&ec2.Filter{
 				Name:   awsClient.String("instance-state-name"),
@@ -255,11 +256,18 @@ func (r *EC2Manager) DescribeInstances() ([]*ec2.Instance, error) {
 		return nil, err
 	}
 
-	instances := []*ec2.Instance{}
+	if instances == nil {
+		instances = []*ec2.Instance{}
+	}
+
 	for _, reservations := range resp.Reservations {
 		for _, instance := range reservations.Instances {
 			instances = append(instances, instance)
 		}
+	}
+
+	if resp.NextToken != nil {
+		r.DescribeInstances(resp.NextToken, instances)
 	}
 
 	return instances, nil

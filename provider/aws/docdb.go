@@ -72,7 +72,7 @@ func (r *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 
 	log.Info("Analyze documentDB")
 	detectedDocDB := []DetectedDocumentDB{}
-	instances, err := r.DescribeInstances()
+	instances, err := r.DescribeInstances(nil, nil)
 	if err != nil {
 		log.WithField("error", err).Error("could not describe documentDB instances")
 		return detectedDocDB, err
@@ -193,9 +193,10 @@ func (r *DocumentDBManager) GetPricingFilterInput(instance *docdb.DBInstance) *p
 }
 
 // DescribeInstances return list of documentDB instances
-func (r *DocumentDBManager) DescribeInstances() ([]*docdb.DBInstance, error) {
+func (r *DocumentDBManager) DescribeInstances(marker *string, instances []*docdb.DBInstance) ([]*docdb.DBInstance, error) {
 
 	input := &docdb.DescribeDBInstancesInput{
+		Marker: marker,
 		Filters: []*docdb.Filter{
 			&docdb.Filter{
 				Name:   awsClient.String("engine"),
@@ -209,9 +210,16 @@ func (r *DocumentDBManager) DescribeInstances() ([]*docdb.DBInstance, error) {
 		return nil, err
 	}
 
-	instances := []*docdb.DBInstance{}
+	if instances == nil {
+		instances = []*docdb.DBInstance{}
+	}
+
 	for _, instance := range resp.DBInstances {
 		instances = append(instances, instance)
+	}
+
+	if resp.Marker != nil {
+		r.DescribeInstances(marker, instances)
 	}
 
 	return instances, nil

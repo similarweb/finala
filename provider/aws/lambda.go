@@ -66,7 +66,7 @@ func (r *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 
 	log.Info("analyze Lambda")
 	detected := []DetectedAWSLambda{}
-	functions, err := r.Describe()
+	functions, err := r.Describe(nil, nil)
 	if err != nil {
 		log.WithField("error", err).Error("could not describe lambda functions")
 		return detected, err
@@ -153,19 +153,27 @@ func (r *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 }
 
 // Describe return list of Lambda functions
-func (r *LambdaManager) Describe() ([]*lambda.FunctionConfiguration, error) {
+func (r *LambdaManager) Describe(marker *string, functions []*lambda.FunctionConfiguration) ([]*lambda.FunctionConfiguration, error) {
 
-	input := &lambda.ListFunctionsInput{}
+	input := &lambda.ListFunctionsInput{
+		Marker: marker,
+	}
 
 	resp, err := r.client.ListFunctions(input)
 	if err != nil {
 		return nil, err
 	}
 
-	functions := []*lambda.FunctionConfiguration{}
+	if functions == nil {
+		functions = []*lambda.FunctionConfiguration{}
+	}
+
 	for _, fun := range resp.Functions {
 		functions = append(functions, fun)
+	}
 
+	if resp.NextMarker != nil {
+		r.Describe(resp.NextMarker, functions)
 	}
 
 	return functions, nil

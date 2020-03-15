@@ -79,7 +79,7 @@ func TestDescribeRDSInstances(t *testing.T) {
 
 		rdsManager := aws.NewRDSManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		result, _ := rdsManager.DescribeInstances()
+		result, _ := rdsManager.DescribeInstances(nil, nil)
 
 		if len(result) != 3 {
 			t.Fatalf("unexpected rds instance count, got %d expected %d", len(result), 3)
@@ -95,7 +95,7 @@ func TestDescribeRDSInstances(t *testing.T) {
 
 		rdsManager := aws.NewRDSManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		_, err := rdsManager.DescribeInstances()
+		_, err := rdsManager.DescribeInstances(nil, nil)
 
 		if err == nil {
 			t.Fatalf("unexpected describe Instances error, return empty")

@@ -59,7 +59,7 @@ func TestDescribeVolumes(t *testing.T) {
 		}
 
 		volumeManager := aws.NewVolumesManager(&mockClient, mockStorage, pricingManager, "us-east-1")
-		response, err := volumeManager.Describe()
+		response, err := volumeManager.Describe(nil, nil)
 
 		if len(response) != 3 {
 			t.Fatalf("unexpected volume detected, got %d expected %d", len(response), 3)
@@ -78,7 +78,7 @@ func TestDescribeVolumes(t *testing.T) {
 		}
 
 		volumeManager := aws.NewVolumesManager(&mockClient, mockStorage, pricingManager, "us-east-1")
-		_, err := volumeManager.Describe()
+		_, err := volumeManager.Describe(nil, nil)
 
 		if err == nil {
 			t.Fatalf("unexpected describe Volumes error, return empty")

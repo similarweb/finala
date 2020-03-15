@@ -70,7 +70,7 @@ func (r *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 	log.Info("Analyze ELBV2")
 	detectedELBV2 := []DetectedELBV2{}
 
-	instances, err := r.DescribeLoadbalancers()
+	instances, err := r.DescribeLoadbalancers(nil, nil)
 	if err != nil {
 		return detectedELBV2, err
 	}
@@ -207,9 +207,11 @@ func (r *ELBV2Manager) GetPricingFilterInput() *pricing.GetProductsInput {
 }
 
 // DescribeLoadbalancers return list of load loadbalancers
-func (r *ELBV2Manager) DescribeLoadbalancers() ([]*elbv2.LoadBalancer, error) {
+func (r *ELBV2Manager) DescribeLoadbalancers(marker *string, loadbalancers []*elbv2.LoadBalancer) ([]*elbv2.LoadBalancer, error) {
 
-	input := &elbv2.DescribeLoadBalancersInput{}
+	input := &elbv2.DescribeLoadBalancersInput{
+		Marker: marker,
+	}
 
 	resp, err := r.client.DescribeLoadBalancers(input)
 	if err != nil {
@@ -217,10 +219,17 @@ func (r *ELBV2Manager) DescribeLoadbalancers() ([]*elbv2.LoadBalancer, error) {
 		return nil, err
 	}
 
-	instances := []*elbv2.LoadBalancer{}
-	for _, instance := range resp.LoadBalancers {
-		instances = append(instances, instance)
+	if loadbalancers == nil {
+		loadbalancers = []*elbv2.LoadBalancer{}
 	}
 
-	return instances, nil
+	for _, lb := range resp.LoadBalancers {
+		loadbalancers = append(loadbalancers, lb)
+	}
+
+	if resp.NextMarker != nil {
+		r.DescribeLoadbalancers(resp.NextMarker, loadbalancers)
+	}
+
+	return loadbalancers, nil
 }

@@ -62,7 +62,7 @@ func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 	log.Info("analyze Volumes")
 
 	detected := []DetectedAWSEC2Volume{}
-	volumes, err := ev.Describe()
+	volumes, err := ev.Describe(nil, nil)
 
 	if err != nil {
 		log.WithField("error", err).Error("could not describe ec2 volumes")
@@ -164,9 +164,10 @@ func (ev *EC2VolumeManager) GetBasePricingFilterInput(vol *ec2.Volume, extraFilt
 }
 
 // Describe return list of volumes with available status
-func (ev *EC2VolumeManager) Describe() ([]*ec2.Volume, error) {
+func (ev *EC2VolumeManager) Describe(token *string, volumes []*ec2.Volume) ([]*ec2.Volume, error) {
 
 	input := &ec2.DescribeVolumesInput{
+		NextToken: token,
 		Filters: []*ec2.Filter{
 			{
 				Name:   awsClient.String("status"),
@@ -180,10 +181,15 @@ func (ev *EC2VolumeManager) Describe() ([]*ec2.Volume, error) {
 		return nil, err
 	}
 
-	volumes := []*ec2.Volume{}
+	if volumes == nil {
+		volumes = []*ec2.Volume{}
+	}
+
 	for _, vol := range resp.Volumes {
 		volumes = append(volumes, vol)
-
+	}
+	if resp.NextToken != nil {
+		ev.Describe(resp.NextToken, volumes)
 	}
 
 	return volumes, nil

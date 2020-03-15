@@ -51,7 +51,7 @@ func TestEC2DescribeInstances(t *testing.T) {
 
 		ec2Manager := aws.NewEC2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		result, _ := ec2Manager.DescribeInstances()
+		result, _ := ec2Manager.DescribeInstances(nil, nil)
 
 		if len(result) != len(defaultEC2Mock.Reservations[0].Instances) {
 			t.Fatalf("unexpected ec2 instance count, got %d expected %d", len(result), len(defaultEC2Mock.Reservations[0].Instances))
@@ -67,7 +67,7 @@ func TestEC2DescribeInstances(t *testing.T) {
 
 		ec2Manager := aws.NewEC2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		_, err := ec2Manager.DescribeInstances()
+		_, err := ec2Manager.DescribeInstances(nil, nil)
 
 		if err == nil {
 			t.Fatalf("unexpected describe Instances error, return empty")

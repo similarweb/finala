@@ -54,7 +54,7 @@ func TestDescribeLambdaInstances(t *testing.T) {
 
 		lambdaManager := aws.NewLambdaManager(&mockClient, mockStorage, nil, metrics, "us-east-1")
 
-		result, _ := lambdaManager.Describe()
+		result, _ := lambdaManager.Describe(nil, nil)
 
 		if len(result) != 2 {
 			t.Fatalf("unexpected lambda count, got %d expected %d", len(result), 3)
@@ -70,7 +70,7 @@ func TestDescribeLambdaInstances(t *testing.T) {
 
 		lambdaManager := aws.NewLambdaManager(&mockClient, mockStorage, nil, metrics, "us-east-1")
 
-		_, err := lambdaManager.Describe()
+		_, err := lambdaManager.Describe(nil, nil)
 
 		if err == nil {
 			t.Fatalf("unexpected describe error, return empty")

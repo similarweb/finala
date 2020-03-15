@@ -51,7 +51,7 @@ func TestDescribeDocdb(t *testing.T) {
 
 		docdbManager := aws.NewDocDBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		result, _ := docdbManager.DescribeInstances()
+		result, _ := docdbManager.DescribeInstances(nil, nil)
 
 		if len(result) != len(defaultDocdbMock.DBInstances) {
 			t.Fatalf("unexpected docdb tables count, got %d expected %d", len(result), len(defaultDocdbMock.DBInstances))
@@ -67,7 +67,7 @@ func TestDescribeDocdb(t *testing.T) {
 
 		docdbManager := aws.NewDocDBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
-		_, err := docdbManager.DescribeInstances()
+		_, err := docdbManager.DescribeInstances(nil, nil)
 
 		if err == nil {
 			t.Fatalf("unexpected describe table error, return empty")

@@ -69,7 +69,7 @@ func (r *ELBManager) Detect() ([]DetectedELB, error) {
 	log.Info("Analyze ELB")
 	detectedELB := []DetectedELB{}
 
-	instances, err := r.DescribeLoadbalancers()
+	instances, err := r.DescribeLoadbalancers(nil, nil)
 	if err != nil {
 		return detectedELB, err
 	}
@@ -199,9 +199,11 @@ func (r *ELBManager) GetPricingFilterInput() *pricing.GetProductsInput {
 }
 
 // DescribeLoadbalancers return list of load loadbalancers
-func (r *ELBManager) DescribeLoadbalancers() ([]*elb.LoadBalancerDescription, error) {
+func (r *ELBManager) DescribeLoadbalancers(marker *string, loadbalancers []*elb.LoadBalancerDescription) ([]*elb.LoadBalancerDescription, error) {
 
-	input := &elb.DescribeLoadBalancersInput{}
+	input := &elb.DescribeLoadBalancersInput{
+		Marker: marker,
+	}
 
 	resp, err := r.client.DescribeLoadBalancers(input)
 	if err != nil {
@@ -209,10 +211,17 @@ func (r *ELBManager) DescribeLoadbalancers() ([]*elb.LoadBalancerDescription, er
 		return nil, err
 	}
 
-	instances := []*elb.LoadBalancerDescription{}
-	for _, instance := range resp.LoadBalancerDescriptions {
-		instances = append(instances, instance)
+	if loadbalancers == nil {
+		loadbalancers = []*elb.LoadBalancerDescription{}
 	}
 
-	return instances, nil
+	for _, lb := range resp.LoadBalancerDescriptions {
+		loadbalancers = append(loadbalancers, lb)
+	}
+
+	if resp.NextMarker != nil {
+		r.DescribeLoadbalancers(resp.NextMarker, loadbalancers)
+	}
+
+	return loadbalancers, nil
 }

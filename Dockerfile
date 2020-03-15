@@ -5,8 +5,6 @@ RUN apk add --update alpine-sdk git make && \
 
 WORKDIR /app
 
-CMD CGO_ENABLED=0 go test ./...
-
 COPY . .
 
 RUN go install -v ./...
@@ -14,6 +12,8 @@ RUN go install -v ./...
 FROM alpine:3.9 
 RUN apk add ca-certificates
 
+COPY --from=build_base /app/ui/build /ui/build
+COPY --from=build_base /app/config.yaml config.yaml
 COPY --from=build_base /go/bin/finala /bin/finala
 
-CMD ["finala"]
+ENTRYPOINT ["finala"]

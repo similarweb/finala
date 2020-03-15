@@ -6,6 +6,7 @@ import (
 	"finala/printers"
 	"finala/storage"
 	"finala/structs"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -15,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -27,14 +29,18 @@ type Analyze struct {
 	storage     storage.Storage
 	awsAccounts []config.AWSAccount
 	metrics     map[string][]config.MetricConfig
+	resources   map[string]config.ResourceConfig
+	global      map[string]struct{}
 }
 
 // NewAnalyzeManager will charge to execute aws resources
-func NewAnalyzeManager(storage storage.Storage, awsAccounts []config.AWSAccount, metrics map[string][]config.MetricConfig) *Analyze {
+func NewAnalyzeManager(storage storage.Storage, awsAccounts []config.AWSAccount, metrics map[string][]config.MetricConfig, resources map[string]config.ResourceConfig) *Analyze {
 	return &Analyze{
 		storage:     storage,
 		awsAccounts: awsAccounts,
 		metrics:     metrics,
+		resources:   resources,
+		global:      make(map[string]struct{}),
 	}
 }
 
@@ -66,6 +72,7 @@ func (app *Analyze) All() {
 			app.AnalyzeLambda(app.storage, sess, cloudWatchCLient)
 			app.AnalyzeEC2Instances(app.storage, sess, cloudWatchCLient, pricing)
 			app.AnalyzeDocdb(app.storage, sess, cloudWatchCLient, pricing)
+			app.IAMUsers(app.storage, sess)
 			app.AnalyzeDynamoDB(app.storage, sess, cloudWatchCLient, pricing)
 		}
 	}
@@ -114,6 +121,53 @@ func (app *Analyze) AnalyzeEC2Instances(st storage.Storage, sess *session.Sessio
 	}
 
 	return err
+}
+
+// IAMUsers will analyzes iam users
+func (app *Analyze) IAMUsers(st storage.Storage, sess *session.Session) error {
+	resource, found := app.resources["iamLastActivity"]
+	if !found {
+		return nil
+	}
+
+	if _, ok := app.global["iamLastActivity"]; ok {
+		log.Debug(fmt.Sprintf("skip %s detection", resource.Description))
+		return nil
+	}
+
+	app.global["iamLastActivity"] = struct{}{}
+	table := &DetectedAWSLastActivity{}
+
+	st.Create(&storage.ResourceStatus{
+		TableName: table.TableName(),
+		Status:    storage.Fetch,
+	})
+
+	iam := NewIAMUseranager(iam.New(sess), st)
+	response, err := iam.LastActivity(resource.Constraint.Value, resource.Constraint.Operator)
+
+	if err == nil {
+		b, _ := json.Marshal(response)
+		config := []structs.PrintTableConfig{
+			{Header: "User Name", Key: "UserName"},
+			{Header: "Access Key", Key: "AccessKey"},
+			{Header: "Last Used Date", Key: "LastUsedDate"},
+			{Header: "Last Activity", Key: "LastActivity"},
+		}
+		printers.Table(config, b, nil)
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+	} else {
+		st.Create(&storage.ResourceStatus{
+			TableName:   table.TableName(),
+			Status:      storage.Error,
+			Description: err.Error(),
+		})
+	}
+
+	return nil
 }
 
 // AnalyzeELB will analyzes elastic load balancer resources

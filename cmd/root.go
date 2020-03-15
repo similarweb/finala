@@ -104,7 +104,7 @@ func runWebserver(storage *storage.MySQLManager, port int) serverutil.StopFunc {
 
 	go func() {
 		time.Sleep(time.Second * 2)
-		openbrowser(fmt.Sprintf("http://localhost:%d/static/", port))
+		openbrowser(fmt.Sprintf("http://127.0.0.1:%d/static/", port))
 	}()
 
 	return serverutil.RunAll(webserverManager).StopFunc
@@ -114,7 +114,7 @@ func runWebserver(storage *storage.MySQLManager, port int) serverutil.StopFunc {
 func init() {
 
 	cobra.OnInitialize(initCmd)
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "", "path to the config file")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "./config.yaml", "path to the config file")
 	rootCmd.PersistentFlags().StringVar(&storageDriver, "storage-driver", "sqlite3", fmt.Sprintf("storage driver. (Options: %s)", strings.Join(avilableStorageDrivers, ",")))
 	rootCmd.PersistentFlags().StringVar(&storageConnectionString, "storage-connection-string", "DB.db", "storage connection string")
 	rootCmd.PersistentFlags().BoolVar(&clearStorage, "clear-storage", false, "delete the storage data on startup (drop all tables in database)")
@@ -186,7 +186,7 @@ func openbrowser(url string) {
 		err = fmt.Errorf("unsupported platform")
 	}
 	if err != nil {
-		log.Fatal(err)
+		log.WithError(err).Info("could not open ui browser")
 	}
 
 }

@@ -8,6 +8,7 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 ## Supported Services
 
 AWS:
+* IAM user last activity
 * RDS
 * EC2 (ELB, ALB, EBS)
 * DynamoDB
@@ -38,6 +39,14 @@ More to come...
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+
+### Docker
+
+```
+docker run -p 9090:9090 -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} similarweb/finala aws
+```
+
+Then browse to: http://127.0.0.1:9090/static/
 
 ### How To Use
 

@@ -75,7 +75,7 @@ func Execute() {
 
 	version, err := notifier.Get(params, notifier.RequestSetting{})
 
-	if err == nil && !version.Outdated {
+	if err == nil && version.Outdated {
 		log.Error(fmt.Sprintf("newer Finala version available. latest version %s, current version %s, link download %s", version.CurrentVersion, mainVersion, version.CurrentDownloadURL))
 
 		for _, notification := range version.Notifications {

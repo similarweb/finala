@@ -13,7 +13,7 @@ var awsCMD = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		awsProvider := Cfg.Providers["aws"]
-		awsManager := aws.NewAnalyzeManager(Storage, awsProvider.Accounts, awsProvider.Metrics)
+		awsManager := aws.NewAnalyzeManager(Storage, awsProvider.Accounts, awsProvider.Metrics, awsProvider.Resources)
 		awsManager.All()
 	},
 }

@@ -8,6 +8,7 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 ## Supported Services
 
 AWS:
+* IAM user last activity
 * RDS
 * EC2 (ELB, ALB, EBS)
 * DynamoDB

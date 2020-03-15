@@ -106,3 +106,10 @@ providers:
           constraint:
             operator: "=="
             value: 0
+    resources:
+      iamLastActivity:
+        description: Last user activity
+        global: true
+        constraint:
+          operator: ">="
+          value: 90 # 90 Days

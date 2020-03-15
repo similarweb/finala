@@ -19,11 +19,8 @@ type IAMClientDescreptor interface {
 
 // IAMManager describe the iam manager
 type IAMManager struct {
-	client           IAMClientDescreptor
-	storage          storage.Storage
-	cloudWatchClient *CloudwatchManager
-	pricingClient    *PricingManager
-	region           string
+	client  IAMClientDescreptor
+	storage storage.Storage
 }
 
 // DetectedAWSLastActivity define the aws last activity
@@ -79,7 +76,7 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 			})
 
 			if err != nil {
-				log.WithError(err).Error("could not get access key lat used metadata")
+				log.WithError(err).Error("could not get access key last used metadata")
 				continue
 			}
 			var lastActivity string
@@ -87,7 +84,7 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 			if resp.AccessKeyLastUsed.LastUsedDate == nil {
 				lastActivity = "N/A"
 			} else {
-				daysActivity, valid := im.passDays(now, *resp.AccessKeyLastUsed.LastUsedDate, days, operator)
+				daysActivity, valid := im.passedDays(now, *resp.AccessKeyLastUsed.LastUsedDate, days, operator)
 				lastActivity = strconv.Itoa(int(daysActivity))
 				if !valid {
 					log.WithFields(log.Fields{
@@ -119,8 +116,8 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 	return detected, nil
 }
 
-// passDays check last used date equal to the expression
-func (im *IAMManager) passDays(now, lastUsedDate time.Time, days float64, operator string) (float64, bool) {
+// passedDays checks last used date equals to the expression
+func (im *IAMManager) passedDays(now, lastUsedDate time.Time, days float64, operator string) (float64, bool) {
 
 	var empty float64
 	lastUsedDateDays := now.Sub(lastUsedDate).Hours() / 24
@@ -136,7 +133,7 @@ func (im *IAMManager) passDays(now, lastUsedDate time.Time, days float64, operat
 
 }
 
-// GetUsers return list of users
+// GetUsers returns list of users
 func (im *IAMManager) GetUsers(marker *string, users []*iam.User) ([]*iam.User, error) {
 
 	input := &iam.ListUsersInput{

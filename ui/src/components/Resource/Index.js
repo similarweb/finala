@@ -1,21 +1,59 @@
 import React from "react";
 import {connect} from 'react-redux';
 import PropTypes from 'prop-types';
-import { BootstrapTable, TableHeaderColumn } from 'react-bootstrap-table';
 import { ResourcesService } from "services/resources.service";
 import TextUtils from "utils/Text";
-import NumberUtils from "utils/Number"
-import LoaderCircle from "components/Loader/Circle";
-import PopupRegular from "components/Popup/Regular"
+import { withStyles } from '@material-ui/styles';
+import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
+import MUIDataTable from "mui-datatables";
+import numeral from 'numeral';
+import TagsDialog from "../Dialog/Tags";
+import LinearProgress from '@material-ui/core/LinearProgress';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import EmojiPeopleIcon from '@material-ui/icons/EmojiPeople';
+import ErrorOutlineIcon from '@material-ui/icons/ErrorOutline';
+import Typography from '@material-ui/core/Typography';
+import Grid from '@material-ui/core/Grid';
 
+
+const styles = () => ({
+  icon:{
+    fontSize: 80,
+  }
+});
+
+const tableFontSize = 12;
+
+const getMuiTheme = () => createMuiTheme({
+  overrides: {
+    MUIDataTableHeadCell:{
+      root:{
+        color: "#878787"
+      }
+    },
+    MUIDataTableBodyCell: {
+      root: {
+        fontSize: tableFontSize,
+        
+      },
+      cellStackedSmall: { 
+        fontSize: tableFontSize,
+    },
+    responsiveStackedSmall: { 
+        fontSize: tableFontSize,
+    },
+      
+    }
+  }
+});
 
 @connect(state => ({
   resources: state.resources,
 }))
 /**
- * Show resouce data
+ * Show resource data
  */
-export default class Resource extends React.Component {
+class Resource extends React.Component {
 
  resourceName = this.props.match.params.name
 
@@ -38,6 +76,9 @@ export default class Resource extends React.Component {
      * Resource name
      */
     resources : PropTypes.object, 
+
+    classes: PropTypes.object
+
   };
 
   state = {
@@ -55,6 +96,12 @@ export default class Resource extends React.Component {
      * Fetch ajax timeout
      */
     timeoutAjaxCall: null,
+
+    tableOptions: {
+      selectableRows: false,
+      responsive: "stacked",
+
+    }
 
   }
   
@@ -104,12 +151,36 @@ export default class Resource extends React.Component {
           const headers = []
 
           Object.keys(firstRow).map(function(key) {
-            headers.push( {
-              id: key,
-              text: TextUtils.ParseName(key).toUpperCase(),
-              sort: true,
-            })
+            const header = {
+              name: key,
+              label: TextUtils.ParseName(key).toUpperCase(),
+              options: {}
+            }
+            switch(key) {
+              case "price_per_month":
+              case "total_spend_price":
+                header["options"]["customBodyRender"] = (data) => {
+                  return (
+                  <span>{numeral(data).format('0,0[.]00 $')}</span>
+                  )
+                }
+              break
+              case "price_per_hour":
+                header["options"]["customBodyRender"] = (data) => {
+                  return (
+                  <span>{numeral(data).format('0,0[.]00000 $')}</span>
+                  )
+                }
+              break
+              case "tags":
+                header["options"]["customBodyRender"] = (data) => (
+                  <TagsDialog tags={data} />
+                  )
+                break
+            }
+            headers.push(header)
           });
+
           this.setState({data, headers})
         } else {
           this.setState({data: []})
@@ -120,8 +191,6 @@ export default class Resource extends React.Component {
             this.getData(this.props.match.params.name);
           }, 5000);
         }
-        
-
       },
       () => {
         this.setState({data: []})
@@ -151,75 +220,91 @@ export default class Resource extends React.Component {
   }
 
   /**
-   * Define the cell formant by field type
-   * @param {string} type 
-   */
-  getCellFormat(type){    
-    switch(type) {
-      case "price_per_hour":
-      case "price_per_month":
-      case "total_spend_price":
-        return this.priceFormatter
-      case "tags":
-        return this.popupFormatter
-      default:
-        return this.defaultFormatter
-    }
-  }
-
-  /**
-   * Cell content
-   * @param {string} cell 
-   */
-  defaultFormatter(cell){
-    return <p title={cell}>{cell}</p>
-
-  }
-
-  /**
-   * Adding dolar char to the pricing cell
-   * @param {float} cell 
-   */
-  priceFormatter(cell){
-    return `$${NumberUtils.Format(cell,2)}`
-  }
-
-  /**
-   * Shoe cell content in popup 
-   * @param {string} cell 
-   */
-  popupFormatter(cell){
-    return <p className="click" onClick={ () => this.ShowPopup(cell)}>Click to see tags</p>
-  }
-
-  /**
-   * Show popup per cell
-   */
-  ShowPopup = (cell) => {
-    this.clickChild(cell)
-  }
-  
-  /**
   * Component render
   */  
   render() {
     const resourceFetchStatus = this.getStatus()
     return (
         <div id="resource-data">
-        <h1>{TextUtils.ParseName(this.props.match.params.name)} <span>{(resourceFetchStatus == 0 && this.state.data.length > 0 ) && "(still in progress.. data will refresh automatically)"}</span></h1>
           
-          { (resourceFetchStatus == 0 && this.state.data.length == 0 )&& <div className="center-loader"><LoaderCircle wrapClass="center" bottomText="Fetching data..." /></div>}
-          { (resourceFetchStatus == 1 )&& <p>{this.getResourceDescription()}</p>}
-          { (resourceFetchStatus == 2 && this.state.data.length == 0 )&& <p>Unused resources not found :)</p>}
-          {this.state.data.length > 0 &&
-            <BootstrapTable search pagination={ true }  options={ this.options } data={ this.state.data }>
-            { this.state.headers.map((cel, index) => 
-              <TableHeaderColumn dataFormat={ this.getCellFormat(cel.id).bind(this) } key={index} dataField={cel.id} isKey={index == 0} dataSort={ true }>{cel.text}</TableHeaderColumn>
-            )}
-            </BootstrapTable>
+          { (resourceFetchStatus == 0 && this.state.data.length > 0 )&& <LinearProgress variant="query" />}
+          { (resourceFetchStatus == 0 && this.state.data.length == 0 )&& 
+            <Grid
+            container
+            spacing={0}
+            direction="column"
+            alignItems="center"
+            justify="center"
+            style={{ minHeight: '80vh', textAlign: "center" }}
+            >
+
+            <Grid item xs={3}>
+              <CircularProgress size={50}/>
+              <Typography variant="subtitle1" >
+              Fetching data...
+              </Typography>
+            </Grid>   
+
+            </Grid> 
+
           }
-          <PopupRegular Show={click => this.clickChild = click}/>
+          { (resourceFetchStatus == 1 )&& 
+              <Grid
+              container
+              spacing={0}
+              direction="column"
+              alignItems="center"
+              justify="center"
+              style={{ minHeight: '80vh', textAlign: "center" }}
+              >
+
+              <Grid item xs={3}>
+                <ErrorOutlineIcon className={this.props.classes.icon}/>
+                <Typography variant="subtitle1" >
+                {this.getResourceDescription()}
+                </Typography>
+              </Grid>   
+
+              </Grid> 
+          
+          }
+          { (resourceFetchStatus == 2 && this.state.data.length == 0 )&& 
+
+            <Grid
+            container
+            spacing={0}
+            direction="column"
+            alignItems="center"
+            justify="center"
+            style={{ minHeight: '80vh', textAlign: "center" }}
+            >
+
+            <Grid item xs={3}>
+              <EmojiPeopleIcon className={this.props.classes.icon}/>
+              <Typography variant="subtitle1" >
+              Unused resources not found :)
+              </Typography>
+            </Grid>   
+
+            </Grid> 
+          }
+           
+
+          {this.state.data.length > 0 &&
+            <MuiThemeProvider theme={getMuiTheme()}>
+              <MUIDataTable
+              title={TextUtils.ParseName(this.props.match.params.name)}
+              data={this.state.data}
+              columns={this.state.headers}
+              options={this.state.tableOptions}
+              />
+            </MuiThemeProvider>
+            
+
+          }
         </div>
     );
   }
 }
+
+export default withStyles(styles)(Resource);

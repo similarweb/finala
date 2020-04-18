@@ -143,7 +143,12 @@ func (s *MySQLManager) GetSummary() (*map[string]Summary, error) {
 		s.db.Table(resource.TableName).Count(&count)
 		var n NResult
 
-		s.db.Table(resource.TableName).Select("SUM(price_per_month) as n").Scan(&n)
+		if s.db.Dialect().HasColumn(resource.TableName, "price_per_month") {
+			s.db.Table(resource.TableName).Select("SUM(price_per_month) as n").Scan(&n)
+		} else {
+			n.N = 0
+		}
+
 		summary[resource.TableName] = Summary{
 			ResourceCount: count,
 			TotalSpent:    n.N,

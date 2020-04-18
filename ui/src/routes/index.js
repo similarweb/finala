@@ -7,21 +7,38 @@ import Resource from '../components/Resource/Index'
 import Header from '../components/Header'
 import LeftBar from '../components/LeftBar'
 import NotFound from '../components/NotFound'
-import { Col, Row } from "react-bootstrap";
 import { ResourcesService } from "services/resources.service";
+import Typography from '@material-ui/core/Typography';
+import { withStyles } from '@material-ui/styles';
+import CssBaseline from '@material-ui/core/CssBaseline';
+import Toolbar from '@material-ui/core/Toolbar';
+import Box from '@material-ui/core/Box';
+
+
+const styles = () => ({
+  root: {
+    display: 'flex',
+  },
+  content: {
+    flexGrow: 1,
+    padding: 3,
+  },
+});
+
 
 @connect()
-export default class Routes extends React.Component {
-
+class Routes extends React.Component {
 
   static propTypes = {    
     /**
      * Redux store
      */
     dispatch : PropTypes.func,
+    
+    classes: PropTypes.object
   
   };
-  
+    
   state = {
     /**
      * Fetch ajax timeout
@@ -46,40 +63,42 @@ export default class Routes extends React.Component {
         this.timeoutAjaxCall = setTimeout(() => { 
           this.fetch()
         }, 5000);
-
       },
       () => {
-        // TODO:: show error when resources list is empty
+        this.timeoutAjaxCall = setTimeout(() => { 
+          this.fetch()
+        }, 5000);
       }
     );
   }
 
   render(){
     return(
-      <div>
+      <div className={this.props.classes.root}>
+        <CssBaseline />
         <Header />
-          <div id="main" className="container-fluid">
-            
-            <Row className="flex-xl-nowrap">
-              <Col xl={2} sm={3} >
-                <LeftBar/>
-              </Col>
-              <Col xl={10} sm={9} id="content-page">
-                <Switch>
-                  <Route exact path="/" component={Dashboard} />
-                  <Route exact path="/resource/:name" component={Resource} />
-                  <Route path="*" component={NotFound}/>
-                </Switch>
-                </Col>
-              </Row>
-            
-            
-          </div>
+        <LeftBar/>
+        <main className={this.props.classes.content}>
+          <Toolbar />
+          <Typography component={"div"}>
+            <Box component="div" m={3}>
+              <Switch>
+                <Route exact path="/" component={Dashboard} />
+                <Route exact path="/resource/:name" component={Resource} />
+                <Route path="*" component={NotFound}/>
+              </Switch>
+            </Box>
+            </Typography>
+          
+        </main>
+       
+       
+        
+                
           
       </div>
     );
   }
 }
 
-
-
+export default withStyles(styles)(Routes);

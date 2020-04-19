@@ -18,11 +18,11 @@ More to come...
 ## Screenshots
 
 ### Dashboard
-![alt Summary](./docs/dashboard.png)
+![alt Summary](https://raw.githubusercontent.com/similarweb/finala/master/docs/dashboard.png)
 
 
 ### Unused RDS report
-![alt Resources](./docs/resource.jpg)
+![alt Resources](https://raw.githubusercontent.com/similarweb/finala/master/docs/resource.jpg)
 
 ### CLI Format
 ```

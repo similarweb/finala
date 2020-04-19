@@ -54,7 +54,7 @@ var (
 
 	webserverStopper serverutil.StopFunc
 
-	mainVersion = "0.1.5"
+	mainVersion = "0.1.7"
 )
 
 // rootCmd represents the base command when called without any subcommands

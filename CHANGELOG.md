@@ -6,13 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7] 
+- New dashboard. [[PR-43](https://github.com/similarweb/finala/pull/43)]
+- Export table to CSV. [[PR-43](https://github.com/similarweb/finala/pull/43)]
+- Fix storage query error when table missed `price_per_month` column. [[PR-43](https://github.com/similarweb/finala/pull/43)]
+
 ## [0.1.6] - 2020-03-15
 ### Added
 - Detect last activity of IAM user. [[PR-36](https://github.com/similarweb/finala/pull/36)]
 - Notify new Finala version release. [[PR-31](https://github.com/similarweb/finala/pull/31)]
 - Improve CI process. [[PR-33](https://github.com/similarweb/finala/pull/33)]
 - Add AWS ELBV2 detection. [[PR-30](https://github.com/similarweb/finala/pull/30)]
-- dockerize the project. [[PR-40](https://github.com/similarweb/finala/pull/40)]
+- Dockerize the project. [[PR-40](https://github.com/similarweb/finala/pull/40)]
+- Notify when new Finala version release. [[PR-43](https://github.com/similarweb/finala/pull/43)]
 
 ## [0.1.5] 
 ### Added

@@ -16,7 +16,7 @@ class App extends React.Component {
   render() {
     
     return (
-      <ConnectedRouter history={this.props.history} basename="asd">
+      <ConnectedRouter history={this.props.history} basename="">
         <Routes />
       </ConnectedRouter>
     )

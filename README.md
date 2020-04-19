@@ -1,7 +1,5 @@
 # Finala
 
-[![Build Status](https://travis-ci.org/similarweb/finala.svg?branch=develop)](https://travis-ci.org/similarweb/finala)
-
 A resource cloud scanner that analyzes and reports about wasteful and unused resources to cut unwanted expenses.
 The tool is based on yaml definitions (no code), by default configuration OR given yaml file and the report output will be saved in a given storage.
 
@@ -19,12 +17,12 @@ More to come...
 
 ## Screenshots
 
+### Dashboard
+![alt Summary](./docs/dashboard.png)
+
+
 ### Unused RDS report
 ![alt Resources](./docs/resource.jpg)
-
-### Summary of all resources
-![alt Summary](./docs/symmary.jpg)
-
 
 ### CLI Format
 ```

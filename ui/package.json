@@ -48,9 +48,13 @@
     "webpack-hot-middleware": "2.24.3"
   },
   "dependencies": {
-    "bootstrap": "4.3.1",
-    "react-bootstrap": "1.0.0-beta.8",
-    "react-bootstrap-table": "^4.3.1",
+    "@material-ui/core": "4.9.10",
+    "@material-ui/icons": "4.9.1",
+    "highcharts": "8.0.4",
+    "highcharts-react-official": "3.0.0",
+    "material-table": "1.57.2",
+    "mui-datatables": "2.14.0",
+    "numeral": "2.0.6",
     "react-history": "0.18.2",
     "react-json-view": "^1.19.1",
     "react-router-dom": "5.0.0"

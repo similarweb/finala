@@ -2,6 +2,15 @@ name: Go
 on: [push]
 jobs:
 
+  spectralops:
+    name: spectralops
+    runs-on: ubuntu-latest
+    steps:
+    - name: Spectral Scan
+      run: |
+        curl -L spectralops.io/get | sudo sh
+        spectral github similarweb/finala --dest similarweb/finala --kind repo
+
   test:
     name: Code Test
     runs-on: ubuntu-latest

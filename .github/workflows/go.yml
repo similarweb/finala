@@ -9,7 +9,7 @@ jobs:
     - name: Spectral Scan
       run: |
         curl -L spectralops.io/get | sudo sh
-        spectral github similarweb/finala --dest similarweb/finala --kind repo
+        spectral run
 
   test:
     name: Code Test

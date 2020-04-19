@@ -4,6 +4,7 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import Link from '@material-ui/core/Link';
 import { makeStyles } from '@material-ui/core/styles';
+import {history} from 'configureStore'
 
 const useStyles = makeStyles((theme) => ({
   appBar: {
@@ -21,6 +22,9 @@ const Header = () => {
 
   const classes = useStyles();
 
+  const preventDefault = () => history.push("/");
+
+
  
   /**
   * Component render
@@ -29,7 +33,7 @@ const Header = () => {
       <AppBar position="fixed" className={classes.appBar}>
         <Toolbar>
           <Typography variant="h6" noWrap>
-            <Link href="/" className={classes.link}>
+            <Link href="#" className={classes.link} onClick={preventDefault}>
               Finala
             </Link>
           </Typography>

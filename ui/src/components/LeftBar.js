@@ -79,8 +79,6 @@ class LeftBar extends React.Component {
           <List>
             {Object.keys(this.props.resources).map((resource) => (
               <ListItem button key={resource} component={Link} to={`/resource/${resource}`}>
-                
-                
                 <ListItemText>
                 <p className={this.props.classes.topLinkText}>{TextUtils.ParseName(resource)} ({this.props.resources[resource].ResourceCount})</p>
                 <p className={this.props.classes.subLinkText}>{numeral(this.props.resources[resource].TotalSpent).format('0,0[.]00 $')}</p>

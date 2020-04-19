@@ -3,13 +3,15 @@ on: [push]
 jobs:
 
   spectralops:
-    name: spectralops
+    name: Spectral
     runs-on: ubuntu-latest
     steps:
-    - name: Spectral Scan
-      run: |
-        curl -L spectralops.io/get | sudo sh
-        spectral run
+      - uses: actions/checkout@v1
+      - name: Install
+        run: curl -L spectralops.io/get | sudo sh
+      - name: Scan
+        run: spectral run
+
 
   test:
     name: Code Test

@@ -12,7 +12,6 @@ jobs:
       - name: Scan
         run: spectral run
 
-
   test:
     name: Code Test
     runs-on: ubuntu-latest

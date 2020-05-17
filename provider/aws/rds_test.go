@@ -68,6 +68,7 @@ func (r *MockAWSRDSClient) ListTagsForResource(*rds.ListTagsForResourceInput) (*
 
 func TestDescribeRDSInstances(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 	metrics := []config.MetricConfig{}
 
@@ -77,7 +78,7 @@ func TestDescribeRDSInstances(t *testing.T) {
 			responseDescribeDBInstances: defaultRDSMock,
 		}
 
-		rdsManager := aws.NewRDSManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		rdsManager := aws.NewRDSManager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		result, _ := rdsManager.DescribeInstances(nil, nil)
 
@@ -93,7 +94,7 @@ func TestDescribeRDSInstances(t *testing.T) {
 			err:                         errors.New("error"),
 		}
 
-		rdsManager := aws.NewRDSManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		rdsManager := aws.NewRDSManager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		_, err := rdsManager.DescribeInstances(nil, nil)
 
@@ -106,8 +107,9 @@ func TestDescribeRDSInstances(t *testing.T) {
 
 func TestRDSGetPricingFilterInput(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
-	rdsManager := aws.NewRDSManager(nil, mockStorage, nil, nil, nil, "us-east-1")
+	rdsManager := aws.NewRDSManager(executionID, nil, mockStorage, nil, nil, nil, "us-east-1")
 
 	t.Run("filters", func(t *testing.T) {
 
@@ -186,6 +188,7 @@ func TestRDSGetPricingFilterInput(t *testing.T) {
 }
 func TestDetectRDS(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 	mockCloudwatchClient := MockAWSCloudwatchClient{
 		responseMetricStatistics: defaultResponseMetricStatistics,
@@ -211,7 +214,7 @@ func TestDetectRDS(t *testing.T) {
 			},
 		}
 
-		rdsManager := aws.NewRDSManager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+		rdsManager := aws.NewRDSManager(executionID, &mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
 
 		response, _ := rdsManager.Detect()
 

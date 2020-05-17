@@ -26,7 +26,9 @@ const styles = () => ({
 });
 
 
-@connect()
+@connect(state => ({
+  selectedExecutionID: state.executions.current,
+}))
 class Routes extends React.Component {
 
   static propTypes = {    
@@ -35,7 +37,9 @@ class Routes extends React.Component {
      */
     dispatch : PropTypes.func,
     
-    classes: PropTypes.object
+    classes: PropTypes.object,
+
+    selectedExecutionID: PropTypes.number
   
   };
     
@@ -44,6 +48,8 @@ class Routes extends React.Component {
      * Fetch ajax timeout
      */
     timeoutAjaxCall: null,
+
+    lastExecutionID: 0,
   }
 
   /**
@@ -57,12 +63,18 @@ class Routes extends React.Component {
    * Fetch resources data
    */
   fetch(){
-    ResourcesService.Summary().then(
+    
+    ResourcesService.GetExecutions().then(
       data => {
-        this.props.dispatch({ type: 'RESOURCE_LIST', data})
-        this.timeoutAjaxCall = setTimeout(() => { 
-          this.fetch()
-        }, 5000);
+        this.props.dispatch({ type: 'EXECUTION_LIST', data})
+        if (this.props.selectedExecutionID == 0){
+          const lastExecution = data.reverse()[0]
+          this.setState({lastExecutionID: lastExecution.ID})
+          this.props.dispatch({ type: 'EXECUTION_SELECTED', id: lastExecution.ID})
+          this.timeoutAjaxCall = setTimeout(() => { 
+            this.fetch()
+          }, 5000);
+        }
       },
       () => {
         this.timeoutAjaxCall = setTimeout(() => { 
@@ -70,6 +82,8 @@ class Routes extends React.Component {
         }, 5000);
       }
     );
+
+  
   }
 
   render(){
@@ -77,7 +91,7 @@ class Routes extends React.Component {
       <div className={this.props.classes.root}>
         <CssBaseline />
         <Header />
-        <LeftBar/>
+        {this.state.lastExecutionID !== 0 && <LeftBar selectedExecutionID={this.state.lastExecutionID}/>}
         <main className={this.props.classes.content}>
           <Toolbar />
           <Typography component={"div"}>
@@ -89,13 +103,7 @@ class Routes extends React.Component {
               </Switch>
             </Box>
             </Typography>
-          
         </main>
-       
-       
-        
-                
-          
       </div>
     );
   }

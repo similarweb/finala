@@ -50,6 +50,7 @@ func (r *MockAWSVolumeClient) DescribeVolumes(input *ec2.DescribeVolumesInput) (
 
 func TestDescribeVolumes(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 	pricingManager := aws.NewPricingManager(&defaultPricingMock, "us-east-1")
 
@@ -58,7 +59,7 @@ func TestDescribeVolumes(t *testing.T) {
 			responseDescribeInstances: defaultVolumeMock,
 		}
 
-		volumeManager := aws.NewVolumesManager(&mockClient, mockStorage, pricingManager, "us-east-1")
+		volumeManager := aws.NewVolumesManager(executionID, &mockClient, mockStorage, pricingManager, "us-east-1")
 		response, err := volumeManager.Describe(nil, nil)
 
 		if len(response) != 3 {
@@ -77,7 +78,7 @@ func TestDescribeVolumes(t *testing.T) {
 			err:                       errors.New("error"),
 		}
 
-		volumeManager := aws.NewVolumesManager(&mockClient, mockStorage, pricingManager, "us-east-1")
+		volumeManager := aws.NewVolumesManager(executionID, &mockClient, mockStorage, pricingManager, "us-east-1")
 		_, err := volumeManager.Describe(nil, nil)
 
 		if err == nil {
@@ -89,13 +90,14 @@ func TestDescribeVolumes(t *testing.T) {
 
 func TestDetectVolumes(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 	pricingManager := aws.NewPricingManager(&defaultPricingMock, "us-east-1")
 	mockClient := MockAWSVolumeClient{
 		responseDescribeInstances: defaultVolumeMock,
 	}
 
-	volumeManager := aws.NewVolumesManager(&mockClient, mockStorage, pricingManager, "us-east-1")
+	volumeManager := aws.NewVolumesManager(executionID, &mockClient, mockStorage, pricingManager, "us-east-1")
 	response, _ := volumeManager.Detect()
 
 	if len(response) != 3 {
@@ -109,8 +111,9 @@ func TestDetectVolumes(t *testing.T) {
 }
 
 func TestGetBasePricingFilterInput(t *testing.T) {
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
-	volumeManager := aws.NewVolumesManager(nil, mockStorage, nil, "us-east-1")
+	volumeManager := aws.NewVolumesManager(executionID, nil, mockStorage, nil, "us-east-1")
 
 	vol := &ec2.Volume{
 		VolumeId:   awsClient.String("1"),

@@ -33,10 +33,12 @@ type ResourceStatus struct {
 	TableName   string           `json:"TableName"`
 	Status      DeploymentStatus `json:"Status"`
 	Description string           `json:"Description"`
+	ExecutionID uint             `json:"ExecutionID"`
 }
 
 // Summary define unused resource summery
 type Summary struct {
+	ResourceName  string           `json:"ResourceName"`
 	ResourceCount int              `json:"ResourceCount"`
 	TotalSpent    float64          `json:"TotalSpent"`
 	Status        DeploymentStatus `json:"Status"`
@@ -104,7 +106,8 @@ func (s *MySQLManager) ClearTables() {
 
 // Create will cerate a new DB record
 func (s *MySQLManager) Create(value interface{}) error {
-	if result := s.db.Create(value); result.Error != nil {
+	result := s.db.Create(value)
+	if result.Error != nil {
 		return result.Error
 	}
 	return nil
@@ -128,33 +131,48 @@ func (s *MySQLManager) DropTable(value interface{}) error {
 	return nil
 }
 
-func (s *MySQLManager) GetSummary() (*map[string]Summary, error) {
+// GetExecutions returns collector executions
+func (s *MySQLManager) GetExecutions() ([]ExecutionsTable, error) {
 
-	summary := map[string]Summary{}
+	executions := []ExecutionsTable{}
+
+	if result := s.db.Find(&executions); result.Error != nil {
+		return executions, result.Error
+	}
+
+	return executions, nil
+
+}
+
+// GetSummary returns summary of collectors reports
+func (s *MySQLManager) GetSummary(executionsID uint64) (*map[uint][]Summary, error) {
+
+	summary := map[uint][]Summary{}
 	resourcesStatus := &[]ResourceStatus{}
 
-	if err := s.db.Select("status, description, table_name").Where("id IN (?)", s.db.Select("MAX(id)").Model(&ResourceStatus{}).Group("table_name").QueryExpr()).Find(resourcesStatus).Error; err != nil {
+	if err := s.db.Select("status, description, table_name, execution_id").Where("id IN (?)", s.db.Select("MAX(id)").Model(&ResourceStatus{}).Group("table_name,execution_id").QueryExpr()).Find(resourcesStatus).Error; err != nil {
 		log.WithError(err).Error("MySQL: Error TODO::")
 		return &summary, err
 	}
 	for _, resource := range *resourcesStatus {
 
 		var count int
-		s.db.Table(resource.TableName).Count(&count)
+		s.db.Table(resource.TableName).Where("execution_id = ?", resource.ExecutionID).Count(&count)
 		var n NResult
 
 		if s.db.Dialect().HasColumn(resource.TableName, "price_per_month") {
-			s.db.Table(resource.TableName).Select("SUM(price_per_month) as n").Scan(&n)
+			s.db.Table(resource.TableName).Select("SUM(price_per_month) as n").Where("execution_id = ?", resource.ExecutionID).Scan(&n)
 		} else {
 			n.N = 0
 		}
 
-		summary[resource.TableName] = Summary{
+		summary[resource.ExecutionID] = append(summary[resource.ExecutionID], Summary{
+			ResourceName:  resource.TableName,
 			ResourceCount: count,
 			TotalSpent:    n.N,
 			Status:        resource.Status,
 			Description:   resource.Description,
-		}
+		})
 	}
 
 	return &summary, nil
@@ -162,11 +180,11 @@ func (s *MySQLManager) GetSummary() (*map[string]Summary, error) {
 }
 
 // GetTableData return all table records
-func (s *MySQLManager) GetTableData(name string) ([]map[string]interface{}, error) {
+func (s *MySQLManager) GetTableData(name string, executionsID uint64) ([]map[string]interface{}, error) {
 
 	var data []map[string]interface{}
 
-	rows, err := s.db.Table(name).Select("*").Rows()
+	rows, err := s.db.Table(name).Select("*").Where("execution_id = ?", executionsID).Rows()
 	if err != nil {
 		return data, err
 	}

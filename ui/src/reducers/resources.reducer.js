@@ -1,4 +1,4 @@
-const initialState = {};
+const initialState = [];
 
 export function resources(state = initialState, action) {
 

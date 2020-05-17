@@ -42,8 +42,8 @@ func (r *MockAWSElasticacheClient) ListTagsForResource(*elasticache.ListTagsForR
 
 func TestDescribeCacheClusters(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
-
 	metrics := []config.MetricConfig{}
 
 	t.Run("valid", func(t *testing.T) {
@@ -52,7 +52,7 @@ func TestDescribeCacheClusters(t *testing.T) {
 			responseDescribeCacheClusters: defaultElasticacheMock,
 		}
 
-		rdsManager := aws.NewElasticacheManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		rdsManager := aws.NewElasticacheManager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		result, _ := rdsManager.DescribeInstances(nil, nil)
 
@@ -68,7 +68,7 @@ func TestDescribeCacheClusters(t *testing.T) {
 			err:                           errors.New("error"),
 		}
 
-		rdsManager := aws.NewElasticacheManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		rdsManager := aws.NewElasticacheManager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		_, err := rdsManager.DescribeInstances(nil, nil)
 
@@ -81,6 +81,7 @@ func TestDescribeCacheClusters(t *testing.T) {
 
 func TestDetectElasticsearch(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 	mockCloudwatchClient := MockAWSCloudwatchClient{
 		responseMetricStatistics: defaultResponseMetricStatistics,
@@ -92,7 +93,7 @@ func TestDetectElasticsearch(t *testing.T) {
 		responseDescribeCacheClusters: defaultElasticacheMock,
 	}
 
-	elbManager := aws.NewElasticacheManager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	elbManager := aws.NewElasticacheManager(executionID, &mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
 
 	response, _ := elbManager.Detect()
 

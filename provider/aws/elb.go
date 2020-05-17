@@ -5,7 +5,6 @@ import (
 	"finala/config"
 	"finala/expression"
 	"finala/storage"
-	"finala/structs"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -21,7 +20,7 @@ type ELBClientDescreptor interface {
 	DescribeTags(*elb.DescribeTagsInput) (*elb.DescribeTagsOutput, error)
 }
 
-// ELBManager describe TODO::appname ELB struct
+// ELBManager describe ELB struct
 type ELBManager struct {
 	client           ELBClientDescreptor
 	storage          storage.Storage
@@ -29,6 +28,7 @@ type ELBManager struct {
 	pricingClient    *PricingManager
 	metrics          []config.MetricConfig
 	region           string
+	executionID      uint
 
 	namespace          string
 	servicePricingCode string
@@ -38,7 +38,9 @@ type ELBManager struct {
 type DetectedELB struct {
 	Metric string
 	Region string
-	structs.BaseDetectedRaw
+
+	storage.GlobalFieldsRaw
+	storage.BaseDetectedRaw
 }
 
 // TableName will set the table name to storage interface
@@ -47,7 +49,7 @@ func (DetectedELB) TableName() string {
 }
 
 // NewELBManager implements AWS GO SDK
-func NewELBManager(client ELBClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ELBManager {
+func NewELBManager(executionID uint, client ELBClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ELBManager {
 
 	st.AutoMigrate(&DetectedELB{})
 
@@ -58,6 +60,7 @@ func NewELBManager(client ELBClientDescreptor, st storage.Storage, cloudWatchCLi
 		metrics:          metrics,
 		pricingClient:    pricing,
 		region:           region,
+		executionID:      executionID,
 
 		namespace:          "AWS/ELB",
 		servicePricingCode: "AmazonEC2",
@@ -145,7 +148,10 @@ func (r *ELBManager) Detect() ([]DetectedELB, error) {
 				elb := DetectedELB{
 					Region: r.region,
 					Metric: metric.Description,
-					BaseDetectedRaw: structs.BaseDetectedRaw{
+					GlobalFieldsRaw: storage.GlobalFieldsRaw{
+						ExecutionID: r.executionID,
+					},
+					BaseDetectedRaw: storage.BaseDetectedRaw{
 						ResourceID:      *instance.LoadBalancerName,
 						LaunchTime:      *instance.CreatedTime,
 						PricePerHour:    price,

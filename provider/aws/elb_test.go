@@ -40,8 +40,8 @@ func (r *MockAWSELBClient) DescribeTags(*elb.DescribeTagsInput) (*elb.DescribeTa
 
 func TestDescribeLoadBalancers(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
-
 	metrics := []config.MetricConfig{}
 
 	t.Run("valid", func(t *testing.T) {
@@ -50,7 +50,7 @@ func TestDescribeLoadBalancers(t *testing.T) {
 			responseDescribeLoadBalancers: defaultELBMock,
 		}
 
-		elbManager := aws.NewELBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		elbManager := aws.NewELBManager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		result, _ := elbManager.DescribeLoadbalancers(nil, nil)
 
@@ -66,7 +66,7 @@ func TestDescribeLoadBalancers(t *testing.T) {
 			err:                           errors.New("error"),
 		}
 
-		elbManager := aws.NewELBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		elbManager := aws.NewELBManager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		_, err := elbManager.DescribeLoadbalancers(nil, nil)
 
@@ -78,7 +78,7 @@ func TestDescribeLoadBalancers(t *testing.T) {
 }
 
 func TestDetectELB(t *testing.T) {
-
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 	mockCloudwatchClient := MockAWSCloudwatchClient{
 		responseMetricStatistics: defaultResponseMetricStatistics,
@@ -90,7 +90,7 @@ func TestDetectELB(t *testing.T) {
 		responseDescribeLoadBalancers: defaultELBMock,
 	}
 
-	elbManager := aws.NewELBManager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	elbManager := aws.NewELBManager(executionID, &mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
 
 	response, _ := elbManager.Detect()
 

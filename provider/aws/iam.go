@@ -19,8 +19,9 @@ type IAMClientDescreptor interface {
 
 // IAMManager describe the iam manager
 type IAMManager struct {
-	client  IAMClientDescreptor
-	storage storage.Storage
+	client      IAMClientDescreptor
+	storage     storage.Storage
+	executionID uint
 }
 
 // DetectedAWSLastActivity define the aws last activity
@@ -29,6 +30,8 @@ type DetectedAWSLastActivity struct {
 	AccessKey    string
 	LastUsedDate time.Time
 	LastActivity string
+
+	storage.GlobalFieldsRaw
 }
 
 // TableName will set the iam table name
@@ -37,13 +40,14 @@ func (DetectedAWSLastActivity) TableName() string {
 }
 
 // NewIAMUseranager implements AWS GO SDK
-func NewIAMUseranager(client IAMClientDescreptor, st storage.Storage) *IAMManager {
+func NewIAMUseranager(executionID uint, client IAMClientDescreptor, st storage.Storage) *IAMManager {
 
 	st.AutoMigrate(&DetectedAWSLastActivity{})
 
 	return &IAMManager{
-		client:  client,
-		storage: st,
+		client:      client,
+		storage:     st,
+		executionID: executionID,
 	}
 }
 
@@ -107,6 +111,9 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 					AccessKey:    *accessKeyData.AccessKeyId,
 					LastUsedDate: lastUsedDate,
 					LastActivity: lastActivity,
+					GlobalFieldsRaw: storage.GlobalFieldsRaw{
+						ExecutionID: im.executionID,
+					},
 				}
 				detected = append(detected, userData)
 				im.storage.Create(&userData)

@@ -40,7 +40,7 @@ func (r *MockAWSDocdbClient) ListTagsForResource(*docdb.ListTagsForResourceInput
 func TestDescribeDocdb(t *testing.T) {
 
 	mockStorage := testutils.NewMockStorage()
-
+	executionID := uint(1)
 	metrics := []config.MetricConfig{}
 
 	t.Run("valid", func(t *testing.T) {
@@ -49,7 +49,7 @@ func TestDescribeDocdb(t *testing.T) {
 			responseDescribeDBInstances: defaultDocdbMock,
 		}
 
-		docdbManager := aws.NewDocDBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		docdbManager := aws.NewDocDBManager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		result, _ := docdbManager.DescribeInstances(nil, nil)
 
@@ -65,7 +65,7 @@ func TestDescribeDocdb(t *testing.T) {
 			err:                         errors.New("error"),
 		}
 
-		docdbManager := aws.NewDocDBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		docdbManager := aws.NewDocDBManager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		_, err := docdbManager.DescribeInstances(nil, nil)
 
@@ -88,8 +88,8 @@ func TestDetectDocdb(t *testing.T) {
 	mockClient := MockAWSDocdbClient{
 		responseDescribeDBInstances: defaultDocdbMock,
 	}
-
-	documentDBManager := aws.NewDocDBManager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	executionID := uint(1)
+	documentDBManager := aws.NewDocDBManager(executionID, &mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
 
 	response, _ := documentDBManager.Detect()
 

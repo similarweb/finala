@@ -5,7 +5,6 @@ import (
 	"finala/config"
 	"finala/expression"
 	"finala/storage"
-	"finala/structs"
 	"strings"
 	"time"
 
@@ -21,7 +20,7 @@ type EC2ClientDescreptor interface {
 	DescribeInstances(*ec2.DescribeInstancesInput) (*ec2.DescribeInstancesOutput, error)
 }
 
-// EC2Manager describe TODO::appname ELB struct
+// EC2Manager describe ELB struct
 type EC2Manager struct {
 	client           EC2ClientDescreptor
 	storage          storage.Storage
@@ -29,6 +28,7 @@ type EC2Manager struct {
 	pricingClient    *PricingManager
 	metrics          []config.MetricConfig
 	region           string
+	executionID      uint
 
 	namespace          string
 	servicePricingCode string
@@ -40,7 +40,9 @@ type DetectedEC2 struct {
 	Metric       string
 	Name         string
 	InstanceType string
-	structs.BaseDetectedRaw
+
+	storage.GlobalFieldsRaw
+	storage.BaseDetectedRaw
 }
 
 // TableName will set the table name to storage interface
@@ -49,7 +51,7 @@ func (DetectedEC2) TableName() string {
 }
 
 // NewEC2Manager implements AWS GO SDK
-func NewEC2Manager(client EC2ClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *EC2Manager {
+func NewEC2Manager(executionID uint, client EC2ClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *EC2Manager {
 
 	st.AutoMigrate(&DetectedEC2{})
 
@@ -60,6 +62,7 @@ func NewEC2Manager(client EC2ClientDescreptor, st storage.Storage, cloudWatchCLi
 		metrics:          metrics,
 		pricingClient:    pricing,
 		region:           region,
+		executionID:      executionID,
 
 		namespace:          "AWS/EC2",
 		servicePricingCode: "AmazonEC2",
@@ -80,7 +83,6 @@ func (r *EC2Manager) Detect() ([]DetectedEC2, error) {
 	for _, instance := range instances {
 		log.WithField("instance_id", *instance.InstanceId).Info("check ec2 instance")
 
-		//TODO:: check price for spot instances
 		price, _ := r.pricingClient.GetPrice(r.GetPricingFilterInput(instance), "")
 
 		for _, metric := range r.metrics {
@@ -152,7 +154,10 @@ func (r *EC2Manager) Detect() ([]DetectedEC2, error) {
 					Metric:       metric.Description,
 					Name:         name,
 					InstanceType: *instance.InstanceType,
-					BaseDetectedRaw: structs.BaseDetectedRaw{
+					GlobalFieldsRaw: storage.GlobalFieldsRaw{
+						ExecutionID: r.executionID,
+					},
+					BaseDetectedRaw: storage.BaseDetectedRaw{
 						ResourceID:      *instance.InstanceId,
 						LaunchTime:      *instance.LaunchTime,
 						PricePerHour:    price,

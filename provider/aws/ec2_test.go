@@ -39,8 +39,8 @@ func (r *MockAWSEC2Client) DescribeInstances(*ec2.DescribeInstancesInput) (*ec2.
 
 func TestEC2DescribeInstances(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
-
 	metrics := []config.MetricConfig{}
 
 	t.Run("valid", func(t *testing.T) {
@@ -49,7 +49,7 @@ func TestEC2DescribeInstances(t *testing.T) {
 			responseDescribeInstances: defaultEC2Mock,
 		}
 
-		ec2Manager := aws.NewEC2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		ec2Manager := aws.NewEC2Manager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		result, _ := ec2Manager.DescribeInstances(nil, nil)
 
@@ -65,7 +65,7 @@ func TestEC2DescribeInstances(t *testing.T) {
 			err:                       errors.New("error"),
 		}
 
-		ec2Manager := aws.NewEC2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		ec2Manager := aws.NewEC2Manager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		_, err := ec2Manager.DescribeInstances(nil, nil)
 
@@ -78,6 +78,7 @@ func TestEC2DescribeInstances(t *testing.T) {
 
 func TestDetectEC2(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 	mockCloudwatchClient := MockAWSCloudwatchClient{
 		responseMetricStatistics: defaultResponseMetricStatistics,
@@ -89,7 +90,7 @@ func TestDetectEC2(t *testing.T) {
 		responseDescribeInstances: defaultEC2Mock,
 	}
 
-	ec2Manager := aws.NewEC2Manager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	ec2Manager := aws.NewEC2Manager(executionID, &mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
 
 	response, _ := ec2Manager.Detect()
 

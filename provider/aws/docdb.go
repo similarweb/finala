@@ -5,7 +5,6 @@ import (
 	"finala/config"
 	"finala/expression"
 	"finala/storage"
-	"finala/structs"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -21,7 +20,7 @@ type DocumentDBClientDescreptor interface {
 	ListTagsForResource(*docdb.ListTagsForResourceInput) (*docdb.ListTagsForResourceOutput, error)
 }
 
-//DocumentDBManager describe TODO::appname documentDB struct
+//DocumentDBManager describe documentDB struct
 type DocumentDBManager struct {
 	client           DocumentDBClientDescreptor
 	storage          storage.Storage
@@ -29,6 +28,7 @@ type DocumentDBManager struct {
 	pricingClient    *PricingManager
 	metrics          []config.MetricConfig
 	region           string
+	executionID      uint
 
 	namespace          string
 	servicePricingCode string
@@ -41,7 +41,9 @@ type DetectedDocumentDB struct {
 	InstanceType string
 	MultiAZ      bool
 	Engine       string
-	structs.BaseDetectedRaw
+
+	storage.GlobalFieldsRaw
+	storage.BaseDetectedRaw
 }
 
 // TableName will set the table name to storage interface
@@ -50,7 +52,7 @@ func (DetectedDocumentDB) TableName() string {
 }
 
 // NewDocDBManager implements AWS GO SDK
-func NewDocDBManager(client DocumentDBClientDescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *DocumentDBManager {
+func NewDocDBManager(executionID uint, client DocumentDBClientDescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *DocumentDBManager {
 
 	st.AutoMigrate(&DetectedDocumentDB{})
 
@@ -61,6 +63,7 @@ func NewDocDBManager(client DocumentDBClientDescreptor, st storage.Storage, clou
 		pricingClient:    pricing,
 		metrics:          metrics,
 		region:           region,
+		executionID:      executionID,
 
 		namespace:          "AWS/DocDB",
 		servicePricingCode: "AmazonDocDB",
@@ -149,7 +152,10 @@ func (r *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 					Metric:       metric.Description,
 					InstanceType: *instance.DBInstanceClass,
 					Engine:       *instance.Engine,
-					BaseDetectedRaw: structs.BaseDetectedRaw{
+					GlobalFieldsRaw: storage.GlobalFieldsRaw{
+						ExecutionID: r.executionID,
+					},
+					BaseDetectedRaw: storage.BaseDetectedRaw{
 						ResourceID:      *instance.DBInstanceArn,
 						LaunchTime:      *instance.InstanceCreateTime,
 						PricePerHour:    price,

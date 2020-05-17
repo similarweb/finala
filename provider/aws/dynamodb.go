@@ -5,7 +5,6 @@ import (
 	"finala/config"
 	"finala/expression"
 	"finala/storage"
-	"finala/structs"
 	"strings"
 	"time"
 
@@ -37,6 +36,7 @@ type DynamoDBManager struct {
 	pricingClient    *PricingManager
 	metrics          []config.MetricConfig
 	region           string
+	executionID      uint
 
 	namespace          string
 	servicePricingCode string
@@ -47,7 +47,9 @@ type DetectedAWSDynamoDB struct {
 	Region string
 	Metric string
 	Name   string
-	structs.BaseDetectedRaw
+
+	storage.GlobalFieldsRaw
+	storage.BaseDetectedRaw
 }
 
 // TableName will set the table name to storage interface
@@ -56,7 +58,7 @@ func (DetectedAWSDynamoDB) TableName() string {
 }
 
 // NewDynamoDBManager implements AWS GO SDK
-func NewDynamoDBManager(client DynamoDBClientescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *DynamoDBManager {
+func NewDynamoDBManager(executionID uint, client DynamoDBClientescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *DynamoDBManager {
 
 	st.AutoMigrate(&DetectedAWSDynamoDB{})
 
@@ -67,6 +69,7 @@ func NewDynamoDBManager(client DynamoDBClientescreptor, st storage.Storage, clou
 		pricingClient:    pricing,
 		metrics:          metrics,
 		region:           region,
+		executionID:      executionID,
 
 		namespace:          "AWS/DynamoDB",
 		servicePricingCode: "AmazonDynamoDB",
@@ -166,7 +169,10 @@ func (r *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 					Region: r.region,
 					Metric: metric.Description,
 					Name:   *table.TableName,
-					BaseDetectedRaw: structs.BaseDetectedRaw{
+					GlobalFieldsRaw: storage.GlobalFieldsRaw{
+						ExecutionID: r.executionID,
+					},
+					BaseDetectedRaw: storage.BaseDetectedRaw{
 						ResourceID:      *table.TableArn,
 						LaunchTime:      *table.CreationDateTime,
 						PricePerHour:    writePrice + readPrice,

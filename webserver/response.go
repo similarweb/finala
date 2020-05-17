@@ -1,5 +1,7 @@
 package webserver
 
+import "net/url"
+
 //HealthResponse is returned when healtcheck requested
 type HealthResponse struct {
 	Status bool `json:"status"`
@@ -7,5 +9,6 @@ type HealthResponse struct {
 
 //HttpErrorResponse is returned on error
 type HttpErrorResponse struct {
-	Error string `json:"error"`
+	Error      string     `json:"error"`
+	ErrorQuery url.Values `json:"errorQuery"`
 }

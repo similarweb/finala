@@ -53,8 +53,8 @@ func (r *MockAWSDynamoDBClient) ListTagsOfResource(*dynamodb.ListTagsOfResourceI
 
 func TestDescribeDynamoDBTables(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
-
 	metrics := []config.MetricConfig{}
 
 	t.Run("valid", func(t *testing.T) {
@@ -64,7 +64,7 @@ func TestDescribeDynamoDBTables(t *testing.T) {
 			responseDescribeTable: defaultDynamoDBDescribeTableMock,
 		}
 
-		dynamoDBManager := aws.NewDynamoDBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		dynamoDBManager := aws.NewDynamoDBManager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		result, _ := dynamoDBManager.DescribeTables()
 
@@ -81,7 +81,7 @@ func TestDescribeDynamoDBTables(t *testing.T) {
 			err:                   errors.New("error"),
 		}
 
-		dynamoDBManager := aws.NewDynamoDBManager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		dynamoDBManager := aws.NewDynamoDBManager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		_, err := dynamoDBManager.DescribeTables()
 
@@ -94,6 +94,7 @@ func TestDescribeDynamoDBTables(t *testing.T) {
 
 func TestDetectDynamoDB(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 	mockCloudwatchClient := MockAWSCloudwatchClient{
 		responseMetricStatistics: defaultResponseMetricStatistics,
@@ -127,7 +128,7 @@ func TestDetectDynamoDB(t *testing.T) {
 		responseDescribeTable: defaultDynamoDBDescribeTableMock,
 	}
 
-	dynamoDBManager := aws.NewDynamoDBManager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	dynamoDBManager := aws.NewDynamoDBManager(executionID, &mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
 
 	response, _ := dynamoDBManager.Detect()
 

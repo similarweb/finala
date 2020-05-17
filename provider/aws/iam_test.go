@@ -62,11 +62,12 @@ func (im *MockIAMClient) GetAccessKeyLastUsed(input *iam.GetAccessKeyLastUsedInp
 }
 
 func TestDescribeUsers(t *testing.T) {
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 
 	t.Run("valid", func(t *testing.T) {
 		mockClient := MockIAMClient{}
-		iamManager := aws.NewIAMUseranager(&mockClient, mockStorage)
+		iamManager := aws.NewIAMUseranager(executionID, &mockClient, mockStorage)
 		response, _ := iamManager.GetUsers(nil, nil)
 
 		if len(response) != len(defaultUsersMock.Users) {
@@ -80,7 +81,7 @@ func TestDescribeUsers(t *testing.T) {
 			errListUser: errors.New("error"),
 		}
 
-		iamManager := aws.NewIAMUseranager(&mockClient, mockStorage)
+		iamManager := aws.NewIAMUseranager(executionID, &mockClient, mockStorage)
 		_, err := iamManager.GetUsers(nil, nil)
 
 		if err == nil {
@@ -92,11 +93,12 @@ func TestDescribeUsers(t *testing.T) {
 
 func TestLastActivity(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 
 	t.Run("valid", func(t *testing.T) {
 		mockClient := MockIAMClient{}
-		iamManager := aws.NewIAMUseranager(&mockClient, mockStorage)
+		iamManager := aws.NewIAMUseranager(executionID, &mockClient, mockStorage)
 		response, _ := iamManager.LastActivity(10, ">=")
 
 		if len(response) != 2 {

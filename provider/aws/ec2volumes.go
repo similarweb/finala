@@ -20,6 +20,7 @@ type EC2VolumeManager struct {
 	client             EC2VolumeClientDescriptor
 	storage            storage.Storage
 	pricingClient      *PricingManager
+	executionID        uint
 	region             string
 	namespace          string
 	servicePricingCode string
@@ -28,11 +29,13 @@ type EC2VolumeManager struct {
 // DetectedAWSEC2Volume define the detected volume data
 type DetectedAWSEC2Volume struct {
 	Region        string
-	ID            string
+	ResourceID    string
 	Type          string
 	Size          int64
 	PricePerMonth float64 `gorm:"type:DOUBLE`
 	Tags          string  `gorm:"type:TEXT" json:"-"`
+
+	storage.GlobalFieldsRaw
 }
 
 // TableName will set the table name to storage interface
@@ -41,7 +44,7 @@ func (DetectedAWSEC2Volume) TableName() string {
 }
 
 // NewVolumesManager implements AWS GO SDK
-func NewVolumesManager(client EC2VolumeClientDescriptor, st storage.Storage, pricing *PricingManager, region string) *EC2VolumeManager {
+func NewVolumesManager(executionID uint, client EC2VolumeClientDescriptor, st storage.Storage, pricing *PricingManager, region string) *EC2VolumeManager {
 
 	st.AutoMigrate(&DetectedAWSEC2Volume{})
 
@@ -50,6 +53,7 @@ func NewVolumesManager(client EC2VolumeClientDescriptor, st storage.Storage, pri
 		storage:       st,
 		pricingClient: pricing,
 		region:        region,
+		executionID:   executionID,
 
 		namespace:          "AWS/EC2",
 		servicePricingCode: "AmazonEC2",
@@ -99,11 +103,14 @@ func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 		volumeSize := *vol.Size
 		dEBS := DetectedAWSEC2Volume{
 			Region:        ev.region,
-			ID:            *vol.VolumeId,
+			ResourceID:    *vol.VolumeId,
 			Type:          *vol.VolumeType,
 			Size:          volumeSize,
 			PricePerMonth: ev.GetCalculatedPrice(vol, price),
 			Tags:          string(decodedTags),
+			GlobalFieldsRaw: storage.GlobalFieldsRaw{
+				ExecutionID: ev.executionID,
+			},
 		}
 
 		detected = append(detected, dEBS)

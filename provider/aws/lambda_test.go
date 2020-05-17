@@ -43,6 +43,7 @@ func (r *MockAWSLambdaClient) ListTags(input *lambda.ListTagsInput) (*lambda.Lis
 
 func TestDescribeLambdaInstances(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 	metrics := []config.MetricConfig{}
 
@@ -52,7 +53,7 @@ func TestDescribeLambdaInstances(t *testing.T) {
 			responseDescribeDBInstances: defaultLambdaMock,
 		}
 
-		lambdaManager := aws.NewLambdaManager(&mockClient, mockStorage, nil, metrics, "us-east-1")
+		lambdaManager := aws.NewLambdaManager(executionID, &mockClient, mockStorage, nil, metrics, "us-east-1")
 
 		result, _ := lambdaManager.Describe(nil, nil)
 
@@ -68,7 +69,7 @@ func TestDescribeLambdaInstances(t *testing.T) {
 			err:                         errors.New("error"),
 		}
 
-		lambdaManager := aws.NewLambdaManager(&mockClient, mockStorage, nil, metrics, "us-east-1")
+		lambdaManager := aws.NewLambdaManager(executionID, &mockClient, mockStorage, nil, metrics, "us-east-1")
 
 		_, err := lambdaManager.Describe(nil, nil)
 
@@ -81,6 +82,7 @@ func TestDescribeLambdaInstances(t *testing.T) {
 
 func TestDetectLambda(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 	mockCloudwatchClient := MockAWSCloudwatchClient{
 		responseMetricStatistics: defaultResponseMetricStatistics,
@@ -93,7 +95,7 @@ func TestDetectLambda(t *testing.T) {
 			responseDescribeDBInstances: defaultLambdaMock,
 		}
 
-		lambdaManager := aws.NewLambdaManager(&mockClient, mockStorage, cloutwatchManager, defaultMetricConfig, "us-east-1")
+		lambdaManager := aws.NewLambdaManager(executionID, &mockClient, mockStorage, cloutwatchManager, defaultMetricConfig, "us-east-1")
 
 		response, _ := lambdaManager.Detect()
 

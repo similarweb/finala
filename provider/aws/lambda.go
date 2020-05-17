@@ -26,6 +26,7 @@ type LambdaManager struct {
 	cloudWatchClient *CloudwatchManager
 	metrics          []config.MetricConfig
 	region           string
+	executionID      uint
 
 	namespace          string
 	servicePricingCode string
@@ -38,6 +39,8 @@ type DetectedAWSLambda struct {
 	ResourceID string
 	Name       string
 	Tags       string
+
+	storage.GlobalFieldsRaw
 }
 
 // TableName will set the table name to storage interface
@@ -46,7 +49,7 @@ func (DetectedAWSLambda) TableName() string {
 }
 
 // NewLambdaManager implements AWS GO SDK
-func NewLambdaManager(client LambdaClientDescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, metrics []config.MetricConfig, region string) *LambdaManager {
+func NewLambdaManager(executionID uint, client LambdaClientDescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, metrics []config.MetricConfig, region string) *LambdaManager {
 
 	st.AutoMigrate(&DetectedAWSLambda{})
 
@@ -56,6 +59,7 @@ func NewLambdaManager(client LambdaClientDescreptor, st storage.Storage, cloudWa
 		cloudWatchClient: cloudWatchClient,
 		metrics:          metrics,
 		region:           region,
+		executionID:      executionID,
 
 		namespace: "AWS/Lambda",
 	}
@@ -138,6 +142,9 @@ func (r *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 					ResourceID: *fun.FunctionArn,
 					Name:       *fun.FunctionName,
 					Tags:       string(decodedTags),
+					GlobalFieldsRaw: storage.GlobalFieldsRaw{
+						ExecutionID: r.executionID,
+					},
 				}
 
 				detected = append(detected, dFun)

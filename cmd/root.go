@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"finala/config"
+	"finala/executions"
 	"finala/serverutil"
 	"finala/storage"
 	"finala/visibility"
@@ -46,6 +47,9 @@ var (
 	// Storage will manage to storage work
 	Storage *storage.MySQLManager
 
+	// Executions will the executions collector ID's
+	Executions *executions.ExecutionsManager
+
 	// err define for a global cmd error
 	err error
 
@@ -54,7 +58,7 @@ var (
 
 	webserverStopper serverutil.StopFunc
 
-	mainVersion = "0.1.7"
+	mainVersion = "0.1.8"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -164,6 +168,7 @@ func initCmd() {
 	}
 
 	Storage.AutoMigrate(&storage.ResourceStatus{})
+	Executions = executions.NewExecutionsManager(Storage)
 
 	if !disableUI {
 		webserverStopper = runWebserver(Storage, uiPort)

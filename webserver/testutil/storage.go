@@ -23,30 +23,38 @@ func (m *MockStorage) AutoMigrate(interface{}) error {
 	return nil
 }
 
-func (m *MockStorage) GetSummary() (*map[string]storage.Summary, error) {
+func (m *MockStorage) GetSummary(executionsID uint64) (*map[uint][]storage.Summary, error) {
 
-	data := map[string]storage.Summary{}
-	data["foo"] = storage.Summary{
+	data := map[uint][]storage.Summary{}
+	data[1] = append(data[1], storage.Summary{
 		ResourceCount: 1,
 		TotalSpent:    2.34,
 		Status:        1,
 		Description:   "",
-	}
-	data["foo-1"] = storage.Summary{
+	})
+	data[2] = append(data[2], storage.Summary{
 		ResourceCount: 1,
 		TotalSpent:    2.34,
 		Status:        1,
 		Description:   "",
-	}
+	})
 	return &data, nil
 
 }
 
-func (m *MockStorage) GetTableData(name string) ([]map[string]interface{}, error) {
+func (m *MockStorage) GetTableData(name string, executionsID uint64) ([]map[string]interface{}, error) {
 
 	data := []map[string]interface{}{
 		map[string]interface{}{"asd": "asd"},
 	}
+	return data, nil
+
+}
+
+func (m *MockStorage) GetExecutions() ([]storage.ExecutionsTable, error) {
+
+	data := []storage.ExecutionsTable{}
+
 	return data, nil
 
 }

@@ -81,6 +81,7 @@ func (server *Server) BindEndpoints() {
 	box := packr.NewBox(fmt.Sprintf("%s/ui/build", path))
 	server.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(box)))
 	server.router.HandleFunc("/api/v1/summary", server.GetSummary).Methods("GET")               // HealthCheck
+	server.router.HandleFunc("/api/v1/executions", server.GetExecutions).Methods("GET")         // HealthCheck
 	server.router.HandleFunc("/api/v1/resources/{type}", server.GetResourceData).Methods("GET") // return list of job deployments
 	server.router.HandleFunc("/api/v1/health", server.HealthCheckHandler).Methods("GET")        // HealthCheck
 

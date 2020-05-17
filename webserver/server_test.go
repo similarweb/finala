@@ -82,28 +82,44 @@ func TestGetSummary(t *testing.T) {
 	ms.BindEndpoints()
 	ms.Serve()
 
-	rr := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/api/v1/summary", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ms.Router().ServeHTTP(rr, req)
-	if rr.Code != http.StatusOK {
-		t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
-	}
-	body, err := ioutil.ReadAll(rr.Body)
-	if err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		endpoint           string
+		expectedStatusCode int
+		Count              int
+	}{
+		{"/api/v1/summary", http.StatusBadRequest, 0},
+		{"/api/v1/summary?executionID=1", http.StatusOK, 2},
 	}
 
-	summaryData := &map[string]storage.Summary{}
-	err = json.Unmarshal(body, summaryData)
-	if err != nil {
-		t.Fatalf("Could not parse http response")
-	}
+	for _, test := range testCases {
+		t.Run(test.endpoint, func(t *testing.T) {
 
-	if len(*summaryData) != 2 {
-		t.Fatalf("unexpected resources summary response, got %d expected %d", len(*summaryData), 2)
+			rr := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", test.endpoint, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ms.Router().ServeHTTP(rr, req)
+			if rr.Code != test.expectedStatusCode {
+				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
+			}
+			if test.expectedStatusCode == http.StatusOK {
+				body, err := ioutil.ReadAll(rr.Body)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				summaryData := &map[uint][]storage.Summary{}
+				err = json.Unmarshal(body, summaryData)
+				if err != nil {
+					t.Fatalf("Could not parse http response")
+				}
+
+				if len(*summaryData) != test.Count {
+					t.Fatalf("unexpected resources summary response, got %d expected %d", len(*summaryData), test.Count)
+				}
+			}
+		})
 	}
 
 }
@@ -113,24 +129,43 @@ func TestGetResourcesData(t *testing.T) {
 	ms.BindEndpoints()
 	ms.Serve()
 
-	rr := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/api/v1/resources/table", nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ms.Router().ServeHTTP(rr, req)
-	if rr.Code != http.StatusOK {
-		t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
-	}
-	body, err := ioutil.ReadAll(rr.Body)
-	if err != nil {
-		t.Fatal(err)
+	testCases := []struct {
+		endpoint           string
+		expectedStatusCode int
+	}{
+		{"/api/v1/resources/table", http.StatusBadRequest},
+		{"/api/v1/resources/table?executionID=1", http.StatusOK},
 	}
 
-	resourceData := &[]map[string]interface{}{}
-	err = json.Unmarshal(body, resourceData)
-	if err != nil {
-		t.Fatalf("Could not parse http response")
+	for _, test := range testCases {
+		t.Run(test.endpoint, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", test.endpoint, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			ms.Router().ServeHTTP(rr, req)
+			if rr.Code != test.expectedStatusCode {
+				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
+			}
+
+			if test.expectedStatusCode == http.StatusOK {
+
+				body, err := ioutil.ReadAll(rr.Body)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				resourceData := &[]map[string]interface{}{}
+				err = json.Unmarshal(body, resourceData)
+				if err != nil {
+					t.Fatalf("Could not parse http response")
+				}
+
+			}
+
+		})
 	}
 
 }

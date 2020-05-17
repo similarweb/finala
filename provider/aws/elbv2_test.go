@@ -41,8 +41,8 @@ func (r *MockAWSELBV2Client) DescribeTags(*elbv2.DescribeTagsInput) (*elbv2.Desc
 
 func TestDescribeLoadBalancersV2(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
-
 	metrics := []config.MetricConfig{}
 
 	t.Run("valid", func(t *testing.T) {
@@ -51,7 +51,7 @@ func TestDescribeLoadBalancersV2(t *testing.T) {
 			responseDescribeLoadBalancers: defaultELBV2Mock,
 		}
 
-		elbv2Manager := aws.NewELBV2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		elbv2Manager := aws.NewELBV2Manager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		result, _ := elbv2Manager.DescribeLoadbalancers(nil, nil)
 
@@ -67,7 +67,7 @@ func TestDescribeLoadBalancersV2(t *testing.T) {
 			err:                           errors.New("error"),
 		}
 
-		elbv2Manager := aws.NewELBV2Manager(&mockClient, mockStorage, nil, nil, metrics, "us-east-1")
+		elbv2Manager := aws.NewELBV2Manager(executionID, &mockClient, mockStorage, nil, nil, metrics, "us-east-1")
 
 		_, err := elbv2Manager.DescribeLoadbalancers(nil, nil)
 
@@ -80,6 +80,7 @@ func TestDescribeLoadBalancersV2(t *testing.T) {
 
 func TestDetectELBV2(t *testing.T) {
 
+	executionID := uint(1)
 	mockStorage := testutils.NewMockStorage()
 	mockCloudwatchClient := MockAWSCloudwatchClient{
 		responseMetricStatistics: defaultResponseMetricStatistics,
@@ -91,7 +92,7 @@ func TestDetectELBV2(t *testing.T) {
 		responseDescribeLoadBalancers: defaultELBV2Mock,
 	}
 
-	elbv2Manager := aws.NewELBV2Manager(&mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	elbv2Manager := aws.NewELBV2Manager(executionID, &mockClient, mockStorage, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
 
 	response, _ := elbv2Manager.Detect()
 

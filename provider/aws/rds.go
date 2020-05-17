@@ -5,7 +5,6 @@ import (
 	"finala/config"
 	"finala/expression"
 	"finala/storage"
-	"finala/structs"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -21,7 +20,7 @@ type RDSClientDescreptor interface {
 	ListTagsForResource(*rds.ListTagsForResourceInput) (*rds.ListTagsForResourceOutput, error)
 }
 
-//RDSManager describe TODO::appname RDS struct
+//RDSManager describe RDS struct
 type RDSManager struct {
 	client           RDSClientDescreptor
 	storage          storage.Storage
@@ -29,6 +28,7 @@ type RDSManager struct {
 	pricingClient    *PricingManager
 	metrics          []config.MetricConfig
 	region           string
+	executionID      uint
 
 	namespace          string
 	servicePricingCode string
@@ -41,7 +41,9 @@ type DetectedAWSRDS struct {
 	InstanceType string
 	MultiAZ      bool
 	Engine       string
-	structs.BaseDetectedRaw
+
+	storage.BaseDetectedRaw
+	storage.GlobalFieldsRaw
 }
 
 // TableName will set the table name to storage interface
@@ -50,7 +52,7 @@ func (DetectedAWSRDS) TableName() string {
 }
 
 // NewRDSManager implements AWS GO SDK
-func NewRDSManager(client RDSClientDescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *RDSManager {
+func NewRDSManager(executionID uint, client RDSClientDescreptor, st storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *RDSManager {
 
 	st.AutoMigrate(&DetectedAWSRDS{})
 
@@ -61,6 +63,7 @@ func NewRDSManager(client RDSClientDescreptor, st storage.Storage, cloudWatchCli
 		pricingClient:    pricing,
 		metrics:          metrics,
 		region:           region,
+		executionID:      executionID,
 
 		namespace:          "AWS/RDS",
 		servicePricingCode: "AmazonRDS",
@@ -150,7 +153,10 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 					InstanceType: *instance.DBInstanceClass,
 					MultiAZ:      *instance.MultiAZ,
 					Engine:       *instance.Engine,
-					BaseDetectedRaw: structs.BaseDetectedRaw{
+					GlobalFieldsRaw: storage.GlobalFieldsRaw{
+						ExecutionID: r.executionID,
+					},
+					BaseDetectedRaw: storage.BaseDetectedRaw{
 						ResourceID:      *instance.DBInstanceArn,
 						LaunchTime:      *instance.InstanceCreateTime,
 						PricePerHour:    price,

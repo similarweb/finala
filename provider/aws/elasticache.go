@@ -5,7 +5,6 @@ import (
 	"finala/config"
 	"finala/expression"
 	"finala/storage"
-	"finala/structs"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -21,7 +20,7 @@ type ElasticCacheClientDescreptor interface {
 	ListTagsForResource(*elasticache.ListTagsForResourceInput) (*elasticache.TagListMessage, error)
 }
 
-//ElasticacheManager describe TODO::appname elasticsearch struct
+//ElasticacheManager describe elasticsearch struct
 type ElasticacheManager struct {
 	client           ElasticCacheClientDescreptor
 	storage          storage.Storage
@@ -29,6 +28,7 @@ type ElasticacheManager struct {
 	pricingClient    *PricingManager
 	metrics          []config.MetricConfig
 	region           string
+	executionID      uint
 
 	namespace          string
 	servicePricingCode string
@@ -41,7 +41,9 @@ type DetectedElasticache struct {
 	CacheEngine   string
 	CacheNodeType string
 	CacheNodes    int
-	structs.BaseDetectedRaw
+
+	storage.GlobalFieldsRaw
+	storage.BaseDetectedRaw
 }
 
 // TableName will set the table name to storage interface
@@ -50,7 +52,7 @@ func (DetectedElasticache) TableName() string {
 }
 
 // NewElasticacheManager implements AWS GO SDK
-func NewElasticacheManager(client ElasticCacheClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ElasticacheManager {
+func NewElasticacheManager(executionID uint, client ElasticCacheClientDescreptor, st storage.Storage, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ElasticacheManager {
 
 	st.AutoMigrate(&DetectedElasticache{})
 
@@ -61,6 +63,7 @@ func NewElasticacheManager(client ElasticCacheClientDescreptor, st storage.Stora
 		pricingClient:    pricing,
 		metrics:          metrics,
 		region:           region,
+		executionID:      executionID,
 
 		namespace:          "AWS/ElastiCache",
 		servicePricingCode: "AmazonElastiCache",
@@ -148,8 +151,10 @@ func (r *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 					CacheEngine:   *instance.Engine,
 					CacheNodeType: *instance.CacheNodeType,
 					CacheNodes:    len(instance.CacheNodes),
-
-					BaseDetectedRaw: structs.BaseDetectedRaw{
+					GlobalFieldsRaw: storage.GlobalFieldsRaw{
+						ExecutionID: r.executionID,
+					},
+					BaseDetectedRaw: storage.BaseDetectedRaw{
 						LaunchTime:      *instance.CacheClusterCreateTime,
 						ResourceID:      *instance.CacheClusterId,
 						PricePerHour:    price,

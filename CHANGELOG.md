@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] 
+- Add AWS Neptune detection
+
 ## [0.1.7] 
 - New dashboard. [[PR-43](https://github.com/similarweb/finala/pull/43)]
 - Export table to CSV. [[PR-43](https://github.com/similarweb/finala/pull/43)]

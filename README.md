@@ -12,6 +12,7 @@ AWS:
 * DynamoDB
 * ElasticCache
 * DocumentDB
+* Neptune
 
 More to come...
 

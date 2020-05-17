@@ -18,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
 
@@ -74,9 +75,9 @@ func (app *Analyze) All() {
 			app.AnalyzeDocdb(app.storage, sess, cloudWatchCLient, pricing)
 			app.IAMUsers(app.storage, sess)
 			app.AnalyzeDynamoDB(app.storage, sess, cloudWatchCLient, pricing)
+			app.AnalyzeNeptune(app.storage, sess, cloudWatchCLient, pricing)
 		}
 	}
-
 }
 
 // AnalyzeEC2Instances will analyzes ec2 resources
@@ -514,4 +515,49 @@ func (app *Analyze) AnalyzeVolumes(st storage.Storage, sess *session.Session, pr
 	}
 
 	return err
+}
+
+// AnalyzeNeptune will analyzes Neptune resources
+func (app *Analyze) AnalyzeNeptune(st storage.Storage, sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+	metrics, found := app.metrics["neptune"]
+	if !found {
+		return nil
+	}
+
+	table := &DetectedAWSNeptune{}
+	st.Create(&storage.ResourceStatus{
+		TableName: table.TableName(),
+		Status:    storage.Fetch,
+	})
+
+	neptune := NewNeptuneManager(neptune.New(sess), st, cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	response, err := neptune.Detect()
+
+	if err == nil {
+		b, _ := json.Marshal(response)
+		config := []structs.PrintTableConfig{
+			{Header: "ID", Key: "ResourceID"},
+			{Header: "Metric", Key: "Metric"},
+			{Header: "Region", Key: "Region"},
+			{Header: "Instance Type", Key: "InstanceType"},
+			{Header: "Multi AZ", Key: "MultiAZ"},
+			{Header: "Engine", Key: "Engine"},
+			{Header: "Price Per Hour", Key: "PricePerHour"},
+			{Header: "Price Per Month", Key: "PricePerMonth"},
+		}
+		printers.Table(config, b, nil)
+		st.Create(&storage.ResourceStatus{
+			TableName: table.TableName(),
+			Status:    storage.Finish,
+		})
+	} else {
+		st.Create(&storage.ResourceStatus{
+			TableName:   table.TableName(),
+			Status:      storage.Error,
+			Description: err.Error(),
+		})
+	}
+
+	return err
+
 }

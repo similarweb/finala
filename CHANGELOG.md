@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ## [0.1.8] 
-- Add AWS Neptune detection
+- Add AWS Neptune detection [[PR-52](https://github.com/similarweb/finala/pull/52)]
 
 ## [0.1.7] 
 - New dashboard. [[PR-43](https://github.com/similarweb/finala/pull/43)]

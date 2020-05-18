@@ -15,13 +15,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// NeptuneClientDescriptor interface define the AWS Neptune client
+// NeptuneClientDescriptor interface defines the AWS Neptune client
 type NeptuneClientDescriptor interface {
 	DescribeDBInstances(*neptune.DescribeDBInstancesInput) (*neptune.DescribeDBInstancesOutput, error)
 	ListTagsForResource(*neptune.ListTagsForResourceInput) (*neptune.ListTagsForResourceOutput, error)
 }
 
-// NeptuneManager describe the Manager for Neptune
+// NeptuneManager describes the Manager for Neptune
 type NeptuneManager struct {
 	client           NeptuneClientDescriptor
 	storage          storage.Storage
@@ -44,7 +44,7 @@ type DetectedAWSNeptune struct {
 	structs.BaseDetectedRaw
 }
 
-// TableName will set the table name to storage interface
+// TableName sets the table name to storage interface
 func (DetectedAWSNeptune) TableName() string {
 	return "aws_neptune"
 }

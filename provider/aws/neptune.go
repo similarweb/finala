@@ -178,18 +178,6 @@ func (np *NeptuneManager) GetPricingFilterInput(instance *neptune.DBInstance) *p
 	// Currently the only Attribute value allowed for deploymentOption in AWS response is "Multi-AZ"
 	deploymentOption := "Multi-AZ"
 
-	var databaseEngine string
-	switch *instance.Engine {
-	case "postgres":
-		databaseEngine = "PostgreSQL"
-	case "aurora":
-		databaseEngine = "Aurora MySQL"
-	case "neptune":
-		databaseEngine = "Amazon Neptune"
-	default:
-		databaseEngine = *instance.Engine
-	}
-
 	return &pricing.GetProductsInput{
 		ServiceCode: &np.servicePricingCode,
 		Filters: []*pricing.Filter{
@@ -197,7 +185,7 @@ func (np *NeptuneManager) GetPricingFilterInput(instance *neptune.DBInstance) *p
 			&pricing.Filter{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("databaseEngine"),
-				Value: &databaseEngine,
+				Value: awsClient.String("Amazon Neptune"),
 			},
 			&pricing.Filter{
 				Type:  awsClient.String("TERM_MATCH"),

@@ -143,7 +143,7 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 					Metric:       metric.Description,
 					InstanceType: *instance.DBInstanceClass,
 					Engine:       *instance.Engine,
-					PriceDetectedFields: collectodd.PriceDetectedFields{
+					PriceDetectedFields: collector.PriceDetectedFields{
 						ResourceID:      *instance.DBInstanceArn,
 						LaunchTime:      *instance.InstanceCreateTime,
 						PricePerHour:    price,

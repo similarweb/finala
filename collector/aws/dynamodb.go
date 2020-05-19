@@ -72,7 +72,7 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 
 	log.Info("Analyze dynamoDB")
 	detectedTables := []DetectedAWSDynamoDB{}
-	tables, err := r.DescribeTables()
+	tables, err := dd.DescribeTables()
 	now := time.Now()
 
 	if err != nil {

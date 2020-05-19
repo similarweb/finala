@@ -76,8 +76,8 @@ func NewCollectorManager(ctx context.Context, wg *sync.WaitGroup, req *request.H
 			case <-time.After(collectorManager.sendInterval):
 				collectorManager.sendBulk()
 			case <-ctx.Done():
-				log.Warn("Collector Loop has been shut down")
-				collectorManager.sendBulk()
+				log.Warn("Collector Loop has been shut down. clean all resources events")
+				collectorManager.done()
 				wg.Done()
 				return
 			}
@@ -106,14 +106,27 @@ func (cm *CollectorManager) saveEvent(data EventCollector) {
 }
 
 // GetEvents return list of collected events
-func (cm *CollectorManager) sendBulk() {
+func (cm *CollectorManager) sendBulk() bool {
 
 	cm.collectorMutex.RLock()
 	defer cm.collectorMutex.RUnlock()
 
-	succeed := cm.send(cm.sendData)
-	if succeed {
+	status := cm.send(cm.sendData)
+	if status {
 		cm.sendData = []EventCollector{}
+	}
+
+	return status
+
+}
+
+func (cm *CollectorManager) done() {
+
+	status := cm.sendBulk()
+	if !status {
+		log.Info("resend bulk data")
+		time.Sleep(cm.sendInterval)
+		cm.done()
 	}
 
 }

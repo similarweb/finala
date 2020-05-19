@@ -3,7 +3,7 @@ log_level: info
 
 webserver: 
   address: http://127.0.0.01:8080
-  bulk_interval: 10s
+  bulk_interval: 5s
 
 providers:
   aws:

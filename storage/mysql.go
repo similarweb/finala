@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"finala/webserver/config"
 	"fmt"
 	"strconv"
 	"strings"
@@ -50,13 +51,22 @@ type MySQLManager struct {
 	db *gorm.DB
 }
 
-// NewStorageManager create new storage instance
-func NewStorageManager(dialect, connection string) *MySQLManager {
+// open will create a new DB connection
+func connectionString(username, password, dns, schema, params string, port int) string {
+	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?%s", username, password, dns, port, schema, params)
+}
 
-	log.WithFields(log.Fields{
-		"dialect":    dialect,
-		"connection": connection,
-	}).Info("Setting up storage configuration")
+// NewStorageManager create new storage instance
+func NewStorageManager(dialect string, storageConfig config.StorageConfig) *MySQLManager {
+
+	var connection string
+	if dialect == "sqlite3" {
+		connection = storageConfig.DNS
+	} else {
+		connection = connectionString(storageConfig.Username, storageConfig.Password, storageConfig.DNS, storageConfig.Schema, storageConfig.Params, storageConfig.Port)
+	}
+
+	log.WithField("dialect", dialect).Info("Open initialize a new db connection")
 
 	db, err := gorm.Open(dialect, connection)
 	if strings.ToLower(fmt.Sprintf("%s", log.GetLevel())) == "debug" {

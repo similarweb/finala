@@ -1,0 +1,119 @@
+---
+log_level: info
+
+webserver: 
+  address: http://127.0.0.01:8080
+  bulk_interval: 10s
+
+providers:
+  aws:
+    accounts: 
+      - name: <account_name>
+        # access_key: <access_key>
+        # secret_key: <secret_key>
+        regions:
+          - us-east-1
+          - us-west-2
+    metrics:
+      rds:
+        - description: Database connection count
+          metrics:
+            - name: DatabaseConnections
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "=="
+            value: 0
+      docDB:
+        - description: Database connection count
+          metrics:
+            - name: DatabaseConnections
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "=="
+            value: 0
+      elasticache:
+        - description: connection count
+          metrics:
+            - name: CurrConnections
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "=="
+            value: 0      
+      elb:
+        - description: Loadbalancer requests count
+          metrics:
+            - name: RequestCount
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d 
+          constraint:
+            operator: "=="
+            value: 0  
+      elbv2:
+        - description: Application Loadbalancer RequestCount
+          metrics:
+            - name: RequestCount
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d 
+          constraint:
+            operator: "=="
+            value: 0    
+      ec2:
+        - description: EC2 CPU utilization 
+          metrics:
+            - name: CPUUtilization
+              statistic: Maximum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "<"
+            value: 6
+      dynamodb:
+        - description: Provisioned read capacity units
+          metrics:
+            - name: ConsumedReadCapacityUnits
+              statistic: Sum
+            - name: ProvisionedReadCapacityUnits
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            formula: ConsumedReadCapacityUnits / ProvisionedReadCapacityUnits * 100 
+            operator: "<"
+            value: 10
+        - description: Provisioned write capacity units
+          metrics:
+            - name: ConsumedWriteCapacityUnits
+              statistic: Sum
+            - name: ProvisionedWriteCapacityUnits
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            formula: ConsumedWriteCapacityUnits / ProvisionedWriteCapacityUnits * 100 
+            operator: "<"
+            value: 10
+      lambda:
+        - description: Lambda invocations count
+          metrics:
+            - name: Invocations
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "=="
+            value: 0
+    resources:
+      iamLastActivity:
+        description: Last user activity
+        global: true
+        constraint:
+          operator: ">="
+          value: 90 # 90 Days

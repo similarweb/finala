@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 func MockServer() (*api.Server, *testutils.MockStorage) {
@@ -272,6 +273,7 @@ func TestSave(t *testing.T) {
 				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
 			}
 
+			time.Sleep(time.Second * 1)
 			if rr.Code == http.StatusAccepted {
 				if mockStorage.Events != len(test.BodyRequest) {
 					t.Fatalf("unexpected saved data, got %d expected %d", rr.Code, test.expectedStatusCode)

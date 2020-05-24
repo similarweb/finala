@@ -102,4 +102,41 @@ func TestDetectDocdb(t *testing.T) {
 		t.Fatalf("unexpected collector documentDB resources, got %d expected %d", len(collector.Events), 1)
 	}
 
+	if len(collector.EventsCollectionStatus) != 2 {
+		t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+	}
+
+}
+
+func TestDetectDocdbError(t *testing.T) {
+
+	collector := testutils.NewMockCollector()
+	pricingManager := aws.NewPricingManager(&defaultPricingMock, "us-east-1")
+
+	mockCloudwatchClient := MockAWSCloudwatchClient{
+		responseMetricStatistics: defaultResponseMetricStatistics,
+	}
+
+	cloutwatchManager := aws.NewCloudWatchManager(&mockCloudwatchClient)
+
+	mockClient := MockAWSDocdbClient{
+		err: errors.New(""),
+	}
+
+	documentDBManager := aws.NewDocDBManager(collector, &mockClient, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+
+	response, _ := documentDBManager.Detect()
+
+	if len(response) != 0 {
+		t.Fatalf("unexpected documentDB detected, got %d expected %d", len(response), 0)
+	}
+
+	if len(collector.Events) != 0 {
+		t.Fatalf("unexpected collector documentDB resources, got %d expected %d", len(collector.Events), 0)
+	}
+
+	if len(collector.EventsCollectionStatus) != 2 {
+		t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+	}
+
 }

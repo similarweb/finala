@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/json"
 	"finala/collector"
 	"finala/collector/config"
 	"finala/expression"
@@ -31,18 +30,17 @@ type DocumentDBManager struct {
 	region             string
 	namespace          string
 	servicePricingCode string
-	Type               string
+	Name               string
 }
 
 // DetectedDocumentDB define the detected AWS documentDB instances
 type DetectedDocumentDB struct {
-	collector.PriceDetectedFields
-
 	Metric       string
 	Region       string
 	InstanceType string
 	MultiAZ      bool
 	Engine       string
+	collector.PriceDetectedFields
 }
 
 // NewDocDBManager implements AWS GO SDK
@@ -57,7 +55,7 @@ func NewDocDBManager(collector collector.CollectorDescriber, client DocumentDBCl
 		region:             region,
 		namespace:          "AWS/DocDB",
 		servicePricingCode: "AmazonDocDB",
-		Type:               fmt.Sprintf("%s_documentDB", ResourcePrefix),
+		Name:               fmt.Sprintf("%s_documentDB", ResourcePrefix),
 	}
 }
 
@@ -65,10 +63,25 @@ func NewDocDBManager(collector collector.CollectorDescriber, client DocumentDBCl
 func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 
 	log.Info("Analyze documentDB")
+
+	dd.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: dd.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFetch,
+		},
+	})
+
 	detectedDocDB := []DetectedDocumentDB{}
 	instances, err := dd.DescribeInstances(nil, nil)
 	if err != nil {
 		log.WithField("error", err).Error("could not describe documentDB instances")
+
+		dd.collector.AddCollectionStatus(collector.EventCollector{
+			ResourceName: dd.Name,
+			Data: collector.EventStatusData{
+				Status: collector.EventError,
+			},
+		})
 		return detectedDocDB, err
 	}
 
@@ -130,12 +143,15 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 					"region":              dd.region,
 				}).Info("DocumentDB instance detected as unutilized resource")
 
-				decodedTags := []byte{}
 				tags, err := dd.client.ListTagsForResource(&docdb.ListTagsForResourceInput{
 					ResourceName: instance.DBInstanceArn,
 				})
+
+				tagsData := map[string]string{}
 				if err == nil {
-					decodedTags, err = json.Marshal(&tags.TagList)
+					for _, tag := range tags.TagList {
+						tagsData[*tag.Key] = *tag.Value
+					}
 				}
 
 				docDB := DetectedDocumentDB{
@@ -149,16 +165,13 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 						PricePerHour:    price,
 						PricePerMonth:   price * 720,
 						TotalSpendPrice: totalPrice,
-						Tags:            string(decodedTags),
+						Tag:             tagsData,
 					},
 				}
 
-				dd.collector.Add(collector.EventCollector{
-					Name: "resource-detected",
-					Data: collector.ResourceDetected{
-						ResourceName: dd.Type,
-						Data:         docDB,
-					},
+				dd.collector.AddResource(collector.EventCollector{
+					ResourceName: dd.Name,
+					Data:         docDB,
 				})
 
 				detectedDocDB = append(detectedDocDB, docDB)
@@ -167,6 +180,13 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 		}
 
 	}
+
+	dd.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: dd.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFinish,
+		},
+	})
 
 	return detectedDocDB, nil
 

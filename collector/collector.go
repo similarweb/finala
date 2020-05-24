@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"finala/request"
+	"finala/visibility"
 	"fmt"
 	"net/http"
 	"sync"
@@ -13,47 +14,43 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	eventStatusCollection = "collection_status"
+	resourceDetected      = "resource_detected"
+)
+
 // CollectorDescriber describe the collector functions
 type CollectorDescriber interface {
-	Add(data EventCollector)
+	AddResource(data EventCollector)
+	AddCollectionStatus(data EventCollector)
 	GetCollectorEvent() []EventCollector
-}
-
-// ResourceDetected descrive the resource data detection
-type ResourceDetected struct {
-	ResourceName string
-	Data         interface{}
-}
-
-// EventCollector collector event data structure
-type EventCollector struct {
-	Name string
-	Data interface{}
 }
 
 // CollectorManager own of event resources detector
 type CollectorManager struct {
-	collectChan       chan EventCollector
-	collectorMutex    *sync.RWMutex
-	request           *request.HTTPClient
-	sendData          []EventCollector
-	sendInterval      time.Duration
-	ExecutionID       uint
-	webserverEndpoint string
+	collectChan    chan EventCollector
+	collectorMutex *sync.RWMutex
+	request        *request.HTTPClient
+	sendData       []EventCollector
+	sendInterval   time.Duration
+	executionID    string
+	apiEndpoint    string
 }
 
 // NewCollectorManager create new collector instance
-func NewCollectorManager(ctx context.Context, wg *sync.WaitGroup, req *request.HTTPClient, sendInterval time.Duration, webserverEndpoint string) *CollectorManager {
+func NewCollectorManager(ctx context.Context, wg *sync.WaitGroup, req *request.HTTPClient, sendInterval time.Duration, name, apiEndpoint string) *CollectorManager {
 
 	wg.Add(2)
+	executionID := fmt.Sprintf("%s_%v", name, time.Now().Unix())
+	log.WithField("id", executionID).Info("generate collector execution id")
 	collectorManager := &CollectorManager{
-		collectChan:       make(chan EventCollector),
-		collectorMutex:    &sync.RWMutex{},
-		request:           req,
-		sendData:          []EventCollector{},
-		sendInterval:      sendInterval,
-		ExecutionID:       1, // TODO:: need to replace
-		webserverEndpoint: webserverEndpoint,
+		collectChan:    make(chan EventCollector),
+		collectorMutex: &sync.RWMutex{},
+		request:        req,
+		sendData:       []EventCollector{},
+		sendInterval:   sendInterval,
+		executionID:    executionID,
+		apiEndpoint:    apiEndpoint,
 	}
 
 	go func(collectorManager *CollectorManager) {
@@ -62,7 +59,7 @@ func NewCollectorManager(ctx context.Context, wg *sync.WaitGroup, req *request.H
 			case data := <-collectorManager.collectChan:
 				collectorManager.saveEvent(data)
 			case <-ctx.Done():
-				log.Warn("Collector events has been shut down")
+				log.Info("collector events has been shut down")
 				wg.Done()
 				return
 			}
@@ -74,10 +71,11 @@ func NewCollectorManager(ctx context.Context, wg *sync.WaitGroup, req *request.H
 		for {
 			select {
 			case <-time.After(collectorManager.sendInterval):
+				log.Debug("Send bulk events")
 				collectorManager.sendBulk()
 			case <-ctx.Done():
-				log.Warn("Collector Loop has been shut down. clean all resources events")
-				collectorManager.done()
+				log.Info("collector Loop has been shut down. clean all resources events")
+				collectorManager.gracefulShutdown()
 				wg.Done()
 				return
 			}
@@ -87,8 +85,17 @@ func NewCollectorManager(ctx context.Context, wg *sync.WaitGroup, req *request.H
 	return collectorManager
 }
 
-// Add will send the event into the collector chnnel
-func (cm *CollectorManager) Add(data EventCollector) {
+// AddResource add resource data
+func (cm *CollectorManager) AddResource(data EventCollector) {
+	data.EventType = resourceDetected
+	data.EventTime = time.Now().Unix()
+	cm.collectChan <- data
+}
+
+// AddCollectionStatus add status on resource collector
+func (cm *CollectorManager) AddCollectionStatus(data EventCollector) {
+	data.EventType = eventStatusCollection
+	data.EventTime = time.Now().Unix()
 	cm.collectChan <- data
 }
 
@@ -105,7 +112,7 @@ func (cm *CollectorManager) saveEvent(data EventCollector) {
 	cm.sendData = append(cm.sendData, data)
 }
 
-// GetEvents return list of collected events
+// sendBulk will send all event data to to api server.
 func (cm *CollectorManager) sendBulk() bool {
 
 	cm.collectorMutex.RLock()
@@ -120,23 +127,23 @@ func (cm *CollectorManager) sendBulk() bool {
 
 }
 
-func (cm *CollectorManager) done() {
+// gracefulShutdown will send the last events
+func (cm *CollectorManager) gracefulShutdown() {
 
 	status := cm.sendBulk()
 	if !status {
 		log.Info("resend bulk data")
 		time.Sleep(cm.sendInterval)
-		cm.done()
+		cm.gracefulShutdown()
 	}
 
 }
 
-// send will get all the events and send them to the webserver
+// send will get all the events and send them to the api server
 func (cm *CollectorManager) send(events []EventCollector) bool {
 
-	// if the send fail we need t save the data to resent it
 	if len(events) == 0 {
-		log.Debug("not found event for webserver")
+		log.Debug("skip send events")
 		return false
 	}
 
@@ -144,13 +151,14 @@ func (cm *CollectorManager) send(events []EventCollector) bool {
 	if err != nil {
 		log.Fatal(err)
 	}
-	req, err := cm.request.Request("POST", fmt.Sprintf("%s/api/v1/detect-events", cm.webserverEndpoint), nil, bytes.NewBuffer(buf))
+	fmt.Println(fmt.Sprintf("%s/api/v1/detect-events/%s", cm.apiEndpoint, cm.executionID))
+	req, err := cm.request.Request("POST", fmt.Sprintf("%s/api/v1/detect-events/%s", cm.apiEndpoint, cm.executionID), nil, bytes.NewBuffer(buf))
 	if err != nil {
 		log.WithError(err).Error("could not create HTTP client request")
 		return false
 	}
 	req.Header.Set("Content-Type", "application/json")
-
+	defer visibility.Elapsed("api webserver request")()
 	res, err := cm.request.DO(req)
 
 	if err != nil {

@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/json"
 	"finala/collector"
 	"finala/collector/config"
 	"finala/expression"
@@ -31,7 +30,7 @@ type RDSManager struct {
 	region             string
 	namespace          string
 	servicePricingCode string
-	Type               string
+	Name               string
 }
 
 // DetectedAWSRDS define the detected AWS RDS instances
@@ -56,7 +55,7 @@ func NewRDSManager(collector collector.CollectorDescriber, client RDSClientDescr
 		region:             region,
 		namespace:          "AWS/RDS",
 		servicePricingCode: "AmazonRDS",
-		Type:               fmt.Sprintf("%s_rds", ResourcePrefix),
+		Name:               fmt.Sprintf("%s_rds", ResourcePrefix),
 	}
 }
 
@@ -64,10 +63,26 @@ func NewRDSManager(collector collector.CollectorDescriber, client RDSClientDescr
 func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 
 	log.Info("analyze RDS")
+
+	r.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: r.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFetch,
+		},
+	})
+
 	detected := []DetectedAWSRDS{}
 	instances, err := r.DescribeInstances(nil, nil)
 	if err != nil {
 		log.WithField("error", err).Error("could not describe rds instances")
+
+		r.collector.AddCollectionStatus(collector.EventCollector{
+			ResourceName: r.Name,
+			Data: collector.EventStatusData{
+				Status: collector.EventError,
+			},
+		})
+
 		return detected, err
 	}
 
@@ -129,12 +144,15 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 					"region":              r.region,
 				}).Info("RDS instance detected as unutilized resource")
 
-				decodedTags := []byte{}
 				tags, err := r.client.ListTagsForResource(&rds.ListTagsForResourceInput{
 					ResourceName: instance.DBInstanceArn,
 				})
+
+				tagsData := map[string]string{}
 				if err == nil {
-					decodedTags, err = json.Marshal(&tags.TagList)
+					for _, tag := range tags.TagList {
+						tagsData[*tag.Key] = *tag.Value
+					}
 				}
 
 				rds := DetectedAWSRDS{
@@ -149,16 +167,13 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 						PricePerHour:    price,
 						PricePerMonth:   price * 720,
 						TotalSpendPrice: totalPrice,
-						Tags:            string(decodedTags),
+						Tag:             tagsData,
 					},
 				}
 
-				r.collector.Add(collector.EventCollector{
-					Name: "resource-detected",
-					Data: collector.ResourceDetected{
-						ResourceName: r.Type,
-						Data:         rds,
-					},
+				r.collector.AddResource(collector.EventCollector{
+					ResourceName: r.Name,
+					Data:         rds,
 				})
 
 				detected = append(detected, rds)
@@ -166,6 +181,13 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 		}
 
 	}
+
+	r.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: r.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFinish,
+		},
+	})
 
 	return detected, nil
 

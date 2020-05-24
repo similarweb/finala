@@ -24,27 +24,10 @@ More to come...
 ### Unused RDS report
 ![alt Resources](https://raw.githubusercontent.com/similarweb/finala/master/docs/resource.jpg)
 
-### CLI Format
-```
-+-------------------------------------------------------------------------------------------------+
-| ID           | REGION    | INSTANCE TYPE | MULTI AZ | ENGINE | PRICE PER HOUR | PRICE PER MONTH |
-+-------------------------------------------------------------------------------------------------+
-| arn:aws:rds: | us-east-1 | db.m3.medium  | true     | mysql  | 0.18           | 129.6           |
-| arn:aws:rds: | us-east-1 | db.t2.medium  | false    | mysql  | 0.068          | 48.96           |
-+-------------------------------------------------------------------------------------------------+
-```
 
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
-
-### Docker
-
-```
-docker run -p 9090:9090 -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} similarweb/finala aws
-```
-
-Then browse to: http://127.0.0.1:9090/static/
 
 ### How To Use
 
@@ -116,7 +99,7 @@ You can even use [aws-vault](https://github.com/99designs/aws-vault):
 $ aws-vault exec aws-account-profile -- ./finala aws -c ${PWD}/config.yaml
 ```
 
-We suggest taking a look at the [example config](./config.yaml) file to see the available options.
+We suggest taking a look at the [example config](./config.yaml) files to see the available options.
 
 
 ### Release New Version
@@ -129,38 +112,40 @@ $ make release
 
 ### Development
 
-To run Finala from the source code run the command:
+See the following commands each component
 
-
-```shell
-$ go run main.go aws -c ./config.yaml
-```
-
-To run Finala UI with run the command:
+## Collector
 
 ```shell
-$ cd ui
-$ npm install
-$ npm run dev
+go run main.go collector -c ./configuration/collector.yaml
 ```
 
-Browse http://127.0.0.1:8081/static/ and enjoy! (we really appreciate contributes)
-
-
-### Dynamic parameters
-
-By default all the data will save in sqlite in local folder
-
-```
--c, --config string                      path to the config file
-    --clear-storage                      clear the internal storage on startup
-    --disable-ui                         disables the ui
--h, --help                               display this help
-    --storage-connection-string string   storage connection string. (default "DB.db")
-    --storage-driver string              storage driver. (Options: mysql, sqlite3) (default "sqlite3")
-    --ui-port int                        UI port. (default 9090)
+## API
+```shell
+go run main.go collector -c ./configuration/collector.yaml
 ```
 
+## UI
+
+If you want to make UI changes run the following commands:
+```shell
+cd ui 
+npm run dev
+```
+
+If you want to see the collector results from the UI run the following command:
+```shell
+make build-ui
+go run main.go ui -c ./configuration/ui.yaml
+```
+
+### Docker
+
+```
+docker-compose up
+```
+
+Then browse to: http://127.0.0.1:8080
 
 ## Running the tests
 

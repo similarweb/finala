@@ -8,14 +8,13 @@ import (
 	"os"
 	"time"
 
-	"github.com/gobuffalo/packr"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
 	log "github.com/sirupsen/logrus"
 
 	"finala/serverutil"
-	"finala/storage"
+	"finala/webserver/config"
 )
 
 const (
@@ -27,17 +26,17 @@ const (
 type Server struct {
 	router     *mux.Router
 	httpserver *http.Server
-	storage    storage.Storage
+	config     config.WebserverConfig
 }
 
 // NewServer returns a new Server
-func NewServer(port int, storage storage.Storage) *Server {
+func NewServer(port int, config config.WebserverConfig) *Server {
 
-	router := mux.NewRouter()
+	router := mux.NewRouter().StrictSlash(false)
 	corsObj := handlers.AllowedOrigins([]string{"*"})
 	return &Server{
-		router:  router,
-		storage: storage,
+		router: router,
+		config: config,
 		httpserver: &http.Server{
 			Handler: handlers.CORS(corsObj)(router),
 			Addr:    fmt.Sprintf("0.0.0.0:%d", port),
@@ -62,6 +61,7 @@ func (server *Server) Serve() serverutil.StopFunc {
 		stopped <- true
 	}()
 	go func() {
+		log.WithField("address", server.httpserver.Addr).Info("server lisinning")
 		server.httpserver.ListenAndServe()
 	}()
 	return func() {
@@ -77,15 +77,15 @@ func (server *Server) BindEndpoints() {
 	path, err := os.Getwd()
 	if err != nil {
 		log.WithError(err).Error("could not get working dir path")
+		os.Exit(1)
 	}
-	box := packr.NewBox(fmt.Sprintf("%s/ui/build", path))
-	server.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(box)))
-	server.router.HandleFunc("/api/v1/summary", server.GetSummary).Methods("GET")               // HealthCheck
-	server.router.HandleFunc("/api/v1/executions", server.GetExecutions).Methods("GET")         // HealthCheck
-	server.router.HandleFunc("/api/v1/resources/{type}", server.GetResourceData).Methods("GET") // return list of job deployments
-	server.router.HandleFunc("/api/v1/health", server.HealthCheckHandler).Methods("GET")        // HealthCheck
 
-	server.router.NotFoundHandler = http.HandlerFunc(server.NotFoundRoute)
+	server.router.HandleFunc("/api/v1/health", server.HealthCheckHandler).Methods("GET")
+	server.router.HandleFunc("/api/v1/settings", server.SettingsHandler).Methods("GET")
+	server.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, fmt.Sprintf("%s/ui/build%s", path, r.URL))
+		return
+	})
 
 }
 

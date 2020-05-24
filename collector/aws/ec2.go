@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/json"
 	"finala/collector"
 	"finala/collector/config"
 	"finala/expression"
@@ -31,7 +30,7 @@ type EC2Manager struct {
 	region             string
 	namespace          string
 	servicePricingCode string
-	Type               string
+	Name               string
 }
 
 // DetectedEC2 define the detected AWS EC2 instances
@@ -40,7 +39,6 @@ type DetectedEC2 struct {
 	Metric       string
 	Name         string
 	InstanceType string
-
 	collector.PriceDetectedFields
 }
 
@@ -56,17 +54,31 @@ func NewEC2Manager(collector collector.CollectorDescriber, client EC2ClientDescr
 		region:             region,
 		namespace:          "AWS/EC2",
 		servicePricingCode: "AmazonEC2",
-		Type:               fmt.Sprintf("%s_ec2", ResourcePrefix),
+		Name:               fmt.Sprintf("%s_ec2", ResourcePrefix),
 	}
 }
 
 // Detect check with ELB  instance is under utilization
 func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 	log.Info("Analyze EC2")
+
+	ec.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: ec.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFetch,
+		},
+	})
+
 	detectedEC2 := []DetectedEC2{}
 
 	instances, err := ec.DescribeInstances(nil, nil)
 	if err != nil {
+		ec.collector.AddCollectionStatus(collector.EventCollector{
+			ResourceName: ec.Name,
+			Data: collector.EventStatusData{
+				Status: collector.EventError,
+			},
+		})
 		return detectedEC2, err
 	}
 	now := time.Now()
@@ -135,11 +147,13 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 				durationRunningTime := now.Sub(*instance.LaunchTime)
 				totalPrice := price * durationRunningTime.Hours()
 
-				decodedTags := []byte{}
-
+				tagsData := map[string]string{}
 				if err == nil {
-					decodedTags, err = json.Marshal(instance.Tags)
+					for _, tag := range instance.Tags {
+						tagsData[*tag.Key] = *tag.Value
+					}
 				}
+
 				ec2 := DetectedEC2{
 					Region:       ec.region,
 					Metric:       metric.Description,
@@ -151,16 +165,13 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 						PricePerHour:    price,
 						PricePerMonth:   price * 720,
 						TotalSpendPrice: totalPrice,
-						Tags:            string(decodedTags),
+						Tag:             tagsData,
 					},
 				}
 
-				ec.collector.Add(collector.EventCollector{
-					Name: "resource-detected",
-					Data: collector.ResourceDetected{
-						ResourceName: ec.Type,
-						Data:         ec2,
-					},
+				ec.collector.AddResource(collector.EventCollector{
+					ResourceName: ec.Name,
+					Data:         ec2,
 				})
 
 				detectedEC2 = append(detectedEC2, ec2)
@@ -169,6 +180,13 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 
 		}
 	}
+
+	ec.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: ec.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFinish,
+		},
+	})
 
 	return detectedEC2, nil
 

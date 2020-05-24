@@ -42,7 +42,7 @@ var collectorCMD = &cobra.Command{
 		req := request.NewHTTPClient()
 
 		// Init collector manager
-		collectorManager := collector.NewCollectorManager(ctx, &wg, req, configStruct.Webserver.BulkInterval, configStruct.Webserver.WebServerAddr)
+		collectorManager := collector.NewCollectorManager(ctx, &wg, req, configStruct.APIServer.BulkInterval, configStruct.Name, configStruct.APIServer.Addr)
 
 		// Starting collect data
 		awsProvider := configStruct.Providers["aws"]

@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/json"
 	"finala/collector"
 	"finala/collector/config"
 	"finala/expression"
@@ -39,7 +38,7 @@ type DynamoDBManager struct {
 	region             string
 	namespace          string
 	servicePricingCode string
-	Type               string
+	Name               string
 }
 
 // DetectedAWSDynamoDB define the detected AWS RDS instances
@@ -47,7 +46,6 @@ type DetectedAWSDynamoDB struct {
 	Region string
 	Metric string
 	Name   string
-
 	collector.PriceDetectedFields
 }
 
@@ -63,7 +61,7 @@ func NewDynamoDBManager(collector collector.CollectorDescriber, client DynamoDBC
 		region:             region,
 		namespace:          "AWS/DynamoDB",
 		servicePricingCode: "AmazonDynamoDB",
-		Type:               fmt.Sprintf("%s_dynamoDB", ResourcePrefix),
+		Name:               fmt.Sprintf("%s_dynamoDB", ResourcePrefix),
 	}
 }
 
@@ -71,12 +69,27 @@ func NewDynamoDBManager(collector collector.CollectorDescriber, client DynamoDBC
 func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 
 	log.Info("Analyze dynamoDB")
+
+	dd.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: dd.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFetch,
+		},
+	})
+
 	detectedTables := []DetectedAWSDynamoDB{}
 	tables, err := dd.DescribeTables()
 	now := time.Now()
 
 	if err != nil {
 		log.WithField("error", err).Error("could not describe rds instances")
+		dd.collector.AddCollectionStatus(collector.EventCollector{
+			ResourceName: dd.Name,
+			Data: collector.EventStatusData{
+				Status: collector.EventError,
+			},
+		})
+
 		return detectedTables, err
 	}
 
@@ -148,12 +161,15 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 					pricePerMonth = float64(*table.ProvisionedThroughput.WriteCapacityUnits) * writePrice * 720
 				}
 
-				decodedTags := []byte{}
 				tags, err := dd.client.ListTagsOfResource(&dynamodb.ListTagsOfResourceInput{
 					ResourceArn: table.TableArn,
 				})
+
+				tagsData := map[string]string{}
 				if err == nil {
-					decodedTags, err = json.Marshal(&tags.Tags)
+					for _, tag := range tags.Tags {
+						tagsData[*tag.Key] = *tag.Value
+					}
 				}
 
 				detectedDynamoDBTable := DetectedAWSDynamoDB{
@@ -166,16 +182,13 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 						PricePerHour:    writePrice + readPrice,
 						PricePerMonth:   pricePerMonth,
 						TotalSpendPrice: totalPrice,
-						Tags:            string(decodedTags),
+						Tag:             tagsData,
 					},
 				}
 
-				dd.collector.Add(collector.EventCollector{
-					Name: "resource-detected",
-					Data: collector.ResourceDetected{
-						ResourceName: dd.Type,
-						Data:         detectedDynamoDBTable,
-					},
+				dd.collector.AddResource(collector.EventCollector{
+					ResourceName: dd.Name,
+					Data:         detectedDynamoDBTable,
 				})
 
 				detectedTables = append(detectedTables, detectedDynamoDBTable)
@@ -184,6 +197,13 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 
 		}
 	}
+
+	dd.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: dd.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFinish,
+		},
+	})
 
 	return detectedTables, nil
 

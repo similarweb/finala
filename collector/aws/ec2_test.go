@@ -100,4 +100,39 @@ func TestDetectEC2(t *testing.T) {
 		t.Fatalf("unexpected collector ec2 resources, got %d expected %d", len(collector.Events), 1)
 	}
 
+	if len(collector.EventsCollectionStatus) != 2 {
+		t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+	}
+
+}
+
+func TestDetectEC2Error(t *testing.T) {
+
+	collector := testutils.NewMockCollector()
+	mockCloudwatchClient := MockAWSCloudwatchClient{
+		responseMetricStatistics: defaultResponseMetricStatistics,
+	}
+	cloutwatchManager := aws.NewCloudWatchManager(&mockCloudwatchClient)
+	pricingManager := aws.NewPricingManager(&defaultPricingMock, "us-east-1")
+
+	mockClient := MockAWSEC2Client{
+		err: errors.New(""),
+	}
+
+	ec2Manager := aws.NewEC2Manager(collector, &mockClient, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+
+	response, _ := ec2Manager.Detect()
+
+	if len(response) != 0 {
+		t.Fatalf("unexpected ec2 detected, got %d expected %d", len(response), 1)
+	}
+
+	if len(collector.Events) != 0 {
+		t.Fatalf("unexpected collector ec2 resources, got %d expected %d", len(collector.Events), 1)
+	}
+
+	if len(collector.EventsCollectionStatus) != 2 {
+		t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+	}
+
 }

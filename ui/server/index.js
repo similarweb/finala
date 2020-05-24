@@ -9,9 +9,9 @@ middleware(app, {
   publicPath: "/"
 });
 
-app.listen(8081, err => {
+app.listen(8080, err => {
   if (err) {
     return console.error(err); // eslint-disable-line no-console
   }
-  console.log("Listening at http://localhost:8081"); // eslint-disable-line no-console
+  console.log("Listening at http://localhost:8080"); // eslint-disable-line no-console
 });

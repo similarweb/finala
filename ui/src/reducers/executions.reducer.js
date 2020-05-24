@@ -1,6 +1,6 @@
 const initialState = {
   list: [],
-  current: 0,
+  current: "",
 };
 
 export function executions(state = initialState, action) {

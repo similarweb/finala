@@ -103,4 +103,38 @@ func TestDetectElasticsearch(t *testing.T) {
 		t.Fatalf("unexpected collector elasticsearch resources, got %d expected %d", len(collector.Events), 1)
 	}
 
+	if len(collector.EventsCollectionStatus) != 2 {
+		t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+	}
+
+}
+func TestDetectElasticsearchError(t *testing.T) {
+
+	collector := testutils.NewMockCollector()
+	mockCloudwatchClient := MockAWSCloudwatchClient{
+		responseMetricStatistics: defaultResponseMetricStatistics,
+	}
+	cloutwatchManager := aws.NewCloudWatchManager(&mockCloudwatchClient)
+	pricingManager := aws.NewPricingManager(&defaultPricingMock, "us-east-1")
+
+	mockClient := MockAWSElasticacheClient{
+		err: errors.New(""),
+	}
+
+	elbManager := aws.NewElasticacheManager(collector, &mockClient, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+
+	response, _ := elbManager.Detect()
+
+	if len(response) != 0 {
+		t.Fatalf("unexpected elasticsearch detected, got %d expected %d", len(response), 0)
+	}
+
+	if len(collector.Events) != 0 {
+		t.Fatalf("unexpected collector elasticsearch resources, got %d expected %d", len(collector.Events), 0)
+	}
+
+	if len(collector.EventsCollectionStatus) != 2 {
+		t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+	}
+
 }

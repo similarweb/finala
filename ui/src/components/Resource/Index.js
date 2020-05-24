@@ -25,21 +25,22 @@ class Resource extends React.Component {
     /**
      * Resource name
      */
-    resources : PropTypes.array, 
+    resources : PropTypes.object, 
 
     /**
      * Current execution id
      */
-    selectedExecutionID: PropTypes.number
+    selectedExecutionID: PropTypes.string
  
   };
 
   getResource(){
     
     let resourceData = {}
-    this.props.resources.map((resource) => {
-      if (resource.ResourceName == this.props.match.params.name){
-        resourceData = resource
+   
+    Object.keys(this.props.resources).map((resourceName) => {
+      if (resourceName == this.props.match.params.name){
+        resourceData = this.props.resources[resourceName]
         return
       }
     })
@@ -55,7 +56,7 @@ class Resource extends React.Component {
     
     return (
         <div >
-          {this.props.selectedExecutionID !== 0 &&
+          {this.props.selectedExecutionID !== "" &&
             <Table 
               executionID={this.props.selectedExecutionID}
               resourceName={ this.props.match.params.name}

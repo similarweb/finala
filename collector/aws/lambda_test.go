@@ -105,6 +105,43 @@ func TestDetectLambda(t *testing.T) {
 			t.Fatalf("unexpected collector lambda resources, got %d expected %d", len(collector.Events), 2)
 		}
 
+		if len(collector.EventsCollectionStatus) != 2 {
+			t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+		}
+
+	})
+
+}
+func TestDetectLambdaError(t *testing.T) {
+
+	collector := testutils.NewMockCollector()
+	mockCloudwatchClient := MockAWSCloudwatchClient{
+		responseMetricStatistics: defaultResponseMetricStatistics,
+	}
+	cloutwatchManager := aws.NewCloudWatchManager(&mockCloudwatchClient)
+
+	t.Run("detected", func(t *testing.T) {
+
+		mockClient := MockAWSLambdaClient{
+			err: errors.New(""),
+		}
+
+		lambdaManager := aws.NewLambdaManager(collector, &mockClient, cloutwatchManager, defaultMetricConfig, "us-east-1")
+
+		response, _ := lambdaManager.Detect()
+
+		if len(response) != 0 {
+			t.Fatalf("unexpected lambda detected, got %d expected %d", len(response), 0)
+		}
+
+		if len(collector.Events) != 0 {
+			t.Fatalf("unexpected collector lambda resources, got %d expected %d", len(collector.Events), 0)
+		}
+
+		if len(collector.EventsCollectionStatus) != 2 {
+			t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+		}
+
 	})
 
 }

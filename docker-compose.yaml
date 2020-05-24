@@ -1,0 +1,68 @@
+version: '3.7'
+
+services:
+  elasticsearch:
+      image: nshou/elasticsearch-kibana
+      ports:
+        - "9200:9200"
+        - "5601:5601"
+      networks:
+        backend:
+          aliases:
+            - elasticsearch
+  ui:
+      build:
+        context: .
+      command: 
+        - ui 
+        - -c 
+        - /etc/config.yaml
+      volumes:
+          - ./configuration/ui.yaml:/etc/config.yaml
+      ports:
+        - "8080:8080"
+      networks:
+        - backend
+      depends_on: 
+        - api
+  api:
+      build:
+        context: .
+      command: 
+        - api 
+        - -c 
+        - /etc/config.yaml
+      environment:
+        - OVERRIDE_STORAGE_ENDPOINT=http://elasticsearch:9200
+      volumes:
+          - ./configuration/api.yaml:/etc/config.yaml
+      ports:
+        - "8081:8081"
+      networks:
+        - backend
+      depends_on: 
+        - elasticsearch
+      networks:
+        backend:
+          aliases:
+            - api
+  collector:
+      build:
+        context: .
+      command: 
+        - collector 
+        - -c 
+        - /etc/config.yaml
+      environment:
+        - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} 
+        - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+        - OVERRIDE_API_ENDPOINT=http://api:8081
+      volumes:
+          - ./configuration/collector.yaml:/etc/config.yaml
+      networks:
+        - backend
+      depends_on: 
+        - api
+ 
+networks:
+  backend:

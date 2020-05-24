@@ -27,7 +27,7 @@ const (
 
 //Analyze represents the aws analyze
 type Analyze struct {
-	cl          *collector.CollectorManager
+	cl          collector.CollectorDescriber
 	awsAccounts []config.AWSAccount
 	metrics     map[string][]config.MetricConfig
 	resources   map[string]config.ResourceConfig
@@ -35,7 +35,7 @@ type Analyze struct {
 }
 
 // NewAnalyzeManager will charge to execute aws resources
-func NewAnalyzeManager(cl *collector.CollectorManager, awsAccounts []config.AWSAccount, metrics map[string][]config.MetricConfig, resources map[string]config.ResourceConfig) *Analyze {
+func NewAnalyzeManager(cl collector.CollectorDescriber, awsAccounts []config.AWSAccount, metrics map[string][]config.MetricConfig, resources map[string]config.ResourceConfig) *Analyze {
 	return &Analyze{
 		cl:          cl,
 		awsAccounts: awsAccounts,
@@ -89,34 +89,11 @@ func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient 
 
 	ec2 := NewEC2Manager(app.cl, ec2.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 
-	app.cl.Add(collector.EventCollector{
-		Name: "status",
-		Data: collector.EventStatusData{
-			Name:   ec2.Type,
-			Status: collector.EventFetch,
-		},
-	})
-
 	response, err := ec2.Detect()
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total EC2 detected")
 
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   ec2.Type,
-				Status: collector.EventFetch,
-			},
-		})
-	} else {
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   ec2.Type,
-				Status: collector.EventError,
-			},
-		})
 	}
 
 	return err
@@ -138,33 +115,10 @@ func (app *Analyze) IAMUsers(sess *session.Session) error {
 
 	iam := NewIAMUseranager(app.cl, iam.New(sess))
 
-	app.cl.Add(collector.EventCollector{
-		Name: "status",
-		Data: collector.EventStatusData{
-			Name:   iam.Type,
-			Status: collector.EventFetch,
-		},
-	})
-
 	response, err := iam.LastActivity(resource.Constraint.Value, resource.Constraint.Operator)
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total iam users detected")
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   iam.Type,
-				Status: collector.EventFetch,
-			},
-		})
-	} else {
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   iam.Type,
-				Status: collector.EventError,
-			},
-		})
 	}
 
 	return nil
@@ -179,34 +133,10 @@ func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *Cloudwat
 
 	elb := NewELBManager(app.cl, elb.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 
-	app.cl.Add(collector.EventCollector{
-		Name: "status",
-		Data: collector.EventStatusData{
-			Name:   elb.Type,
-			Status: collector.EventFetch,
-		},
-	})
-
 	response, err := elb.Detect()
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total ELB detected")
-
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   elb.Type,
-				Status: collector.EventFinish,
-			},
-		})
-	} else {
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   elb.Type,
-				Status: collector.EventError,
-			},
-		})
 	}
 
 	return err
@@ -221,34 +151,10 @@ func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *Cloudw
 
 	elbv2 := NewELBV2Manager(app.cl, elbv2.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 
-	app.cl.Add(collector.EventCollector{
-		Name: "status",
-		Data: collector.EventStatusData{
-			Name:   elbv2.Type,
-			Status: collector.EventFetch,
-		},
-	})
-
 	response, err := elbv2.Detect()
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total elbV2 detected")
-
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   elbv2.Type,
-				Status: collector.EventFinish,
-			},
-		})
-	} else {
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   elbv2.Type,
-				Status: collector.EventError,
-			},
-		})
 	}
 
 	return err
@@ -263,33 +169,10 @@ func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *
 
 	elasticacheCLient := NewElasticacheManager(app.cl, elasticache.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 
-	app.cl.Add(collector.EventCollector{
-		Name: "status",
-		Data: collector.EventStatusData{
-			Name:   elasticacheCLient.Type,
-			Status: collector.EventFetch,
-		},
-	})
-
 	response, err := elasticacheCLient.Detect()
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total elasticsearch detected")
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   elasticacheCLient.Type,
-				Status: collector.EventFinish,
-			},
-		})
-	} else {
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   elasticacheCLient.Type,
-				Status: collector.EventError,
-			},
-		})
 	}
 
 	return err
@@ -304,35 +187,10 @@ func (app *Analyze) AnalyzeRDS(sess *session.Session, cloudWatchCLient *Cloudwat
 
 	rds := NewRDSManager(app.cl, rds.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 
-	app.cl.Add(collector.EventCollector{
-		Name: "status",
-		Data: collector.EventStatusData{
-			Name:   rds.Type,
-			Status: collector.EventFetch,
-		},
-	})
-
 	response, err := rds.Detect()
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total RDS detected")
-
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   rds.Type,
-				Status: collector.EventFinish,
-			},
-		})
-
-	} else {
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   rds.Type,
-				Status: collector.EventError,
-			},
-		})
 	}
 
 	return err
@@ -348,34 +206,10 @@ func (app *Analyze) AnalyzeDynamoDB(sess *session.Session, cloudWatchCLient *Clo
 
 	dynamoDB := NewDynamoDBManager(app.cl, dynamodb.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 
-	app.cl.Add(collector.EventCollector{
-		Name: "status",
-		Data: collector.EventStatusData{
-			Name:   dynamoDB.Type,
-			Status: collector.EventFetch,
-		},
-	})
-
 	response, err := dynamoDB.Detect()
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total dynamoDB detected")
-
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   dynamoDB.Type,
-				Status: collector.EventFinish,
-			},
-		})
-	} else {
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   dynamoDB.Type,
-				Status: collector.EventError,
-			},
-		})
 	}
 
 	return err
@@ -391,35 +225,10 @@ func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *Cloudw
 
 	docDB := NewDocDBManager(app.cl, docdb.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
 
-	app.cl.Add(collector.EventCollector{
-		Name: "status",
-		Data: collector.EventStatusData{
-			Name:   docDB.Type,
-			Status: collector.EventFetch,
-		},
-	})
-
 	response, err := docDB.Detect()
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total documentDB detected")
-
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   docDB.Type,
-				Status: collector.EventFinish,
-			},
-		})
-	} else {
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   docDB.Type,
-				Status: collector.EventError,
-			},
-		})
-
 	}
 
 	return err
@@ -434,34 +243,10 @@ func (app *Analyze) AnalyzeLambda(sess *session.Session, cloudWatchCLient *Cloud
 
 	lambdaManager := NewLambdaManager(app.cl, lambda.New(sess), cloudWatchCLient, metrics, *sess.Config.Region)
 
-	app.cl.Add(collector.EventCollector{
-		Name: "status",
-		Data: collector.EventStatusData{
-			Name:   lambdaManager.Type,
-			Status: collector.EventFetch,
-		},
-	})
-
 	response, err := lambdaManager.Detect()
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total lambda detected")
-
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   lambdaManager.Type,
-				Status: collector.EventFinish,
-			},
-		})
-	} else {
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   lambdaManager.Type,
-				Status: collector.EventError,
-			},
-		})
 	}
 
 	return err
@@ -472,35 +257,10 @@ func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManage
 
 	volumeManager := NewVolumesManager(app.cl, ec2.New(sess), pricing, *sess.Config.Region)
 
-	app.cl.Add(collector.EventCollector{
-		Name: "status",
-		Data: collector.EventStatusData{
-			Name:   volumeManager.Type,
-			Status: collector.EventFetch,
-		},
-	})
-
 	response, err := volumeManager.Detect()
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total ec2 volumes detected")
-
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   volumeManager.Type,
-				Status: collector.EventFinish,
-			},
-		})
-
-	} else {
-		app.cl.Add(collector.EventCollector{
-			Name: "status",
-			Data: collector.EventStatusData{
-				Name:   volumeManager.Type,
-				Status: collector.EventError,
-			},
-		})
 	}
 	return err
 }

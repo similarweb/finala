@@ -22,7 +22,7 @@ type IAMClientDescreptor interface {
 type IAMManager struct {
 	collector collector.CollectorDescriber
 	client    IAMClientDescreptor
-	Type      string
+	Name      string
 }
 
 // DetectedAWSLastActivity define the aws last activity
@@ -39,7 +39,7 @@ func NewIAMUseranager(collector collector.CollectorDescriber, client IAMClientDe
 	return &IAMManager{
 		collector: collector,
 		client:    client,
-		Type:      fmt.Sprintf("%s_iam_users", ResourcePrefix),
+		Name:      fmt.Sprintf("%s_iam_users", ResourcePrefix),
 	}
 }
 
@@ -47,11 +47,27 @@ func NewIAMUseranager(collector collector.CollectorDescriber, client IAMClientDe
 func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWSLastActivity, error) {
 
 	log.Info("analyze IAM users last activity")
+
+	im.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: im.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFetch,
+		},
+	})
+
 	detected := []DetectedAWSLastActivity{}
 
 	users, err := im.GetUsers(nil, nil)
 	if err != nil {
 		log.WithError(err).Error("could not get iam users")
+
+		im.collector.AddCollectionStatus(collector.EventCollector{
+			ResourceName: im.Name,
+			Data: collector.EventStatusData{
+				Status: collector.EventError,
+			},
+		})
+
 		return detected, err
 	}
 	now := time.Now()
@@ -105,18 +121,23 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 					LastActivity: lastActivity,
 				}
 
-				im.collector.Add(collector.EventCollector{
-					Name: "resource-detected",
-					Data: collector.ResourceDetected{
-						ResourceName: im.Type,
-						Data:         userData,
-					},
+				im.collector.AddResource(collector.EventCollector{
+					ResourceName: im.Name,
+					Data:         userData,
 				})
 
 				detected = append(detected, userData)
 			}
 		}
 	}
+
+	im.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: im.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFinish,
+		},
+	})
+
 	return detected, nil
 }
 

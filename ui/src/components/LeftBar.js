@@ -63,11 +63,11 @@ const styles = () => ({
 class LeftBar extends React.Component {
 
   static propTypes = {    
-    resources : PropTypes.array, 
+    resources : PropTypes.object, 
     dispatch : PropTypes.func,
     executions: PropTypes.object, 
     classes: PropTypes.object,
-    selectedExecutionID: PropTypes.number
+    selectedExecutionID: PropTypes.string
 
   };  
 
@@ -90,7 +90,7 @@ class LeftBar extends React.Component {
   fetch(executionID){
     ResourcesService.Summary(executionID).then(
         data => {
-          this.props.dispatch({ type: 'RESOURCE_LIST', data: data[executionID]})
+          this.props.dispatch({ type: 'RESOURCE_LIST', data: data})
           this.timeoutAjaxCall = setTimeout(() => { 
             this.fetch(executionID)
           }, 5000);
@@ -112,10 +112,22 @@ class LeftBar extends React.Component {
     this.fetch(event.target.value)
   }
 
+   compare( a, b ) {
+    if ( a.Time < b.Time ){
+      return -1;
+    }
+    if ( a.Time > b.Time ){
+      return 1;
+    }
+    return 0;
+  }
+
   /**
   * Component render
   */    
   render() {
+    this.props.executions.list.sort( this.compare );
+
     return (
       <Drawer
         className={this.props.classes.drawer}
@@ -138,8 +150,8 @@ class LeftBar extends React.Component {
                 value={this.state.executionID}
                 onChange={(event)=> this.handleChange(event)}
               >
-                {this.props.executions.list.map((execution) => (
-                  <MenuItem key={execution.ID} value={execution.ID}>{execution.ID} - {Moment(execution.CreatedAt).format('MM-DD-YYYY H:mm')}</MenuItem>
+                {this.props.executions.list.map((execution, i) => (
+                  <MenuItem key={i} value={execution.ID}>{execution.Name} - {Moment(execution.Time).format('MM-DD-YYYY H:mm')}</MenuItem>
                 ))}
               </Select>
               </Grid>
@@ -149,14 +161,14 @@ class LeftBar extends React.Component {
         </List>
         <Divider />
         <List>
-          {this.props.resources.map((resource, i) => (
-                <ListItem button key={i} component={Link} to={`/resource/${resource.ResourceName}`}>
+          {Object.keys(this.props.resources).map((resourceName, i) => (
+                <ListItem button key={i} component={Link} to={`/resource/${this.props.resources[resourceName].ResourceName}`}>
                 <ListItemText>
-                <p className={this.props.classes.topLinkText}>{TextUtils.ParseName(resource.ResourceName)} ({resource.ResourceCount})</p>
-                <p className={this.props.classes.subLinkText}>{numeral(resource.TotalSpent).format('0,0[.]00 $')}</p>
+                <p className={this.props.classes.topLinkText}>{TextUtils.ParseName(this.props.resources[resourceName].ResourceName)} ({this.props.resources[resourceName].ResourceCount})</p>
+                <p className={this.props.classes.subLinkText}>{numeral(this.props.resources[resourceName].TotalSpent).format('0,0[.]00 $')}</p>
                 </ListItemText>
-                {resource.Status == 1 && <ErrorOutlineIcon style={{position: "absolute", right: 5, top: 10, color: "red"}} />}
-                {resource.Status == 0 && <CircularProgress style={{position: "absolute", right: 5, top: 10}} className={this.props.classes.progress} size={16} />}
+                {this.props.resources[resourceName].Status == 1 && <ErrorOutlineIcon style={{position: "absolute", right: 5, top: 10, color: "red"}} />}
+                {this.props.resources[resourceName].Status == 0 && <CircularProgress style={{position: "absolute", right: 5, top: 10}} className={this.props.classes.progress} size={16} />}
                 </ListItem>
           ))}
         </List>

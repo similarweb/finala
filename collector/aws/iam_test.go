@@ -107,6 +107,33 @@ func TestLastActivity(t *testing.T) {
 			t.Fatalf("unexpected collector iam user resources, got %d expected %d", len(collector.Events), 2)
 		}
 
+		if len(collector.EventsCollectionStatus) != 2 {
+			t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+		}
+
 	})
+
+}
+func TestLastActivityError(t *testing.T) {
+
+	collector := testutils.NewMockCollector()
+
+	mockClient := MockIAMClient{
+		errListUser: errors.New(""),
+	}
+	iamManager := aws.NewIAMUseranager(collector, &mockClient)
+	response, _ := iamManager.LastActivity(10, ">=")
+
+	if len(response) != 0 {
+		t.Fatalf("unexpected iam user detection, got %d expected %d", len(response), 0)
+	}
+
+	if len(collector.Events) != 0 {
+		t.Fatalf("unexpected collector iam user resources, got %d expected %d", len(collector.Events), 0)
+	}
+
+	if len(collector.EventsCollectionStatus) != 2 {
+		t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+	}
 
 }

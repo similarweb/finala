@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"finala/collector"
 	"finala/request"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -21,9 +22,9 @@ type DetectEvents struct {
 }
 
 type ReceivedData struct {
-	webserverEndpoint string
-	receivedCount     int
-	returnStatusCode  int
+	apiEndpoint      string
+	receivedCount    int
+	returnStatusCode int
 }
 
 func (rd *ReceivedData) HandleRequestHandler(resp http.ResponseWriter, req *http.Request) {
@@ -46,14 +47,13 @@ func (rd *ReceivedData) HandleRequestHandler(resp http.ResponseWriter, req *http
 
 }
 
-func newCollector(wg sync.WaitGroup, ctx context.Context) *collector.CollectorManager {
+func newCollector(wg sync.WaitGroup, ctx context.Context, port int) *collector.CollectorManager {
 
 	req := request.NewHTTPClient()
 	duration := time.Duration(time.Second * 1)
-	coll := collector.NewCollectorManager(ctx, &wg, req, duration, "http://127.0.0.1:5000")
+	coll := collector.NewCollectorManager(ctx, &wg, req, duration, "collector_name", fmt.Sprintf("http://127.0.0.1:%d", port))
 	return coll
 }
-
 func TestAddEvent(t *testing.T) {
 
 	var wg sync.WaitGroup
@@ -63,13 +63,13 @@ func TestAddEvent(t *testing.T) {
 		returnStatusCode: http.StatusAccepted,
 	}
 
-	coll := newCollector(wg, ctx)
+	coll := newCollector(wg, ctx, 5001)
 
 	r := mux.NewRouter()
-	r.HandleFunc("/api/v1/detect-events", receivedData.HandleRequestHandler)
+	r.HandleFunc("/api/v1/detect-events/{executionID}", receivedData.HandleRequestHandler)
 
 	srv := &http.Server{
-		Addr:    ":5000",
+		Addr:    ":5001",
 		Handler: r,
 	}
 	go func() {
@@ -80,18 +80,19 @@ func TestAddEvent(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	coll.Add(collector.EventCollector{
-		Name: "test",
-		Data: "test data",
+	coll.AddCollectionStatus(collector.EventCollector{
+		ResourceName: "test",
+		Data:         "test data",
 	})
-	coll.Add(collector.EventCollector{
-		Name: "test1",
-		Data: "test data",
+	coll.AddResource(collector.EventCollector{
+		ResourceName: "test1",
+		Data:         "test data",
 	})
+
 	time.Sleep(time.Second * 2)
 
 	if receivedData.receivedCount != 2 {
-		t.Fatalf("unexpected collector send data, got %d, expected %d", receivedData.returnStatusCode, 2)
+		t.Fatalf("unexpected collector send data, got %d, expected %d", receivedData.receivedCount, 2)
 	}
 
 	if len(coll.GetCollectorEvent()) != 0 {
@@ -109,13 +110,13 @@ func TestAddEventServerUnavailable(t *testing.T) {
 		returnStatusCode: http.StatusInternalServerError,
 	}
 
-	coll := newCollector(wg, ctx)
+	coll := newCollector(wg, ctx, 5002)
 
 	r := mux.NewRouter()
-	r.HandleFunc("/api/v1/detect-events", receivedData.HandleRequestHandler)
+	r.HandleFunc("/api/v1/detect-events/{executionID}", receivedData.HandleRequestHandler)
 
 	srv := &http.Server{
-		Addr:    ":5000",
+		Addr:    ":5002",
 		Handler: r,
 	}
 	go func() {
@@ -126,13 +127,13 @@ func TestAddEventServerUnavailable(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	coll.Add(collector.EventCollector{
-		Name: "test",
-		Data: "test data",
+	coll.AddCollectionStatus(collector.EventCollector{
+		ResourceName: "test",
+		Data:         "test data",
 	})
-	coll.Add(collector.EventCollector{
-		Name: "test1",
-		Data: "test data",
+	coll.AddResource(collector.EventCollector{
+		ResourceName: "test1",
+		Data:         "test data",
 	})
 	time.Sleep(time.Second * 2)
 

@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/json"
 	"finala/collector"
 	"fmt"
 
@@ -18,13 +17,13 @@ type EC2VolumeClientDescriptor interface {
 
 // EC2VolumeManager describe EBS manager
 type EC2VolumeManager struct {
-	collector          collector.CollectorDescriber
 	client             EC2VolumeClientDescriptor
 	pricingClient      *PricingManager
+	collector          collector.CollectorDescriber
 	region             string
 	namespace          string
 	servicePricingCode string
-	Type               string
+	Name               string
 }
 
 // DetectedAWSEC2Volume define the detected volume data
@@ -33,21 +32,22 @@ type DetectedAWSEC2Volume struct {
 	ResourceID    string
 	Type          string
 	Size          int64
-	PricePerMonth float64 `gorm:"type:DOUBLE`
-	Tags          string  `gorm:"type:TEXT" json:"-"`
+	PricePerMonth float64
+	Tag           map[string]string
 }
 
 // NewVolumesManager implements AWS GO SDK
 func NewVolumesManager(collector collector.CollectorDescriber, client EC2VolumeClientDescriptor, pricing *PricingManager, region string) *EC2VolumeManager {
 
 	return &EC2VolumeManager{
-		collector:          collector,
-		client:             client,
-		pricingClient:      pricing,
-		region:             region,
+		client:        client,
+		pricingClient: pricing,
+		region:        region,
+		collector:     collector,
+
 		namespace:          "AWS/EC2",
 		servicePricingCode: "AmazonEC2",
-		Type:               fmt.Sprintf("%s_ec2_volume", ResourcePrefix),
+		Name:               fmt.Sprintf("%s_ec2_volume", ResourcePrefix),
 	}
 }
 
@@ -56,11 +56,24 @@ func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 
 	log.Info("analyze Volumes")
 
+	ev.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: ev.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFetch,
+		},
+	})
+
 	detected := []DetectedAWSEC2Volume{}
 	volumes, err := ev.Describe(nil, nil)
 
 	if err != nil {
 		log.WithField("error", err).Error("could not describe ec2 volumes")
+		ev.collector.AddCollectionStatus(collector.EventCollector{
+			ResourceName: ev.Name,
+			Data: collector.EventStatusData{
+				Status: collector.EventError,
+			},
+		})
 		return detected, err
 	}
 
@@ -86,9 +99,11 @@ func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 			price = 0
 		}
 
-		decodedTags := []byte{}
+		tagsData := map[string]string{}
 		if err == nil {
-			decodedTags, err = json.Marshal(vol.Tags)
+			for _, tag := range vol.Tags {
+				tagsData[*tag.Key] = *tag.Value
+			}
 		}
 
 		volumeSize := *vol.Size
@@ -98,20 +113,24 @@ func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 			Type:          *vol.VolumeType,
 			Size:          volumeSize,
 			PricePerMonth: ev.GetCalculatedPrice(vol, price),
-			Tags:          string(decodedTags),
+			Tag:           tagsData,
 		}
 
-		ev.collector.Add(collector.EventCollector{
-			Name: "resource-detected",
-			Data: collector.ResourceDetected{
-				ResourceName: ev.Type,
-				Data:         dEBS,
-			},
+		ev.collector.AddResource(collector.EventCollector{
+			ResourceName: ev.Name,
+			Data:         dEBS,
 		})
 
 		detected = append(detected, dEBS)
 
 	}
+
+	ev.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: ev.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFinish,
+		},
+	})
 
 	return detected, nil
 

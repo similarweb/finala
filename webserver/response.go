@@ -1,14 +1,10 @@
 package webserver
 
-import "net/url"
+type SettingsResponse struct {
+	APIEndpoint string `json:"api_endpoint"`
+}
 
 //HealthResponse is returned when healtcheck requested
 type HealthResponse struct {
 	Status bool `json:"status"`
-}
-
-//HttpErrorResponse is returned on error
-type HttpErrorResponse struct {
-	Error      string     `json:"error"`
-	ErrorQuery url.Values `json:"errorQuery"`
 }

@@ -2,7 +2,6 @@ const path = require('path')
 const webpack = require('webpack')
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
 const FaviconsWebpackPlugin = require('favicons-webpack-plugin')
-const Settings = require('./settings')
 
 module.exports = (options) => ({
   mode: options.mode,
@@ -42,16 +41,6 @@ module.exports = (options) => ({
                 name: 'images/[hash]-[name].[ext]'
             } 
         }]
-      },
-      {
-        test: /\.js$/,
-        loader: 'string-replace-loader',
-        options: {
-          multiple: [
-              { search: '<<API_URL>>', replace: Settings.webserver_endpoint},
-              
-          ]
-        }
       },
       {
         test: /\.svg$/,

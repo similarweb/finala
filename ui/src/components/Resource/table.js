@@ -78,7 +78,7 @@ class Table extends React.Component {
 
     resourceName: PropTypes.string,
 
-    executionID: PropTypes.number
+    executionID: PropTypes.string
 
   };
 
@@ -161,36 +161,47 @@ class Table extends React.Component {
       data => {
         if (data != null && typeof data == "object" && data.length > 0 ){
           
-          const firstRow = data[0]
+          const resources = []
+          data.find(obj => {
+            resources.push(obj.Data)
+          })
+          const firstRow = resources[0]
           const headers = []
 
           Object.keys(firstRow).map(function(key) {
             const header = {
               name: key,
-              label: TextUtils.ParseName(key).toUpperCase(),
+              label: TextUtils.CamelCaseToTitleCase(key),
               options: {}
             }
             switch(key) {
-              case "price_per_month":
-              case "total_spend_price":
+              case "PricePerMonth":
+              case "TotalSpendPrice":
                 header["options"]["customBodyRender"] = (data) => {
                   return (
                   <span>{numeral(data).format('0,0[.]00 $')}</span>
                   )
                 }
               break
-              case "price_per_hour":
+              case "PricePerHour":
                 header["options"]["customBodyRender"] = (data) => {
                   return (
                   <span>{numeral(data).format('0,0[.]00000 $')}</span>
                   )
                 }
               break
-              case "tags":
-                header["options"]["customBodyRender"] = (data) => (
-                  <TagsDialog tags={data} />
-                  )
+              case "Tag":
+                header["options"]["customBodyRender"] = (data) => {
+                 return( <TagsDialog tags={data} />)
+                }
                 break
+              default:
+                header["options"]["customBodyRender"] = (data) => {
+                  return (
+                  <span>{data}</span>
+                  )
+                }
+
             }
 
             if (key !== "execution_id"){
@@ -199,7 +210,7 @@ class Table extends React.Component {
             
           });
 
-          this.setState({data, headers})
+          this.setState({data:resources, headers})
           this.setState({showLoader: false })
         } else {
           this.setState({data: []})

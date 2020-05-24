@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/json"
 	"finala/collector"
 	"finala/collector/config"
 	"finala/expression"
@@ -29,7 +28,7 @@ type LambdaManager struct {
 	region             string
 	namespace          string
 	servicePricingCode string
-	Type               string
+	Name               string
 }
 
 // DetectedAWSLambda define the detected AWS Lambda instances
@@ -38,7 +37,7 @@ type DetectedAWSLambda struct {
 	Region     string
 	ResourceID string
 	Name       string
-	Tags       string
+	Tag        map[string]string
 }
 
 // NewLambdaManager implements AWS GO SDK
@@ -51,7 +50,7 @@ func NewLambdaManager(collector collector.CollectorDescriber, client LambdaClien
 		metrics:          metrics,
 		region:           region,
 		namespace:        "AWS/Lambda",
-		Type:             fmt.Sprintf("%s_lambda", ResourcePrefix),
+		Name:             fmt.Sprintf("%s_lambda", ResourcePrefix),
 	}
 }
 
@@ -59,10 +58,26 @@ func NewLambdaManager(collector collector.CollectorDescriber, client LambdaClien
 func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 
 	log.Info("analyze Lambda")
+
+	lm.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: lm.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFetch,
+		},
+	})
+
 	detected := []DetectedAWSLambda{}
 	functions, err := lm.Describe(nil, nil)
 	if err != nil {
 		log.WithField("error", err).Error("could not describe lambda functions")
+
+		lm.collector.AddCollectionStatus(collector.EventCollector{
+			ResourceName: lm.Name,
+			Data: collector.EventStatusData{
+				Status: collector.EventError,
+			},
+		})
+
 		return detected, err
 	}
 
@@ -118,12 +133,17 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 					"region":              lm.region,
 				}).Info("Lambda function detected as unutilized resource")
 
-				decodedTags := []byte{}
 				tags, err := lm.client.ListTags(&lambda.ListTagsInput{
 					Resource: fun.FunctionArn,
 				})
+
+				tagsData := map[string]string{}
 				if err == nil {
-					decodedTags, err = json.Marshal(&tags.Tags)
+					for key, value := range tags.Tags {
+						log.Info(key)
+						log.Info(*value)
+						tagsData[key] = *value
+					}
 				}
 
 				lambdaData := DetectedAWSLambda{
@@ -131,15 +151,12 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 					Metric:     metric.Description,
 					ResourceID: *fun.FunctionArn,
 					Name:       *fun.FunctionName,
-					Tags:       string(decodedTags),
+					Tag:        tagsData,
 				}
 
-				lm.collector.Add(collector.EventCollector{
-					Name: "resource-detected",
-					Data: collector.ResourceDetected{
-						ResourceName: lm.Type,
-						Data:         lambdaData,
-					},
+				lm.collector.AddResource(collector.EventCollector{
+					ResourceName: lm.Name,
+					Data:         lambdaData,
 				})
 
 				detected = append(detected, lambdaData)
@@ -148,6 +165,13 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 		}
 
 	}
+
+	lm.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: lm.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFinish,
+		},
+	})
 
 	return detected, nil
 

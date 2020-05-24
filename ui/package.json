@@ -38,7 +38,6 @@
     "redux": "4.0.1",
     "redux-thunk": "2.3.0",
     "sass-loader": "7.1.0",
-    "string-replace-loader": "2.1.1",
     "style-loader": "0.23.1",
     "svg-inline-loader": "^0.8.0",
     "url-loader": "1.1.2",
@@ -57,7 +56,6 @@
     "mui-datatables": "2.14.0",
     "numeral": "2.0.6",
     "react-history": "0.18.2",
-    "react-json-view": "^1.19.1",
     "react-router-dom": "5.0.0"
   }
 }

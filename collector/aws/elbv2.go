@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/json"
 	"finala/collector"
 	"finala/collector/config"
 	"finala/expression"
@@ -32,14 +31,13 @@ type ELBV2Manager struct {
 	region             string
 	namespace          string
 	servicePricingCode string
-	Type               string
+	Name               string
 }
 
 // DetectedELBV2 define the detected AWS ELB instances
 type DetectedELBV2 struct {
 	Metric string
 	Region string
-
 	collector.PriceDetectedFields
 }
 
@@ -55,17 +53,31 @@ func NewELBV2Manager(collector collector.CollectorDescriber, client ELBV2ClientD
 		region:             region,
 		namespace:          "AWS/ApplicationELB",
 		servicePricingCode: "AmazonEC2",
-		Type:               fmt.Sprintf("%s_elbv2", ResourcePrefix),
+		Name:               fmt.Sprintf("%s_elbv2", ResourcePrefix),
 	}
 }
 
 // Detect check with ELBV2 instance is under utilization
 func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 	log.Info("Analyze ELBV2")
+
+	el.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: el.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFetch,
+		},
+	})
+
 	detectedELBV2 := []DetectedELBV2{}
 
 	instances, err := el.DescribeLoadbalancers(nil, nil)
 	if err != nil {
+		el.collector.AddCollectionStatus(collector.EventCollector{
+			ResourceName: el.Name,
+			Data: collector.EventStatusData{
+				Status: collector.EventError,
+			},
+		})
 		return detectedELBV2, err
 	}
 
@@ -136,12 +148,17 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 					"region":              el.region,
 				}).Info("LoadBalancer detected as unutilized resource")
 
-				decodedTags := []byte{}
 				tags, err := el.client.DescribeTags(&elbv2.DescribeTagsInput{
 					ResourceArns: []*string{instance.LoadBalancerArn},
 				})
+				tagsData := map[string]string{}
 				if err == nil {
-					decodedTags, err = json.Marshal(&tags.TagDescriptions)
+					for _, tags := range tags.TagDescriptions {
+						for _, tag := range tags.Tags {
+							tagsData[*tag.Key] = *tag.Value
+						}
+
+					}
 				}
 
 				elbv2 := DetectedELBV2{
@@ -153,16 +170,13 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 						PricePerHour:    price,
 						PricePerMonth:   price * 720,
 						TotalSpendPrice: totalPrice,
-						Tags:            string(decodedTags),
+						Tag:             tagsData,
 					},
 				}
 
-				el.collector.Add(collector.EventCollector{
-					Name: "resource-detected",
-					Data: collector.ResourceDetected{
-						ResourceName: el.Type,
-						Data:         elbv2,
-					},
+				el.collector.AddResource(collector.EventCollector{
+					ResourceName: el.Name,
+					Data:         elbv2,
 				})
 
 				detectedELBV2 = append(detectedELBV2, elbv2)
@@ -171,6 +185,13 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 
 		}
 	}
+
+	el.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: el.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFinish,
+		},
+	})
 
 	return detectedELBV2, nil
 

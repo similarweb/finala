@@ -59,7 +59,7 @@ func Execute() {
 // init cobra global commands
 func init() {
 	cobra.OnInitialize(initCmd)
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "./docs/configuration/webserver.yaml", "path to the config file")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "/etc/config.yaml", "path to the config file")
 }
 
 // initCmd will prepare the configuration and validate the common flag parametes
@@ -68,6 +68,12 @@ func initCmd() {
 	// Validate yaml file
 	if !strings.HasSuffix(cfgFile, ".yaml") {
 		log.WithField("file", cfgFile).Error("Configuration file must be a yaml file")
+		os.Exit(1)
+	}
+
+	_, err := os.Stat(cfgFile)
+	if os.IsNotExist(err) {
+		log.WithField("file", cfgFile).Error("Configuration file not found")
 		os.Exit(1)
 	}
 

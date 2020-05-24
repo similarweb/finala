@@ -50,7 +50,7 @@ export default class Dashboard extends React.Component {
     /**
      * List of all un-usage resources
      */
-    resources : PropTypes.array, 
+    resources : PropTypes.object, 
   };  
 
   state = {
@@ -112,16 +112,16 @@ export default class Dashboard extends React.Component {
     }
    
     const seriesData = []
-    this.props.resources.map((resource) => {
+    Object.keys(this.props.resources).map((resourceName) => {
       seriesData.push(
         {
-          name: TextUtils.ParseName(resource.ResourceName),
-          y: resource.TotalSpent
+          name: TextUtils.ParseName(resourceName),
+          y: this.props.resources[resourceName].TotalSpent
       }
       )
 
       table.data.push(
-        [TextUtils.ParseName(resource.ResourceName), resource.TotalSpent]
+        [TextUtils.ParseName(resourceName), this.props.resources[resourceName].TotalSpent]
       )
 
     })
@@ -138,7 +138,7 @@ export default class Dashboard extends React.Component {
       <div className="">
 
         <h1>Dashboard</h1>
-        {this.props.resources.length > 0 ?(
+        {Object.keys(this.props.resources).length > 0 ?(
           <div>
             <Paper elevation={3} >
             <HighchartsReact

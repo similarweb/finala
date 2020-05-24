@@ -1,6 +1,8 @@
 package collector
 
-import "time"
+import (
+	"time"
+)
 
 // EventStatus descrive the status of the resource collector
 type EventStatus int
@@ -18,7 +20,6 @@ const (
 
 // EventStatusData descrive the struct of the resource statuses
 type EventStatusData struct {
-	Name   string
 	Status EventStatus
 }
 
@@ -26,8 +27,16 @@ type EventStatusData struct {
 type PriceDetectedFields struct {
 	ResourceID      string
 	LaunchTime      time.Time
-	PricePerHour    float64 `gorm:"type:DOUBLE"`
-	PricePerMonth   float64 `gorm:"type:DOUBLE`
-	TotalSpendPrice float64 `gorm:"type:DOUBLE`
-	Tags            string  `gorm:"type:TEXT" json:"-"`
+	PricePerHour    float64
+	PricePerMonth   float64
+	TotalSpendPrice float64
+	Tag             map[string]string
+}
+
+// EventCollector collector event data structure
+type EventCollector struct {
+	EventType    string
+	ResourceName string
+	EventTime    int64
+	Data         interface{}
 }

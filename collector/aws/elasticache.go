@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"encoding/json"
 	"finala/collector"
 	"finala/collector/config"
 	"finala/expression"
@@ -31,7 +30,7 @@ type ElasticacheManager struct {
 	region             string
 	namespace          string
 	servicePricingCode string
-	Type               string
+	Name               string
 }
 
 // DetectedElasticache define the detected AWS Elasticache instances
@@ -41,7 +40,6 @@ type DetectedElasticache struct {
 	CacheEngine   string
 	CacheNodeType string
 	CacheNodes    int
-
 	collector.PriceDetectedFields
 }
 
@@ -58,17 +56,33 @@ func NewElasticacheManager(collector collector.CollectorDescriber, client Elasti
 
 		namespace:          "AWS/ElastiCache",
 		servicePricingCode: "AmazonElastiCache",
-		Type:               fmt.Sprintf("%s_elasticache", ResourcePrefix),
+		Name:               fmt.Sprintf("%s_elasticache", ResourcePrefix),
 	}
 }
 
 // Detect check with elasticache instance is under utilization
 func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 	log.Info("Analyze elasticache")
+
+	ec.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: ec.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFetch,
+		},
+	})
+
 	detectedelasticache := []DetectedElasticache{}
 
 	instances, err := ec.DescribeInstances(nil, nil)
 	if err != nil {
+
+		ec.collector.AddCollectionStatus(collector.EventCollector{
+			ResourceName: ec.Name,
+			Data: collector.EventStatusData{
+				Status: collector.EventError,
+			},
+		})
+
 		return detectedelasticache, err
 	}
 
@@ -129,12 +143,15 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 					"region":              ec.region,
 				}).Info("Elasticache instance detected as unutilized resource")
 
-				decodedTags := []byte{}
 				tags, err := ec.client.ListTagsForResource(&elasticache.ListTagsForResourceInput{
 					ResourceName: instance.CacheClusterId,
 				})
+
+				tagsData := map[string]string{}
 				if err == nil {
-					decodedTags, err = json.Marshal(&tags.TagList)
+					for _, tag := range tags.TagList {
+						tagsData[*tag.Key] = *tag.Value
+					}
 				}
 
 				es := DetectedElasticache{
@@ -149,22 +166,26 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 						PricePerHour:    price,
 						PricePerMonth:   price * 720,
 						TotalSpendPrice: totalPrice,
-						Tags:            string(decodedTags),
+						Tag:             tagsData,
 					},
 				}
 
-				ec.collector.Add(collector.EventCollector{
-					Name: "resource-detected",
-					Data: collector.ResourceDetected{
-						ResourceName: ec.Type,
-						Data:         es,
-					},
+				ec.collector.AddResource(collector.EventCollector{
+					ResourceName: ec.Name,
+					Data:         es,
 				})
 
 				detectedelasticache = append(detectedelasticache, es)
 			}
 		}
 	}
+
+	ec.collector.AddCollectionStatus(collector.EventCollector{
+		ResourceName: ec.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFinish,
+		},
+	})
 
 	return detectedelasticache, nil
 }

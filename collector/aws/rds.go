@@ -62,7 +62,10 @@ func NewRDSManager(collector collector.CollectorDescriber, client RDSClientDescr
 // Detect check with RDS is under utilization
 func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 
-	log.Info("analyze RDS")
+	log.WithFields(log.Fields{
+		"region":   r.region,
+		"resource": "rds",
+	}).Info("starting to analyze resource")
 
 	r.collector.AddCollectionStatus(collector.EventCollector{
 		ResourceName: r.Name,
@@ -79,7 +82,8 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 		r.collector.AddCollectionStatus(collector.EventCollector{
 			ResourceName: r.Name,
 			Data: collector.EventStatusData{
-				Status: collector.EventError,
+				Status:       collector.EventError,
+				ErrorMessage: err.Error(),
 			},
 		})
 
@@ -89,7 +93,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 	now := time.Now()
 	for _, instance := range instances {
 
-		log.WithField("name", *instance.DBInstanceIdentifier).Info("check RDS instance")
+		log.WithField("name", *instance.DBInstanceIdentifier).Debug("checking RDS")
 
 		price, _ := r.pricingClient.GetPrice(r.GetPricingFilterInput(instance), "")
 

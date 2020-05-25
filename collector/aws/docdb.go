@@ -62,7 +62,10 @@ func NewDocDBManager(collector collector.CollectorDescriber, client DocumentDBCl
 // Detect check with documentDB is under utilization
 func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 
-	log.Info("Analyze documentDB")
+	log.WithFields(log.Fields{
+		"region":   dd.region,
+		"resource": "documentDB",
+	}).Info("starting to analyze resource")
 
 	dd.collector.AddCollectionStatus(collector.EventCollector{
 		ResourceName: dd.Name,
@@ -79,7 +82,8 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 		dd.collector.AddCollectionStatus(collector.EventCollector{
 			ResourceName: dd.Name,
 			Data: collector.EventStatusData{
-				Status: collector.EventError,
+				Status:       collector.EventError,
+				ErrorMessage: err.Error(),
 			},
 		})
 		return detectedDocDB, err
@@ -88,7 +92,7 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 	now := time.Now()
 	for _, instance := range instances {
 
-		log.WithField("name", *instance.DBInstanceIdentifier).Info("check documentDB instance")
+		log.WithField("name", *instance.DBInstanceIdentifier).Debug("checking documentDB")
 
 		price, _ := dd.pricingClient.GetPrice(dd.GetPricingFilterInput(instance), "")
 

@@ -284,10 +284,10 @@ class Table extends React.Component {
               style={{ minHeight: '80vh', textAlign: "center" }}
               >
 
-              <Grid item xs={3}>
+              <Grid item xs={10}>
                 <ErrorOutlineIcon className={this.props.classes.icon}/>
                 <Typography variant="subtitle1" >
-                {this.props.resources.Description}
+                {this.props.resources.ErrorMessage}
                 </Typography>
               </Grid>   
 

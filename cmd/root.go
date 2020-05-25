@@ -59,7 +59,7 @@ func Execute() {
 // init cobra global commands
 func init() {
 	cobra.OnInitialize(initCmd)
-	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "/etc/config.yaml", "path to the config file")
+	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "/etc/finala/config.yaml", "path to the config file")
 }
 
 // initCmd will prepare the configuration and validate the common flag parametes

@@ -130,10 +130,10 @@ func (cm *CollectorManager) sendBulk() bool {
 // gracefulShutdown will send the last events
 func (cm *CollectorManager) gracefulShutdown() {
 
-	status := cm.sendBulk()
-	if !status {
-		log.Info("resend bulk data")
+	if len(cm.sendData) > 0 {
+		log.WithField("event_count", len(cm.sendData)).Info("Found more event to send")
 		time.Sleep(cm.sendInterval)
+		cm.sendBulk()
 		cm.gracefulShutdown()
 	}
 

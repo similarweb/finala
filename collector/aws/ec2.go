@@ -60,7 +60,11 @@ func NewEC2Manager(collector collector.CollectorDescriber, client EC2ClientDescr
 
 // Detect check with ELB  instance is under utilization
 func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
-	log.Info("Analyze EC2")
+
+	log.WithFields(log.Fields{
+		"region":   ec.region,
+		"resource": "ec2_instances",
+	}).Info("starting to analyze resource")
 
 	ec.collector.AddCollectionStatus(collector.EventCollector{
 		ResourceName: ec.Name,
@@ -76,7 +80,8 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 		ec.collector.AddCollectionStatus(collector.EventCollector{
 			ResourceName: ec.Name,
 			Data: collector.EventStatusData{
-				Status: collector.EventError,
+				Status:       collector.EventError,
+				ErrorMessage: err.Error(),
 			},
 		})
 		return detectedEC2, err
@@ -84,7 +89,7 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 	now := time.Now()
 
 	for _, instance := range instances {
-		log.WithField("instance_id", *instance.InstanceId).Info("check ec2 instance")
+		log.WithField("instance_id", *instance.InstanceId).Debug("checking ec2 instance")
 
 		price, _ := ec.pricingClient.GetPrice(ec.GetPricingFilterInput(instance), "")
 

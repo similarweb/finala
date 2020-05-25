@@ -16,9 +16,9 @@ services:
       command: 
         - ui 
         - -c 
-        - /etc/config.yaml
+        - /etc/finala/config.yaml
       volumes:
-          - ./configuration/ui.yaml:/etc/config.yaml
+          - ./configuration/ui.yaml:/etc/finala/config.yaml
       ports:
         - "8080:8080"
       networks:
@@ -31,11 +31,11 @@ services:
       command: 
         - api 
         - -c 
-        - /etc/config.yaml
+        - /etc/finala/config.yaml
       environment:
         - OVERRIDE_STORAGE_ENDPOINT=http://elasticsearch:9200
       volumes:
-          - ./configuration/api.yaml:/etc/config.yaml
+          - ./configuration/api.yaml:/etc/finala/config.yaml
       ports:
         - "8081:8081"
       networks:
@@ -52,13 +52,13 @@ services:
       command: 
         - collector 
         - -c 
-        - /etc/config.yaml
+        - /etc/finala/config.yaml
       environment:
         - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} 
         - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
         - OVERRIDE_API_ENDPOINT=http://api:8081
       volumes:
-          - ./configuration/collector.yaml:/etc/config.yaml
+          - ./configuration/collector.yaml:/etc/finala/config.yaml
       networks:
         - backend
       depends_on: 

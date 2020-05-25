@@ -54,7 +54,10 @@ func NewVolumesManager(collector collector.CollectorDescriber, client EC2VolumeC
 // Detect unused volumes
 func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 
-	log.Info("analyze Volumes")
+	log.WithFields(log.Fields{
+		"region":   ev.region,
+		"resource": "ec2_volume",
+	}).Info("starting to analyze resource")
 
 	ev.collector.AddCollectionStatus(collector.EventCollector{
 		ResourceName: ev.Name,
@@ -71,7 +74,8 @@ func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 		ev.collector.AddCollectionStatus(collector.EventCollector{
 			ResourceName: ev.Name,
 			Data: collector.EventStatusData{
-				Status: collector.EventError,
+				Status:       collector.EventError,
+				ErrorMessage: err.Error(),
 			},
 		})
 		return detected, err
@@ -88,7 +92,7 @@ func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 
 	for _, vol := range volumes {
 
-		log.WithField("id", *vol.VolumeId).Info("Volume found")
+		log.WithField("id", *vol.VolumeId).Debug("cheking ec2 volume")
 
 		price, err := ev.pricingClient.GetPrice(ev.GetBasePricingFilterInput(vol, filters), "")
 		if err != nil {

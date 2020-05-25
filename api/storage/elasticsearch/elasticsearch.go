@@ -151,6 +151,7 @@ func (sm *StorageManager) GetSummary(executionsID string) (map[string]storage.Co
 			EventTime:    summaryRow.EventTime,
 			Status:       summaryRow.Data.Status,
 			ResourceName: summaryRow.ResourceName,
+			ErrorMessage: summaryRow.Data.ErrorMessage,
 		}
 	}
 

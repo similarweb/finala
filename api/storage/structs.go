@@ -24,17 +24,19 @@ type CollectorsSummary struct {
 	ResourceCount int64   `json:"ResourceCount"`
 	TotalSpent    float64 `json:"TotalSpent"`
 	Status        int     `json:"Status"`
-	Description   string  `json:"Description"`
+	ErrorMessage  string  `json:"ErrorMessage"`
 	EventTime     int64   `json:"-"`
 }
 
 type SummaryData struct {
-	Status int `json:"Status"`
+	Status       int    `json:"Status"`
+	ErrorMessage string `json:"ErrorMessage"`
 }
 
 type Summary struct {
 	ResourceName string      `json:"ResourceName"`
 	EventTime    int64       `json:"EventTime"`
+	ErrorMessage string      `json:"ErrorMessage"`
 	Data         SummaryData `json:"Data"`
 }
 

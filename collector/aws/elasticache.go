@@ -62,7 +62,11 @@ func NewElasticacheManager(collector collector.CollectorDescriber, client Elasti
 
 // Detect check with elasticache instance is under utilization
 func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
-	log.Info("Analyze elasticache")
+
+	log.WithFields(log.Fields{
+		"region":   ec.region,
+		"resource": "elasticache",
+	}).Info("starting to analyze resource")
 
 	ec.collector.AddCollectionStatus(collector.EventCollector{
 		ResourceName: ec.Name,
@@ -79,7 +83,8 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 		ec.collector.AddCollectionStatus(collector.EventCollector{
 			ResourceName: ec.Name,
 			Data: collector.EventStatusData{
-				Status: collector.EventError,
+				Status:       collector.EventError,
+				ErrorMessage: err.Error(),
 			},
 		})
 
@@ -89,7 +94,7 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 	now := time.Now()
 
 	for _, instance := range instances {
-		log.WithField("cluster_id", *instance.CacheClusterId).Info("check elasticache instance")
+		log.WithField("cluster_id", *instance.CacheClusterId).Debug("checking elasticache")
 
 		price, _ := ec.pricingClient.GetPrice(ec.GetPricingFilterInput(instance), "")
 

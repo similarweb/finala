@@ -59,7 +59,11 @@ func NewELBV2Manager(collector collector.CollectorDescriber, client ELBV2ClientD
 
 // Detect check with ELBV2 instance is under utilization
 func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
-	log.Info("Analyze ELBV2")
+
+	log.WithFields(log.Fields{
+		"region":   el.region,
+		"resource": "elb_v2",
+	}).Info("starting to analyze resource")
 
 	el.collector.AddCollectionStatus(collector.EventCollector{
 		ResourceName: el.Name,
@@ -75,7 +79,8 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 		el.collector.AddCollectionStatus(collector.EventCollector{
 			ResourceName: el.Name,
 			Data: collector.EventStatusData{
-				Status: collector.EventError,
+				Status:       collector.EventError,
+				ErrorMessage: err.Error(),
 			},
 		})
 		return detectedELBV2, err
@@ -85,7 +90,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 
 	for _, instance := range instances {
 
-		log.WithField("name", *instance.LoadBalancerName).Info("check ELBV2")
+		log.WithField("name", *instance.LoadBalancerName).Debug("cheking elbV2")
 
 		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput(), "")
 

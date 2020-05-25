@@ -68,7 +68,10 @@ func NewDynamoDBManager(collector collector.CollectorDescriber, client DynamoDBC
 // Detect will go over on all dynamoDB tables an check if some of the metric configuration happend
 func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 
-	log.Info("Analyze dynamoDB")
+	log.WithFields(log.Fields{
+		"region":   dd.region,
+		"resource": "dynamoDB",
+	}).Info("starting to analyze resource")
 
 	dd.collector.AddCollectionStatus(collector.EventCollector{
 		ResourceName: dd.Name,
@@ -86,7 +89,8 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 		dd.collector.AddCollectionStatus(collector.EventCollector{
 			ResourceName: dd.Name,
 			Data: collector.EventStatusData{
-				Status: collector.EventError,
+				Status:       collector.EventError,
+				ErrorMessage: err.Error(),
 			},
 		})
 
@@ -98,7 +102,7 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 
 	for _, table := range tables {
 
-		log.WithField("table_name", *table.TableName).Info("check dynamodb table")
+		log.WithField("table_name", *table.TableName).Debug("checking dynamodb table")
 
 		for _, metric := range dd.metrics {
 			log.WithFields(log.Fields{
@@ -194,7 +198,6 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 				detectedTables = append(detectedTables, detectedDynamoDBTable)
 
 			}
-
 		}
 	}
 

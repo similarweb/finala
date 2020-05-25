@@ -46,7 +46,9 @@ func NewIAMUseranager(collector collector.CollectorDescriber, client IAMClientDe
 // LastActivity check the last users activities
 func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWSLastActivity, error) {
 
-	log.Info("analyze IAM users last activity")
+	log.WithFields(log.Fields{
+		"resource": "ec2",
+	}).Info("starting to analyze resource")
 
 	im.collector.AddCollectionStatus(collector.EventCollector{
 		ResourceName: im.Name,
@@ -64,7 +66,8 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 		im.collector.AddCollectionStatus(collector.EventCollector{
 			ResourceName: im.Name,
 			Data: collector.EventStatusData{
-				Status: collector.EventError,
+				Status:       collector.EventError,
+				ErrorMessage: err.Error(),
 			},
 		})
 
@@ -99,10 +102,7 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 				daysActivity, valid := im.passedDays(now, *resp.AccessKeyLastUsed.LastUsedDate, days, operator)
 				lastActivity = strconv.Itoa(int(daysActivity))
 				if !valid {
-					log.WithFields(log.Fields{
-						"User_name":     *user.UserName,
-						"days_activity": lastActivity,
-					}).Info("user activity")
+
 					continue
 				}
 			}

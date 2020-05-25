@@ -57,7 +57,10 @@ func NewLambdaManager(collector collector.CollectorDescriber, client LambdaClien
 // Detect lambda that under utilization
 func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 
-	log.Info("analyze Lambda")
+	log.WithFields(log.Fields{
+		"region":   lm.region,
+		"resource": "lambda",
+	}).Info("starting to analyze resource")
 
 	lm.collector.AddCollectionStatus(collector.EventCollector{
 		ResourceName: lm.Name,
@@ -74,7 +77,8 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 		lm.collector.AddCollectionStatus(collector.EventCollector{
 			ResourceName: lm.Name,
 			Data: collector.EventStatusData{
-				Status: collector.EventError,
+				Status:       collector.EventError,
+				ErrorMessage: err.Error(),
 			},
 		})
 
@@ -84,7 +88,7 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 	now := time.Now()
 	for _, fun := range functions {
 
-		log.WithField("name", *fun.FunctionName).Info("check Lambda instance")
+		log.WithField("name", *fun.FunctionName).Debug("checking lambda")
 
 		for _, metric := range lm.metrics {
 			log.WithFields(log.Fields{

@@ -20,7 +20,8 @@ const (
 
 // EventStatusData descrive the struct of the resource statuses
 type EventStatusData struct {
-	Status EventStatus
+	Status       EventStatus
+	ErrorMessage string
 }
 
 // PriceDetectedFields describe the pricing field

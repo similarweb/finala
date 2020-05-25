@@ -7,6 +7,7 @@ import Resource from '../components/Resource/Index'
 import Header from '../components/Header'
 import LeftBar from '../components/LeftBar'
 import NotFound from '../components/NotFound'
+import PageLoader from '../components/PageLoader'
 import { ResourcesService } from "services/resources.service";
 import { SettingsService } from "services/settings.service";
 import Typography from '@material-ui/core/Typography';
@@ -122,9 +123,12 @@ class Routes extends React.Component {
           <Toolbar />
           <Typography component={"div"}>
           <Box component="div" m={3}>
-              {(this.state.executionsCount === null || this.state.executionsCount === 0) &&
+              {this.state.executionsCount === null &&
+                <PageLoader/>
+              }
+              {(this.state.executionsCount === 0) &&
                 <Box component="div">
-                    Waiting for the first collector run...
+                    Waiting for the first collection of data for Finala
                 </Box>
               }
               <Box component="div" className={(this.state.executionsCount === null || this.state.executionsCount === 0)  ? this.props.classes.hide : ""}>

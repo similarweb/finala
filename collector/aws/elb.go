@@ -58,7 +58,11 @@ func NewELBManager(collector collector.CollectorDescriber, client ELBClientDescr
 
 // Detect check with ELB  instance is under utilization
 func (el *ELBManager) Detect() ([]DetectedELB, error) {
-	log.Info("Analyze ELB")
+
+	log.WithFields(log.Fields{
+		"region":   el.region,
+		"resource": "elb",
+	}).Info("starting to analyze resource")
 
 	el.collector.AddCollectionStatus(collector.EventCollector{
 		ResourceName: el.Name,
@@ -75,7 +79,8 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 		el.collector.AddCollectionStatus(collector.EventCollector{
 			ResourceName: el.Name,
 			Data: collector.EventStatusData{
-				Status: collector.EventError,
+				Status:       collector.EventError,
+				ErrorMessage: err.Error(),
 			},
 		})
 		return detectedELB, err
@@ -84,7 +89,7 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 	now := time.Now()
 
 	for _, instance := range instances {
-		log.WithField("name", *instance.LoadBalancerName).Info("check ELB")
+		log.WithField("name", *instance.LoadBalancerName).Debug("checking elb")
 
 		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput(), "")
 

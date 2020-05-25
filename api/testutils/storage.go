@@ -33,7 +33,7 @@ func (ms *MockStorage) GetSummary(executionsID string) (map[string]storage.Colle
 			ResourceCount: 3,
 			TotalSpent:    100,
 			Status:        1,
-			Description:   "description",
+			ErrorMessage:  "description",
 			EventTime:     123456,
 		},
 		"resource_2": storage.CollectorsSummary{
@@ -41,7 +41,7 @@ func (ms *MockStorage) GetSummary(executionsID string) (map[string]storage.Colle
 			ResourceCount: 3,
 			TotalSpent:    100,
 			Status:        1,
-			Description:   "description",
+			ErrorMessage:  "description",
 			EventTime:     123456,
 		},
 	}

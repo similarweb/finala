@@ -3,6 +3,7 @@ finala
 pkg/
 config_test.yaml
 cov.txt
+.vscode
 
 # Golang
 # Binaries for programs and plugins

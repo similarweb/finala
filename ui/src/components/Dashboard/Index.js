@@ -73,7 +73,7 @@ export default class Dashboard extends React.Component {
         type: 'pie'
       },
       title: {
-        text: 'Optional spend save'
+        text: 'Potential spend save'
       },
       tooltip: {
           pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'

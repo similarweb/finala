@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -83,7 +84,11 @@ func (server *Server) BindEndpoints() {
 	server.router.HandleFunc("/api/v1/health", server.HealthCheckHandler).Methods("GET")
 	server.router.HandleFunc("/api/v1/settings", server.SettingsHandler).Methods("GET")
 	server.router.PathPrefix("/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, fmt.Sprintf("%s/ui/build%s", path, r.URL))
+		if strings.HasPrefix(r.URL.String(), "/static/") {
+			http.ServeFile(w, r, fmt.Sprintf("%s/ui/build%s", path, r.URL))
+		} else {
+			http.ServeFile(w, r, fmt.Sprintf("%s/ui/build%s", path, "/"))
+		}
 		return
 	})
 

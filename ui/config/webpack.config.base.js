@@ -9,8 +9,8 @@ module.exports = (options) => ({
   devtool: options.devtool,
   output: Object.assign(
     {
-      path: path.resolve(process.cwd(), 'build'),
-      publicPath: '/'
+      path: path.resolve(process.cwd(), 'build' ,"static"),
+      publicPath: '/static'
     },
     options.output
   ), 

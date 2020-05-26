@@ -88,14 +88,14 @@ func NewCollectorManager(ctx context.Context, wg *sync.WaitGroup, req *request.H
 // AddResource add resource data
 func (cm *CollectorManager) AddResource(data EventCollector) {
 	data.EventType = resourceDetected
-	data.EventTime = time.Now().Unix()
+	data.EventTime = time.Now().UnixNano()
 	cm.collectChan <- data
 }
 
 // AddCollectionStatus add status on resource collector
 func (cm *CollectorManager) AddCollectionStatus(data EventCollector) {
 	data.EventType = eventStatusCollection
-	data.EventTime = time.Now().Unix()
+	data.EventTime = time.Now().UnixNano()
 	cm.collectChan <- data
 }
 
@@ -130,9 +130,9 @@ func (cm *CollectorManager) sendBulk() bool {
 // gracefulShutdown will send the last events
 func (cm *CollectorManager) gracefulShutdown() {
 
+	time.Sleep(cm.sendInterval)
 	if len(cm.sendData) > 0 {
 		log.WithField("event_count", len(cm.sendData)).Info("Found more event to send")
-		time.Sleep(cm.sendInterval)
 		cm.sendBulk()
 		cm.gracefulShutdown()
 	}

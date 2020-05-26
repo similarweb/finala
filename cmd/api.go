@@ -22,7 +22,7 @@ var (
 // awsCMS will present the aws analyze command
 var apiServer = &cobra.Command{
 	Use:   "api",
-	Short: "Run Finala api server",
+	Short: "Serve resetAPI",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -58,6 +58,6 @@ var apiServer = &cobra.Command{
 // init will add aws command
 func init() {
 
-	apiServer.PersistentFlags().IntVar(&port, "port", 8081, "api server port")
+	apiServer.PersistentFlags().IntVar(&port, "port", 8081, "lisinning port")
 	rootCmd.AddCommand(apiServer)
 }

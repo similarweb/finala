@@ -20,7 +20,7 @@ var (
 // awsCMS will present the aws analyze command
 var uiWebserver = &cobra.Command{
 	Use:   "ui",
-	Short: "Run Finala UI",
+	Short: "Serve UI",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -51,6 +51,6 @@ var uiWebserver = &cobra.Command{
 // init will add aws command
 func init() {
 
-	uiWebserver.PersistentFlags().IntVar(&uiPort, "port", 8080, "port")
+	uiWebserver.PersistentFlags().IntVar(&uiPort, "port", 8080, "lisinning port")
 	rootCmd.AddCommand(uiWebserver)
 }

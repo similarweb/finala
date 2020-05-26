@@ -17,7 +17,7 @@ import (
 // collectorCMD will present the aws analyze command
 var collectorCMD = &cobra.Command{
 	Use:   "collector",
-	Short: "Collect and analyze resources from given providers configuration",
+	Short: "Collect and analyze resources from given configuration",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 

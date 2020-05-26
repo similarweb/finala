@@ -66,7 +66,9 @@ func NewStorageManager(conf config.ElasticsearchConfig) (*StorageManager, error)
 			if err == nil {
 				break
 			}
-			log.WithError(err).Warn("could not initialize connection to elasticsearch, retrying for 5 seconds")
+			log.WithFields(log.Fields{
+				"endpoint": conf.Endpoints,
+			}).WithError(err).Warn("could not initialize connection to elasticsearch, retrying for 5 seconds")
 			time.Sleep(5 * time.Second)
 		}
 		c <- 1

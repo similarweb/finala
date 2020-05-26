@@ -1,3 +1,5 @@
+![Go](https://github.com/similarweb/finala/workflows/Go/badge.svg?event=push)
+[![Coverage Status](https://coveralls.io/repos/github/similarweb/finala/badge.svg?branch=master)](https://coveralls.io/github/similarweb/finala?branch=master)
 # Finala
 
 A resource cloud scanner that analyzes and reports about wasteful and unused resources to cut unwanted expenses.
@@ -6,12 +8,13 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 ## Supported Services
 
 AWS:
-* IAM user last activity
 * RDS
 * EC2 (ELB, ALB, EBS)
 * DynamoDB
 * ElasticCache
 * DocumentDB
+* IAM user last activity
+* Lambda
 
 More to come...
 
@@ -31,8 +34,10 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### How To Use
 
-All the configuration is contained inside [config.yaml](./config.yaml). 
-1. Setup your Cloud provider accounts and credentials you would like to analyze. 
+Finala have 3 component:
+
+* **collector** - collect and analyzes resources from [collector.yaml](./configuration/collector.yaml). all resources that marked as under utilized reported to api component.
+In [collector.yaml](./configuration/collector.yaml) configuration you can multiple accounts and multiple regions that you want to collect. 
 
 ```yaml
 providers:
@@ -45,14 +50,7 @@ providers:
     regions:
       - <REGION>
 ```
-2. Let it [run](#Installing)! 
-
-*Note:* We've already implemented some queries to find out which resources are under utilized, feel free to add or change and contribute!
-
-### For example: 
-
-If you want to test RDS resources that had zero connections in the last week: 
-
+In `metrics` section you add/remove/change the metrics that mark the resource as under utilized` 
 ```yaml
 rds:
     - description: Database connection count
@@ -66,66 +64,34 @@ rds:
         value: 0
 ```
 
-You can try and play with the query before in CloudWatch.
+This example will marked RDS as under utilized` that had **zero** connections in the last week: 
+
+* **api** - a rest api to server the collector incoming events and the UI. api configuration [api.yaml](./configuration/api.yaml)
+
+* **ui** - component that server the UI 
 
 
-### Install & Run
+### Deploy
 
-1) Optional: Build from source
-
-```shell
-$ git clone git@github.com:similarweb/finala
-$ cd finala
-$ make build
-```
-
-2) Download the binary from https://github.com/similarweb/finala/releases
-
-3) Run it! (make sure to have the config file, you can take the one in this repository)
-```shell
-$  ./finala aws -c ${PWD}/config.yaml
-```
-
-You may use environment variables for AWS access instead of providing them in the config file.
-```shell
-$ export AWS_ACCESS_KEY_ID=...
-$ export AWS_SECRET_ACCESS_KEY=...
-$ export AWS_SESSION_TOKEN=...
-$ export AWS_SECURITY_TOKEN=...
-```
-
-You can even use [aws-vault](https://github.com/99designs/aws-vault):
-```shell
-$ aws-vault exec aws-account-profile -- ./finala aws -c ${PWD}/config.yaml
-```
-
-We suggest taking a look at the [example config](./config.yaml) files to see the available options.
-
-
-### Release New Version
-
-To release a new version run the command: 
-
-```shell
-$ make release
-```
+1) Deploy with Kubernetes. see Helm chart 
+2) Run it locally with `docker-compose up`.
 
 ### Development
 
 See the following commands each component
 
-## Collector
+#### Collector
 
 ```shell
 go run main.go collector -c ./configuration/collector.yaml
 ```
 
-## API
+#### API
 ```shell
 go run main.go collector -c ./configuration/collector.yaml
 ```
 
-## UI
+#### UI
 
 If you want to make UI changes run the following commands:
 ```shell
@@ -147,17 +113,10 @@ docker-compose up
 
 Then browse to: http://127.0.0.1:8080
 
-## Running the tests
-
-```
-$ make test
-
-$ make test-html
-```
 
 ## Configuration samples explained:
 
-The full working example can be found in [config.yaml](./config.yaml). 
+The full working example can be found in [collector.yaml](./configuration/collector.yaml). 
 <hr>
 
 1. Find EC2 instances has less that 5% CPU usage in the last week.
@@ -239,6 +198,22 @@ dynamodb:
         formula: ConsumedReadCapacityUnits / ProvisionedReadCapacityUnits * 100 # specify any formula 
         operator: "<"
         value: 10
+```
+
+## Running the tests
+
+```
+$ make test
+
+$ make test-html
+```
+
+### Release New Version
+
+To release a new version run the command: 
+
+```shell
+$ make release
 ```
 
 ## Built With

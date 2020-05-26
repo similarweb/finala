@@ -5,25 +5,32 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "run",
+            "name": "UI",
             "type": "go",
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceRoot}",
             "env": {},
-            "args": ["aws","-c", "config.yaml"]
-        },        {
-            "name": "elbv2_test.go",
+            "args": ["webserver","-c", "./configuration/webserver.yaml"]
+        },       
+        {
+            "name": "Api",
             "type": "go",
             "request": "launch",
-            "mode": "test",
-            "remotePath": "",
-            "port": 2345,
-            "host": "127.0.0.1",
-            "program": "${workspaceRoot}/provider/aws/elbv2_test.go",
+            "mode": "auto",
+            "program": "${workspaceRoot}",
             "env": {},
-            "args": [],
-            "showLog": true
-        }       
+            "args": ["webserver","-c", "./configuration/api.yaml"]
+        },       
+        {
+            "name": "Collector",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceRoot}",
+            "env": {},
+            "args": ["webserver","-c", "./configuration/collector.yaml"]
+        },       
+      
     ]
 }

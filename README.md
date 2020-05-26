@@ -1,3 +1,5 @@
+![Go](https://github.com/similarweb/finala/workflows/Go/badge.svg?event=push)
+[![Coverage Status](https://coveralls.io/repos/github/similarweb/finala/badge.svg?branch=master)](https://coveralls.io/github/similarweb/finala?branch=master)
 # Finala
 
 A resource cloud scanner that analyzes and reports about wasteful and unused resources to cut unwanted expenses.
@@ -6,12 +8,13 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 ## Supported Services
 
 AWS:
-* IAM user last activity
 * RDS
 * EC2 (ELB, ALB, EBS)
 * DynamoDB
 * ElasticCache
 * DocumentDB
+* IAM user last activity
+* Lambda
 
 More to come...
 
@@ -24,32 +27,21 @@ More to come...
 ### Unused RDS report
 ![alt Resources](https://raw.githubusercontent.com/similarweb/finala/master/docs/resource.jpg)
 
-### CLI Format
-```
-+-------------------------------------------------------------------------------------------------+
-| ID           | REGION    | INSTANCE TYPE | MULTI AZ | ENGINE | PRICE PER HOUR | PRICE PER MONTH |
-+-------------------------------------------------------------------------------------------------+
-| arn:aws:rds: | us-east-1 | db.m3.medium  | true     | mysql  | 0.18           | 129.6           |
-| arn:aws:rds: | us-east-1 | db.t2.medium  | false    | mysql  | 0.068          | 48.96           |
-+-------------------------------------------------------------------------------------------------+
-```
 
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
 
-### Docker
-
-```
-docker run -p 9090:9090 -e AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} -e AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} similarweb/finala aws
-```
-
-Then browse to: http://127.0.0.1:9090/static/
-
 ### How To Use
 
-All the configuration is contained inside [config.yaml](./config.yaml). 
-1. Setup your Cloud provider accounts and credentials you would like to analyze. 
+Finala is built from 3 components:
+
+* **API** - RESTful API server that receives events from the collector and serves the UI. See [example API configuration file](./configuration/api.yaml).
+
+* **UI** - The User Interface, display the data in a way that it'll look nice :).
+
+* **Collector** - Collects and analyzes resources against their thresholds defined in [collector.yaml](./configuration/collector.yaml). All resources that marked as "under utilized" are reported back to the API component.
+You can define multiple accounts and regions in the [collector.yaml](./configuration/collector.yaml) file.
 
 ```yaml
 providers:
@@ -62,14 +54,7 @@ providers:
     regions:
       - <REGION>
 ```
-2. Let it [run](#Installing)! 
-
-*Note:* We've already implemented some queries to find out which resources are under utilized, feel free to add or change and contribute!
-
-### For example: 
-
-If you want to test RDS resources that had zero connections in the last week: 
-
+We've already provided list of built-in cost-optimization `metrics`, you may modify the file to suit your needs.
 ```yaml
 rds:
     - description: Database connection count
@@ -83,96 +68,58 @@ rds:
         value: 0
 ```
 
-You can try and play with the query before in CloudWatch.
+This example will mark RDS as under utilized` if that RDS had **zero** connections in the last week.
 
 
-### Install & Run
+### Deploy
+You may use either approach in order to deploy Finala.
 
-1) Optional: Build from source
+* Deploy with Kubernetes, see [Helm chart](https://github.com/similarweb/finala-helm) for more information.
+* Run it locally with `docker-compose up`.
 
-```shell
-$ git clone git@github.com:similarweb/finala
-$ cd finala
-$ make build
-```
+### Contribution
 
-2) Download the binary from https://github.com/similarweb/finala/releases
+**Running the different components**:
 
-3) Run it! (make sure to have the config file, you can take the one in this repository)
-```shell
-$  ./finala aws -c ${PWD}/config.yaml
-```
-
-You may use environment variables for AWS access instead of providing them in the config file.
-```shell
-$ export AWS_ACCESS_KEY_ID=...
-$ export AWS_SECRET_ACCESS_KEY=...
-$ export AWS_SESSION_TOKEN=...
-$ export AWS_SECURITY_TOKEN=...
-```
-
-You can even use [aws-vault](https://github.com/99designs/aws-vault):
-```shell
-$ aws-vault exec aws-account-profile -- ./finala aws -c ${PWD}/config.yaml
-```
-
-We suggest taking a look at the [example config](./config.yaml) file to see the available options.
-
-
-### Release New Version
-
-To release a new version run the command: 
+#### Collector
 
 ```shell
-$ make release
+go run main.go collector -c ./configuration/collector.yaml
 ```
 
-### Development
+#### API
+```shell
+go run main.go api -c ./configuration/api.yaml
+```
 
-To run Finala from the source code run the command:
-
+#### UI
 
 ```shell
-$ go run main.go aws -c ./config.yaml
+cd ui 
+npm run dev
 ```
 
-To run Finala UI with run the command:
+*OR*
 
 ```shell
-$ cd ui
-$ npm install
-$ npm run dev
+make build-ui
+go run main.go ui -c ./configuration/ui.yaml
 ```
 
-Browse http://127.0.0.1:8081/static/ and enjoy! (we really appreciate contributes)
-
-
-### Dynamic parameters
-
-By default all the data will save in sqlite in local folder
+### Docker
+Running all components using `docker-compose`:
 
 ```
--c, --config string                      path to the config file
-    --clear-storage                      clear the internal storage on startup
-    --disable-ui                         disables the ui
--h, --help                               display this help
-    --storage-connection-string string   storage connection string. (default "DB.db")
-    --storage-driver string              storage driver. (Options: mysql, sqlite3) (default "sqlite3")
-    --ui-port int                        UI port. (default 9090)
+docker-compose up
 ```
 
 
-## Running the tests
+UI is exposed on port 8080 ([quick link](http://127.0.0.1:8080)).
 
-```
-$ make test
-
-$ make test-html
-```
 
 ## Configuration samples explained:
 
-The full working example can be found in [config.yaml](./config.yaml). 
+The full working example can be found in [collector.yaml](./configuration/collector.yaml). 
 <hr>
 
 1. Find EC2 instances has less that 5% CPU usage in the last week.
@@ -254,6 +201,22 @@ dynamodb:
         formula: ConsumedReadCapacityUnits / ProvisionedReadCapacityUnits * 100 # specify any formula 
         operator: "<"
         value: 10
+```
+
+## Running the tests
+
+```
+$ make test
+
+$ make test-html
+```
+
+### Release New Version
+
+To release a new version run the command: 
+
+```shell
+$ make release
 ```
 
 ## Built With

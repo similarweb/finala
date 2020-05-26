@@ -73,7 +73,7 @@ export default class Dashboard extends React.Component {
         type: 'pie'
       },
       title: {
-        text: 'Optional spend save'
+        text: 'Potential spend save'
       },
       tooltip: {
           pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
@@ -112,16 +112,16 @@ export default class Dashboard extends React.Component {
     }
    
     const seriesData = []
-    Object.keys(this.props.resources).map((resource) => {
+    Object.keys(this.props.resources).map((resourceName) => {
       seriesData.push(
         {
-          name: TextUtils.ParseName(resource),
-          y: this.props.resources[resource].TotalSpent
+          name: TextUtils.ParseName(resourceName),
+          y: this.props.resources[resourceName].TotalSpent
       }
       )
 
       table.data.push(
-        [TextUtils.ParseName(resource), this.props.resources[resource].TotalSpent]
+        [TextUtils.ParseName(resourceName), this.props.resources[resourceName].TotalSpent]
       )
 
     })
@@ -134,7 +134,6 @@ export default class Dashboard extends React.Component {
    */
   render() {
     const data = this.getData()
-    console.log(data)
     return (
       <div className="">
 

@@ -1,15 +1,25 @@
 import { http } from './request.service'
 
 export const ResourcesService = {
+    GetExecutions,
     Summary,
     GetContent,
 };
 
 /**
+ * Get executions data
+ */
+function GetExecutions() {
+    return http.send(`api/v1/executions`, `get`).then(this.handleResponse).then(response => {
+        return response;
+    })
+}
+
+/**
  * Get resources metadata
  */
-function Summary() {
-    return http.send(`api/v1/summary`, `get`).then(this.handleResponse).then(response => {
+function Summary(executionID) {
+    return http.send(`api/v1/summary?executionID=${executionID}`, `get`).then(this.handleResponse).then(response => {
         return response;
     })
 }
@@ -18,9 +28,9 @@ function Summary() {
  * Get resource data
  * @param {string} name
  */
-function GetContent(name) {
+function GetContent(name, executionID) {
 
-    return http.send(`api/v1/resources/${name}`, `get`).then(this.handleResponse).then(response => {
+    return http.send(`api/v1/resources/${name}?executionID=${executionID}`, `get`).then(this.handleResponse).then(response => {
         return response;
     })
 

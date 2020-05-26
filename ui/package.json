@@ -28,7 +28,7 @@
     "extract-text-webpack-plugin": "4.0.0-beta.0",
     "favicons-webpack-plugin": "0.0.9",
     "html-webpack-plugin": "3.2.0",
-    "node-sass": "4.12.0",
+    "node-sass": "4.14.1",
     "react": "16.8.6",
     "react-dom": "16.8.6",
     "react-hot-loader": "4.8.4",
@@ -42,7 +42,7 @@
     "svg-inline-loader": "^0.8.0",
     "url-loader": "1.1.2",
     "webpack": "4.30.0",
-    "webpack-cli": "3.3.1",
+    "webpack-cli": "3.3.11",
     "webpack-dev-middleware": "3.6.2",
     "webpack-hot-middleware": "2.24.3"
   },

@@ -22,7 +22,7 @@ var (
 // awsCMS will present the aws analyze command
 var apiServer = &cobra.Command{
 	Use:   "api",
-	Short: "Serve resetAPI",
+	Short: "Launch RESTful API",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 

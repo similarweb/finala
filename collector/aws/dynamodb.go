@@ -73,7 +73,7 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 		"resource": "dynamoDB",
 	}).Info("starting to analyze resource")
 
-	dd.collector.AddCollectionStatus(collector.EventCollector{
+	dd.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: dd.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFetch,
@@ -86,7 +86,7 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 
 	if err != nil {
 		log.WithField("error", err).Error("could not describe rds instances")
-		dd.collector.AddCollectionStatus(collector.EventCollector{
+		dd.collector.UpdateServiceStatus(collector.EventCollector{
 			ResourceName: dd.Name,
 			Data: collector.EventStatusData{
 				Status:       collector.EventError,
@@ -201,7 +201,7 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 		}
 	}
 
-	dd.collector.AddCollectionStatus(collector.EventCollector{
+	dd.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: dd.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFinish,

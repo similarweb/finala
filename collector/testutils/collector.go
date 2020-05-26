@@ -14,7 +14,7 @@ func NewMockCollector() *MockCollector {
 	return &MockCollector{}
 }
 
-func (mc *MockCollector) AddCollectionStatus(data collector.EventCollector) {
+func (mc *MockCollector) UpdateServiceStatus(data collector.EventCollector) {
 	mc.EventsCollectionStatus = append(mc.EventsCollectionStatus, data)
 }
 

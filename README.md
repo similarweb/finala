@@ -34,10 +34,14 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### How To Use
 
-Finala have 3 component:
+Finala is built from 3 components:
 
-* **collector** - collect and analyzes resources from [collector.yaml](./configuration/collector.yaml). all resources that marked as under utilized reported to api component.
-In [collector.yaml](./configuration/collector.yaml) configuration you can multiple accounts and multiple regions that you want to collect. 
+* **API** - RESTful API server that receives events from the collector and serves the UI. See [example API configuration file](./configuration/api.yaml).
+
+* **UI** - The User Interface, display the data in a way that it'll look nice :).
+
+* **Collector** - Collects and analyzes resources against their thresholds defined in [collector.yaml](./configuration/collector.yaml). All resources that marked as "under utilized" are reported back to the API component.
+You can define multiple accounts and regions in the [collector.yaml](./configuration/collector.yaml) file.
 
 ```yaml
 providers:
@@ -50,7 +54,7 @@ providers:
     regions:
       - <REGION>
 ```
-In `metrics` section you add/remove/change the metrics that mark the resource as under utilized` 
+We've already provided list of built-in cost-optimization `metrics`, you may modify the file to suit your needs.
 ```yaml
 rds:
     - description: Database connection count
@@ -64,21 +68,18 @@ rds:
         value: 0
 ```
 
-This example will marked RDS as under utilized` that had **zero** connections in the last week: 
-
-* **api** - a rest api to server the collector incoming events and the UI. api configuration [api.yaml](./configuration/api.yaml)
-
-* **ui** - component that server the UI 
+This example will mark RDS as under utilized` if that RDS had **zero** connections in the last week.
 
 
 ### Deploy
+You may use either approach in order to deploy Finala.
 
-1) Deploy with Kubernetes. see Helm chart 
-2) Run it locally with `docker-compose up`.
+* Deploy with Kubernetes, see [Helm chart](https://github.com/similarweb/finala-helm) for more information.
+* Run it locally with `docker-compose up`.
 
-### Development
+### Contribution
 
-See the following commands each component
+**Running the different components**:
 
 #### Collector
 
@@ -88,30 +89,32 @@ go run main.go collector -c ./configuration/collector.yaml
 
 #### API
 ```shell
-go run main.go collector -c ./configuration/collector.yaml
+go run main.go api -c ./configuration/api.yaml
 ```
 
 #### UI
 
-If you want to make UI changes run the following commands:
 ```shell
 cd ui 
 npm run dev
 ```
 
-If you want to see the collector results from the UI run the following command:
+*OR*
+
 ```shell
 make build-ui
 go run main.go ui -c ./configuration/ui.yaml
 ```
 
 ### Docker
+Running all components using `docker-compose`:
 
 ```
 docker-compose up
 ```
 
-Then browse to: http://127.0.0.1:8080
+
+UI is exposed on port 8080 ([quick link](http://127.0.0.1:8080)).
 
 
 ## Configuration samples explained:

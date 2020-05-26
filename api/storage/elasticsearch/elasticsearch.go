@@ -113,7 +113,7 @@ func (sm *StorageManager) GetSummary(executionsID string) (map[string]storage.Co
 
 	summary := map[string]storage.CollectorsSummary{}
 
-	eventTypeQuery := elastic.NewMatchQuery("EventType", "collection_status")
+	eventTypeQuery := elastic.NewMatchQuery("EventType", "service_status")
 	executionIDQuery := elastic.NewMatchQuery("ExecutionID", executionsID)
 
 	searchResult, err := sm.client.Search().
@@ -224,7 +224,7 @@ func (sm *StorageManager) GetExecutions() ([]storage.Executions, error) {
 	executions := []storage.Executions{}
 
 	searchResult, err := sm.client.Search().
-		Query(elastic.NewMatchQuery("EventType", "collection_status")).
+		Query(elastic.NewMatchQuery("EventType", "service_status")).
 		Aggregation("uniq", elastic.NewTermsAggregation().Field("ExecutionID.keyword")).
 		Size(0).
 		Do(context.Background())

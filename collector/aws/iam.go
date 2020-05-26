@@ -50,7 +50,7 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 		"resource": "ec2",
 	}).Info("starting to analyze resource")
 
-	im.collector.AddCollectionStatus(collector.EventCollector{
+	im.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: im.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFetch,
@@ -63,7 +63,7 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 	if err != nil {
 		log.WithError(err).Error("could not get iam users")
 
-		im.collector.AddCollectionStatus(collector.EventCollector{
+		im.collector.UpdateServiceStatus(collector.EventCollector{
 			ResourceName: im.Name,
 			Data: collector.EventStatusData{
 				Status:       collector.EventError,
@@ -131,7 +131,7 @@ func (im *IAMManager) LastActivity(days float64, operator string) ([]DetectedAWS
 		}
 	}
 
-	im.collector.AddCollectionStatus(collector.EventCollector{
+	im.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: im.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFinish,

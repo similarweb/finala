@@ -65,7 +65,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 		"resource": "elb_v2",
 	}).Info("starting to analyze resource")
 
-	el.collector.AddCollectionStatus(collector.EventCollector{
+	el.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: el.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFetch,
@@ -76,7 +76,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 
 	instances, err := el.DescribeLoadbalancers(nil, nil)
 	if err != nil {
-		el.collector.AddCollectionStatus(collector.EventCollector{
+		el.collector.UpdateServiceStatus(collector.EventCollector{
 			ResourceName: el.Name,
 			Data: collector.EventStatusData{
 				Status:       collector.EventError,
@@ -191,7 +191,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 		}
 	}
 
-	el.collector.AddCollectionStatus(collector.EventCollector{
+	el.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: el.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFinish,

@@ -68,7 +68,7 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 		"resource": "elasticache",
 	}).Info("starting to analyze resource")
 
-	ec.collector.AddCollectionStatus(collector.EventCollector{
+	ec.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: ec.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFetch,
@@ -80,7 +80,7 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 	instances, err := ec.DescribeInstances(nil, nil)
 	if err != nil {
 
-		ec.collector.AddCollectionStatus(collector.EventCollector{
+		ec.collector.UpdateServiceStatus(collector.EventCollector{
 			ResourceName: ec.Name,
 			Data: collector.EventStatusData{
 				Status:       collector.EventError,
@@ -185,7 +185,7 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 		}
 	}
 
-	ec.collector.AddCollectionStatus(collector.EventCollector{
+	ec.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: ec.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFinish,

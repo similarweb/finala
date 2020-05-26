@@ -59,7 +59,7 @@ func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 		"resource": "ec2_volume",
 	}).Info("starting to analyze resource")
 
-	ev.collector.AddCollectionStatus(collector.EventCollector{
+	ev.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: ev.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFetch,
@@ -71,7 +71,7 @@ func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 
 	if err != nil {
 		log.WithField("error", err).Error("could not describe ec2 volumes")
-		ev.collector.AddCollectionStatus(collector.EventCollector{
+		ev.collector.UpdateServiceStatus(collector.EventCollector{
 			ResourceName: ev.Name,
 			Data: collector.EventStatusData{
 				Status:       collector.EventError,
@@ -129,7 +129,7 @@ func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 
 	}
 
-	ev.collector.AddCollectionStatus(collector.EventCollector{
+	ev.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: ev.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFinish,

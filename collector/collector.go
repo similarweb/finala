@@ -15,14 +15,14 @@ import (
 )
 
 const (
-	eventStatusCollection = "collection_status"
-	resourceDetected      = "resource_detected"
+	eventServiceStatus    = "service_status"
+	eventResourceDetected = "resource_detected"
 )
 
 // CollectorDescriber describe the collector functions
 type CollectorDescriber interface {
 	AddResource(data EventCollector)
-	AddCollectionStatus(data EventCollector)
+	UpdateServiceStatus(data EventCollector)
 	GetCollectorEvent() []EventCollector
 }
 
@@ -87,14 +87,14 @@ func NewCollectorManager(ctx context.Context, wg *sync.WaitGroup, req *request.H
 
 // AddResource add resource data
 func (cm *CollectorManager) AddResource(data EventCollector) {
-	data.EventType = resourceDetected
+	data.EventType = eventResourceDetected
 	data.EventTime = time.Now().UnixNano()
 	cm.collectChan <- data
 }
 
-// AddCollectionStatus add status on resource collector
-func (cm *CollectorManager) AddCollectionStatus(data EventCollector) {
-	data.EventType = eventStatusCollection
+// UpdateServiceStatus add status on resource collector
+func (cm *CollectorManager) UpdateServiceStatus(data EventCollector) {
+	data.EventType = eventServiceStatus
 	data.EventTime = time.Now().UnixNano()
 	cm.collectChan <- data
 }
@@ -151,7 +151,6 @@ func (cm *CollectorManager) send(events []EventCollector) bool {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(fmt.Sprintf("%s/api/v1/detect-events/%s", cm.apiEndpoint, cm.executionID))
 	req, err := cm.request.Request("POST", fmt.Sprintf("%s/api/v1/detect-events/%s", cm.apiEndpoint, cm.executionID), nil, bytes.NewBuffer(buf))
 	if err != nil {
 		log.WithError(err).Error("could not create HTTP client request")

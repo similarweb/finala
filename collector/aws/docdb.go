@@ -67,7 +67,7 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 		"resource": "documentDB",
 	}).Info("starting to analyze resource")
 
-	dd.collector.AddCollectionStatus(collector.EventCollector{
+	dd.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: dd.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFetch,
@@ -79,7 +79,7 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 	if err != nil {
 		log.WithField("error", err).Error("could not describe documentDB instances")
 
-		dd.collector.AddCollectionStatus(collector.EventCollector{
+		dd.collector.UpdateServiceStatus(collector.EventCollector{
 			ResourceName: dd.Name,
 			Data: collector.EventStatusData{
 				Status:       collector.EventError,
@@ -185,7 +185,7 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 
 	}
 
-	dd.collector.AddCollectionStatus(collector.EventCollector{
+	dd.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: dd.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFinish,

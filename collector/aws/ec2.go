@@ -66,7 +66,7 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 		"resource": "ec2_instances",
 	}).Info("starting to analyze resource")
 
-	ec.collector.AddCollectionStatus(collector.EventCollector{
+	ec.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: ec.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFetch,
@@ -77,7 +77,7 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 
 	instances, err := ec.DescribeInstances(nil, nil)
 	if err != nil {
-		ec.collector.AddCollectionStatus(collector.EventCollector{
+		ec.collector.UpdateServiceStatus(collector.EventCollector{
 			ResourceName: ec.Name,
 			Data: collector.EventStatusData{
 				Status:       collector.EventError,
@@ -186,7 +186,7 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 		}
 	}
 
-	ec.collector.AddCollectionStatus(collector.EventCollector{
+	ec.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: ec.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFinish,

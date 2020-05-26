@@ -67,7 +67,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 		"resource": "rds",
 	}).Info("starting to analyze resource")
 
-	r.collector.AddCollectionStatus(collector.EventCollector{
+	r.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: r.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFetch,
@@ -79,7 +79,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 	if err != nil {
 		log.WithField("error", err).Error("could not describe rds instances")
 
-		r.collector.AddCollectionStatus(collector.EventCollector{
+		r.collector.UpdateServiceStatus(collector.EventCollector{
 			ResourceName: r.Name,
 			Data: collector.EventStatusData{
 				Status:       collector.EventError,
@@ -186,7 +186,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 
 	}
 
-	r.collector.AddCollectionStatus(collector.EventCollector{
+	r.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: r.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFinish,

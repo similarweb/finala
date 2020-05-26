@@ -62,7 +62,7 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 		"resource": "lambda",
 	}).Info("starting to analyze resource")
 
-	lm.collector.AddCollectionStatus(collector.EventCollector{
+	lm.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: lm.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFetch,
@@ -74,7 +74,7 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 	if err != nil {
 		log.WithField("error", err).Error("could not describe lambda functions")
 
-		lm.collector.AddCollectionStatus(collector.EventCollector{
+		lm.collector.UpdateServiceStatus(collector.EventCollector{
 			ResourceName: lm.Name,
 			Data: collector.EventStatusData{
 				Status:       collector.EventError,
@@ -170,7 +170,7 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 
 	}
 
-	lm.collector.AddCollectionStatus(collector.EventCollector{
+	lm.collector.UpdateServiceStatus(collector.EventCollector{
 		ResourceName: lm.Name,
 		Data: collector.EventStatusData{
 			Status: collector.EventFinish,

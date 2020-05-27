@@ -1,11 +1,10 @@
 package aws
 
 import (
-	"encoding/json"
-	"finala/config"
+	"finala/collector"
+	"finala/collector/config"
 	"finala/expression"
-	"finala/storage"
-	"finala/structs"
+	"fmt"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -23,15 +22,15 @@ type NeptuneClientDescriptor interface {
 
 // NeptuneManager describes the Manager for Neptune
 type NeptuneManager struct {
-	client           NeptuneClientDescriptor
-	storage          storage.Storage
-	cloudWatchClient *CloudwatchManager
-	pricingClient    *PricingManager
-	metrics          []config.MetricConfig
-	region           string
-
+	collector          collector.CollectorDescriber
+	client             NeptuneClientDescriptor
+	cloudWatchClient   *CloudwatchManager
+	pricingClient      *PricingManager
+	metrics            []config.MetricConfig
+	region             string
 	namespace          string
 	servicePricingCode string
+	Name               string
 }
 
 // DetectedAWSNeptune defines the detected AWS Neptune instances
@@ -41,47 +40,59 @@ type DetectedAWSNeptune struct {
 	InstanceType string
 	MultiAZ      bool
 	Engine       string
-	structs.BaseDetectedRaw
-}
-
-// TableName sets the table name to storage interface
-func (DetectedAWSNeptune) TableName() string {
-	return "aws_neptune"
+	collector.PriceDetectedFields
 }
 
 // NewNeptuneManager implements AWS GO SDK
-func NewNeptuneManager(client NeptuneClientDescriptor, st storage.Storage, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *NeptuneManager {
-
-	st.AutoMigrate(&DetectedAWSNeptune{})
-
+func NewNeptuneManager(collector collector.CollectorDescriber, client NeptuneClientDescriptor, cloudWatchClient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *NeptuneManager {
 	return &NeptuneManager{
-		client:           client,
-		storage:          st,
-		cloudWatchClient: cloudWatchClient,
-		pricingClient:    pricing,
-		metrics:          metrics,
-		region:           region,
-
+		collector:          collector,
+		client:             client,
+		cloudWatchClient:   cloudWatchClient,
+		pricingClient:      pricing,
+		metrics:            metrics,
+		region:             region,
 		namespace:          "AWS/Neptune",
 		servicePricingCode: "AmazonNeptune",
+		Name:               fmt.Sprintf("%s_neptune", ResourcePrefix),
 	}
 }
 
 // Detect checks which Neptune instance  is under-utilized
 func (np *NeptuneManager) Detect() ([]DetectedAWSNeptune, error) {
 
-	log.Info("analyze Neptune")
+	log.WithFields(log.Fields{
+		"region":   np.region,
+		"resource": "neptune",
+	}).Info("starting to analyze resource")
+
+	np.collector.UpdateServiceStatus(collector.EventCollector{
+		ResourceName: np.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFetch,
+		},
+	})
+
 	detected := []DetectedAWSNeptune{}
 	instances, err := np.DescribeInstances(nil, nil)
 	if err != nil {
-		log.WithField("error", err).Error("could not describe neptune instances")
+		log.WithField("error", err).Error("could not describe any neptune instances")
+
+		np.collector.UpdateServiceStatus(collector.EventCollector{
+			ResourceName: np.Name,
+			Data: collector.EventStatusData{
+				Status:       collector.EventError,
+				ErrorMessage: err.Error(),
+			},
+		})
+
 		return detected, err
 	}
 
 	now := time.Now()
 	for _, instance := range instances {
 
-		log.WithField("name", *instance.DBInstanceIdentifier).Info("check Neptune instance")
+		log.WithField("name", *instance.DBInstanceIdentifier).Info("checking Neptune instances")
 
 		price, _ := np.pricingClient.GetPrice(np.GetPricingFilterInput(instance), "")
 
@@ -89,7 +100,7 @@ func (np *NeptuneManager) Detect() ([]DetectedAWSNeptune, error) {
 			log.WithFields(log.Fields{
 				"name":        *instance.DBInstanceIdentifier,
 				"metric_name": metric.Description,
-			}).Debug("check metric")
+			}).Debug("checking metric")
 
 			period := int64(metric.Period.Seconds())
 			metricEndTime := now.Add(time.Duration(-metric.StartTime))
@@ -112,7 +123,7 @@ func (np *NeptuneManager) Detect() ([]DetectedAWSNeptune, error) {
 				log.WithError(err).WithFields(log.Fields{
 					"name":        *instance.DBInstanceIdentifier,
 					"metric_name": metric.Description,
-				}).Error("Could not get cloudwatch metric data")
+				}).Error("Could not get any cloudwatch metric data")
 				continue
 			}
 
@@ -134,14 +145,17 @@ func (np *NeptuneManager) Detect() ([]DetectedAWSNeptune, error) {
 					"name":                *instance.DBInstanceIdentifier,
 					"instance_type":       *instance.DBInstanceClass,
 					"region":              np.region,
-				}).Info("Neptune instance detected as unutilized resource")
+				}).Info("detected unutilized neptune resource")
 
-				decodedTags := []byte{}
 				tags, err := np.client.ListTagsForResource(&neptune.ListTagsForResourceInput{
 					ResourceName: instance.DBInstanceArn,
 				})
+
+				tagsData := map[string]string{}
 				if err == nil {
-					decodedTags, err = json.Marshal(&tags.TagList)
+					for _, tag := range tags.TagList {
+						tagsData[*tag.Key] = *tag.Value
+					}
 				}
 
 				neptune := DetectedAWSNeptune{
@@ -150,23 +164,32 @@ func (np *NeptuneManager) Detect() ([]DetectedAWSNeptune, error) {
 					InstanceType: *instance.DBInstanceClass,
 					MultiAZ:      *instance.MultiAZ,
 					Engine:       *instance.Engine,
-					BaseDetectedRaw: structs.BaseDetectedRaw{
+					PriceDetectedFields: collector.PriceDetectedFields{
 						ResourceID:      *instance.DBInstanceArn,
 						LaunchTime:      *instance.InstanceCreateTime,
 						PricePerHour:    price,
 						PricePerMonth:   price * 720,
 						TotalSpendPrice: totalPrice,
-						Tags:            string(decodedTags),
+						Tag:             tagsData,
 					},
 				}
 
+				np.collector.AddResource(collector.EventCollector{
+					ResourceName: np.Name,
+					Data:         neptune,
+				})
+
 				detected = append(detected, neptune)
-				np.storage.Create(&neptune)
 
 			}
 		}
-
 	}
+	np.collector.UpdateServiceStatus(collector.EventCollector{
+		ResourceName: np.Name,
+		Data: collector.EventStatusData{
+			Status: collector.EventFinish,
+		},
+	})
 
 	return detected, nil
 

@@ -5,7 +5,7 @@ import createRootReducer from './reducers'
 import thunkMiddleware from 'redux-thunk';
 
 export const history = createBrowserHistory({
-  basename: '/static'
+  basename: '/'
 
 })
 

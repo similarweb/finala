@@ -15,6 +15,11 @@ module.exports = function middleware(app, config) {
   app.use(webpackHotMiddleware(compiler));  
 
   const fs = middleware.fileSystem;
+    app.get('/api/v1/settings', (req, res) => {
+    fs.readFile(path.join(compiler.outputPath, 'index.html'), (err, file) => {
+      res.send({api_endpoint: "http://127.0.0.1:8081"})
+    });
+  });
     app.get('*', (req, res) => {
     fs.readFile(path.join(compiler.outputPath, 'index.html'), (err, file) => {
       if (err) {

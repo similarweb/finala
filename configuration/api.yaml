@@ -1,0 +1,10 @@
+---
+log_level: info
+
+storage:
+  elasticsearch:
+    index: general
+    username: ""
+    password: ""
+    endpoints: 
+      - http://127.0.0.1:9200

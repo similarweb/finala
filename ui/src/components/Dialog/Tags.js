@@ -7,7 +7,6 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Link from '@material-ui/core/Link';
-import ReactJson from 'react-json-view'
 
 /**
  * 
@@ -30,12 +29,7 @@ const DialogTags = ({ tags }) => {
     setOpen(false);
   };
 
-  let j = {}
-  try{
-    j = JSON.parse(tags)
-  } catch{
-    //
-  }
+
   
   return (
 
@@ -57,12 +51,12 @@ const DialogTags = ({ tags }) => {
         <DialogTitle id="max-width-dialog-title">Tags</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            List of resource tags
+            
           </DialogContentText>
           <pre>
             {
               <div>
-                <ReactJson src={j} displayDataTypes={false} />
+                {JSON.stringify(tags, null, 2)}
               </div>
             }
           </pre>
@@ -78,7 +72,7 @@ const DialogTags = ({ tags }) => {
 }
 
 DialogTags.propTypes = {
-    tags: PropTypes.string,
+    tags: PropTypes.object,
 };
 
 DialogTags.defaultProps = {

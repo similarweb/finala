@@ -1,10 +1,12 @@
 var merge = require('lodash/merge');
 
+
 /**
  *  Manage http request
  */
 class Http {
 
+    baseURL = ""
     /**
      * Making request
      * 
@@ -19,11 +21,14 @@ class Http {
             method: action,
         };
         merge(defaultRequestOptions, customRequestOptions);
-        let baseUrl = `<<API_URL>>`
-        if (baseUrl === ""){
-            baseUrl = `http://127.0.0.1:${window.location.port}`
+        let fullUrl = ""
+        if (url.startsWith("http")) {
+            fullUrl = url
+        } else{
+            fullUrl = `${this.baseURL}/${url}`
         }
-        return fetch(`${baseUrl}/${url}`, defaultRequestOptions).then(handleResponse)
+
+        return fetch(`${fullUrl}`, defaultRequestOptions).then(handleResponse)
     }
 }
 

@@ -3,6 +3,7 @@ finala
 pkg/
 config_test.yaml
 cov.txt
+.vscode
 
 # Golang
 # Binaries for programs and plugins
@@ -149,7 +150,6 @@ scripts/flow/*/.flowconfig
 .grunt
 _SpecRunner.html
 __benchmarks__
-build/
 remote-repo/
 coverage/
 .module-cache
@@ -165,6 +165,7 @@ chrome-user-data
 .vscode
 *.swp
 *.swo
+build
 
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build

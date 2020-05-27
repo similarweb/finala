@@ -5,12 +5,11 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 module.exports = require('./webpack.config.base')({
   mode: 'production',
   entry: [
-    path.join(process.cwd(), 'src/index.js') 
-
+    path.join(process.cwd(), 'src/index.js')
   ],
   output: {
     filename: '[name].[hash].js',
-    chunkFilename: '[name].[hash].chunk.js'
+    chunkFilename: '[name].[hash].chunk.js',
   },
   module: {
     rules: [  
@@ -22,7 +21,7 @@ module.exports = require('./webpack.config.base')({
     new HtmlWebpackPlugin({
       inject: true, 
       template: 'src/index.html',
-      filename: `index.html`,
+      filename: `../index.html`,
       minify: {
         removeComments: true,
         collapseWhitespace: true,

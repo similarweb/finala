@@ -97,8 +97,8 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 		return detectedTables, err
 	}
 
-	writePrice, _ := dd.pricingClient.GetPrice(dd.GetPricingWriteFilterInput(), rateCode)
-	readPrice, _ := dd.pricingClient.GetPrice(dd.GetPricingReadFilterInput(), rateCode)
+	writePricePerHour, _ := dd.pricingClient.GetPrice(dd.GetPricingWriteFilterInput(), rateCode)
+	readPricePerHour, _ := dd.pricingClient.GetPrice(dd.GetPricingReadFilterInput(), rateCode)
 
 	for _, table := range tables {
 
@@ -121,14 +121,13 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 				EndTime:    &now,
 				Dimensions: []*cloudwatch.Dimension{
 					&cloudwatch.Dimension{
-						Name: awsClient.String("TableName"),
-						// Value: awsClient.String("seam_production_cross_sites_info"),
+						Name:  awsClient.String("TableName"),
 						Value: table.TableName,
 					},
 				},
 			}
 
-			metricResponse, err := dd.cloudWatchClient.GetMetric(&metricInput, metric)
+			formulaValue, metricsResponseValues, err := dd.cloudWatchClient.GetMetric(&metricInput, metric)
 			if err != nil {
 				log.WithError(err).WithFields(log.Fields{
 					"table_name":  *table.TableName,
@@ -137,8 +136,14 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 				continue
 			}
 
-			expression, err := expression.BoolExpression(metricResponse, metric.Constraint.Value, metric.Constraint.Operator)
+			expression, err := expression.BoolExpression(formulaValue, metric.Constraint.Value, metric.Constraint.Operator)
 			if err != nil {
+				log.WithFields(log.Fields{
+					"table_name":                 *table.TableName,
+					"formula_value":              formulaValue,
+					"metric_constraint_value":    metric.Constraint.Value,
+					"metric_constraint_operator": metric.Constraint.Operator,
+				}).Error("bool expression error")
 				continue
 			}
 
@@ -148,21 +153,28 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 					"metric_name":         metric.Description,
 					"Constraint_operator": metric.Constraint.Operator,
 					"Constraint_Value":    metric.Constraint.Value,
-					"metric_response":     metricResponse,
+					"formula_value":       formulaValue,
 					"name":                *table.TableName,
 					"region":              dd.region,
 				}).Info("DynamoDB table detected as unutilized resource")
 
-				price := readPrice
 				instanceCreateTime := *table.CreationDateTime
 				durationRunningTime := now.Sub(instanceCreateTime)
-				totalPrice := price * durationRunningTime.Hours()
-				pricePerMonth := float64(*table.ProvisionedThroughput.ReadCapacityUnits) * readPrice * 720
 
-				// TODO:: temp hack
+				var pricePerHour float64
+				var totalPrice float64
+				var pricePerMonth float64
 				if strings.Contains(metric.Description, "write capacity") {
-					price = writePrice
-					pricePerMonth = float64(*table.ProvisionedThroughput.WriteCapacityUnits) * writePrice * 720
+					provisionedWriteCapacityUnits := metricsResponseValues["ProvisionedWriteCapacityUnits"].(float64)
+					pricePerHour = writePricePerHour
+					totalPrice = pricePerHour * provisionedWriteCapacityUnits * durationRunningTime.Hours()
+					pricePerMonth = provisionedWriteCapacityUnits * pricePerHour * 720
+
+				} else {
+					provisionedReadCapacityUnits := metricsResponseValues["ProvisionedReadCapacityUnits"].(float64)
+					pricePerHour = readPricePerHour
+					totalPrice = pricePerHour * provisionedReadCapacityUnits * durationRunningTime.Hours()
+					pricePerMonth = provisionedReadCapacityUnits * pricePerHour * 720
 				}
 
 				tags, err := dd.client.ListTagsOfResource(&dynamodb.ListTagsOfResourceInput{
@@ -183,9 +195,9 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 					PriceDetectedFields: collector.PriceDetectedFields{
 						ResourceID:      *table.TableArn,
 						LaunchTime:      *table.CreationDateTime,
-						PricePerHour:    writePrice + readPrice,
+						PricePerHour:    pricePerHour,
 						PricePerMonth:   pricePerMonth,
-						TotalSpendPrice: totalPrice,
+						TotalSpendPrice: totalPrice, // get the percentage
 						Tag:             tagsData,
 					},
 				}
@@ -258,12 +270,15 @@ func (dd *DynamoDBManager) DescribeTables() ([]*dynamodb.TableDescription, error
 
 	tables := []*dynamodb.TableDescription{}
 	for _, tableName := range resp.TableNames {
-		resp, err := dd.client.DescribeTable(&dynamodb.DescribeTableInput{TableName: tableName})
-		if err != nil {
-			return nil, err
-		}
 
-		tables = append(tables, resp.Table)
+		resp, err := dd.client.DescribeTable(&dynamodb.DescribeTableInput{TableName: tableName})
+		if resp.Table.BillingModeSummary == nil {
+			if err != nil {
+				return nil, err
+			}
+
+			tables = append(tables, resp.Table)
+		}
 	}
 
 	return tables, nil

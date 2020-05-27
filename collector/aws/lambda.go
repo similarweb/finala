@@ -111,7 +111,7 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 				},
 			}
 
-			metricResponse, err := lm.cloudWatchClient.GetMetric(&metricInput, metric)
+			formulaValue, _, err := lm.cloudWatchClient.GetMetric(&metricInput, metric)
 
 			if err != nil {
 				log.WithError(err).WithFields(log.Fields{
@@ -121,7 +121,7 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 				continue
 			}
 
-			expression, err := expression.BoolExpression(metricResponse, metric.Constraint.Value, metric.Constraint.Operator)
+			expression, err := expression.BoolExpression(formulaValue, metric.Constraint.Value, metric.Constraint.Operator)
 			if err != nil {
 				continue
 			}
@@ -132,7 +132,7 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 					"metric_name":         metric.Description,
 					"Constraint_operator": metric.Constraint.Operator,
 					"Constraint_Value":    metric.Constraint.Value,
-					"metric_response":     metricResponse,
+					"formula_value":       formulaValue,
 					"name":                *fun.FunctionName,
 					"region":              lm.region,
 				}).Info("Lambda function detected as unutilized resource")

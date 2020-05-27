@@ -81,7 +81,7 @@ func TestGetMetricFormula(t *testing.T) {
 			Formula: "a + b + c",
 		},
 	}
-	result, err := cloutwatchManager.GetMetric(&metricInput, metricConfig)
+	result, _, err := cloutwatchManager.GetMetric(&metricInput, metricConfig)
 
 	if err != nil {
 		t.Fatalf("unexpected err furmola results to be empty")
@@ -108,7 +108,7 @@ func TestGetMetricErrors(t *testing.T) {
 			},
 		},
 	}
-	_, err := cloutwatchManager.GetMetric(&metricInput, metricConfig)
+	_, _, err := cloutwatchManager.GetMetric(&metricInput, metricConfig)
 
 	if err == nil {
 		t.Fatalf("unexpected empty error response")
@@ -132,7 +132,7 @@ func TestGetMetricNoneFormula(t *testing.T) {
 			},
 		},
 	}
-	result, err := cloutwatchManager.GetMetric(&metricInput, metricConfig)
+	result, _, err := cloutwatchManager.GetMetric(&metricInput, metricConfig)
 
 	if err != nil {
 		t.Fatalf("unexpected err furmola results to be empty")

@@ -123,7 +123,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 				},
 			}
 
-			metricResponse, err := el.cloudWatchCLient.GetMetric(&metricInput, metric)
+			formulaValue, _, err := el.cloudWatchCLient.GetMetric(&metricInput, metric)
 
 			if err != nil {
 				log.WithError(err).WithFields(log.Fields{
@@ -137,7 +137,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 			durationRunningTime := now.Sub(instanceCreateTime)
 			totalPrice := price * durationRunningTime.Hours()
 
-			expression, err := expression.BoolExpression(metricResponse, metric.Constraint.Value, metric.Constraint.Operator)
+			expression, err := expression.BoolExpression(formulaValue, metric.Constraint.Value, metric.Constraint.Operator)
 			if err != nil {
 				continue
 			}
@@ -148,7 +148,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 					"metric_name":         metric.Description,
 					"Constraint_operator": metric.Constraint.Operator,
 					"Constraint_Value":    metric.Constraint.Value,
-					"metric_response":     metricResponse,
+					"formula_value":       formulaValue,
 					"name":                *instance.LoadBalancerName,
 					"region":              el.region,
 				}).Info("LoadBalancer detected as unutilized resource")

@@ -1,4 +1,4 @@
 ---
 log_level: info
 api_server:
-  address: http://127.0.0.01:8081
+  address: http://127.0.0.1:8081

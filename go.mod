@@ -10,7 +10,6 @@ require (
 	github.com/jmoiron/sqlx v1.2.0 // indirect
 	github.com/lib/pq v1.5.2 // indirect
 	github.com/mitchellh/hashstructure v1.0.0
-	github.com/nlopes/slack v0.6.0 // indirect
 	github.com/olivere/elastic/v7 v7.0.15
 	github.com/rubenv/sql-migrate v0.0.0-20200429072036-ae26b214fa43 // indirect
 	github.com/similarweb/client-notifier v0.1.2

@@ -92,7 +92,7 @@ func (np *NeptuneManager) Detect() ([]DetectedAWSNeptune, error) {
 	now := time.Now()
 	for _, instance := range instances {
 
-		log.WithField("name", *instance.DBInstanceIdentifier).Info("checking Neptune instances")
+		log.WithField("name", *instance.DBInstanceIdentifier).Debug("checking Neptune instances")
 
 		price, _ := np.pricingClient.GetPrice(np.GetPricingFilterInput(instance), "")
 

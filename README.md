@@ -15,6 +15,7 @@ AWS:
 * DocumentDB
 * IAM user last activity
 * Lambda
+* Neptune
 
 More to come...
 

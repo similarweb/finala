@@ -54,13 +54,13 @@ func (server *Server) Serve() serverutil.StopFunc {
 		serverCtx, serverCancelFn := context.WithTimeout(context.Background(), DrainTimeout)
 		err := server.httpserver.Shutdown(serverCtx)
 		if err != nil {
-			log.WithError(err).Error("error occured while shutting down manager HTTP server")
+			log.WithError(err).Error("error occurred while shutting down manager HTTP server")
 		}
 		serverCancelFn()
 		stopped <- true
 	}()
 	go func() {
-		log.WithField("address", server.httpserver.Addr).Info("server lisinning")
+		log.WithField("address", server.httpserver.Addr).Info("server listening on")
 		server.httpserver.ListenAndServe()
 	}()
 	return func() {

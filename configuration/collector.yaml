@@ -110,6 +110,19 @@ providers:
           constraint:
             operator: "=="
             value: 0
+      neptune:
+        - description: Neptune Requests Gremlin/Sparql
+          metrics:
+            - name: GremlinRequestsPerSec
+              statistic: Sum
+            - name: SparqlRequestsPerSec
+              statistic: Sum              
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            formula: GremlinRequestsPerSec + SparqlRequestsPerSec
+            operator: "=="
+            value: 0
     resources:
       iamLastActivity:
         description: Last user activity

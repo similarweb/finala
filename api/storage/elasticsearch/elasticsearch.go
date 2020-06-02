@@ -31,6 +31,7 @@ const (
 			}
 		}
 	}`
+	executionsQueryLimitSize = 20
 )
 
 // StorageManager descrive elasticsearchStorage
@@ -44,7 +45,7 @@ func getESClient(conf config.ElasticsearchConfig) (*elastic.Client, error) {
 
 	client, err := elastic.NewClient(elastic.SetURL(strings.Join(conf.Endpoints, ",")),
 		elastic.SetErrorLog(log.New()),
-		// elastic.SetTraceLog(log.New()),
+		//elastic.SetTraceLog(log.New()), // Uncomment for debugging ElasticSearch Queries
 		elastic.SetBasicAuth(conf.Username, conf.Password),
 		elastic.SetSniff(false),
 		elastic.SetHealthcheck(true))
@@ -225,9 +226,8 @@ func (sm *StorageManager) GetExecutions() ([]storage.Executions, error) {
 
 	searchResult, err := sm.client.Search().
 		Query(elastic.NewMatchQuery("EventType", "service_status")).
-		Aggregation("uniq", elastic.NewTermsAggregation().Field("ExecutionID.keyword")).
-		Size(0).
-		Do(context.Background())
+		Aggregation("uniq", elastic.NewTermsAggregation().Field("ExecutionID.keyword").
+			Order("_term", false).Size(executionsQueryLimitSize)).Do(context.Background())
 
 	if nil != err {
 		log.WithError(err).WithFields(log.Fields{

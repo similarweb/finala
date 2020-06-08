@@ -44,7 +44,7 @@ func getESClient(conf config.ElasticsearchConfig) (*elastic.Client, error) {
 
 	client, err := elastic.NewClient(elastic.SetURL(strings.Join(conf.Endpoints, ",")),
 		elastic.SetErrorLog(log.New()),
-		// elastic.SetTraceLog(log.New()),
+		elastic.SetTraceLog(log.New()), // Uncomment for debugging ElasticSearch Queries
 		elastic.SetBasicAuth(conf.Username, conf.Password),
 		elastic.SetSniff(false),
 		elastic.SetHealthcheck(true))
@@ -108,16 +108,27 @@ func (sm *StorageManager) Save(data string) bool {
 
 }
 
-// GetSummary return executions summary
-func (sm *StorageManager) GetSummary(executionsID string) (map[string]storage.CollectorsSummary, error) {
+// getDynamicMatchQuery will iterate through a filters map and create Match Query for each of them
+func (sm *StorageManager) getDynamicMatchQuery(filters map[string]string) []elastic.Query {
+	dynamicMatchQuery := []elastic.Query{}
+	for name, value := range filters {
+		dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery(name, value))
+	}
+	return dynamicMatchQuery
+}
 
+// GetSummary returns executions summary
+func (sm *StorageManager) GetSummary(filters map[string]string) (map[string]storage.CollectorsSummary, error) {
 	summary := map[string]storage.CollectorsSummary{}
-
+	executionIDQuery := elastic.NewMatchQuery("ExecutionID", filters["ExecutionID"])
 	eventTypeQuery := elastic.NewMatchQuery("EventType", "service_status")
-	executionIDQuery := elastic.NewMatchQuery("ExecutionID", executionsID)
+	log.WithFields(log.Fields{
+		"execution_id": executionIDQuery,
+		"event_type":   eventTypeQuery,
+	}).Debug("Going to get get summary with the following fields")
 
 	searchResult, err := sm.client.Search().
-		Query(elastic.NewBoolQuery().Must(eventTypeQuery).Must(executionIDQuery)).
+		Query(elastic.NewBoolQuery().Must(eventTypeQuery, executionIDQuery)).
 		Pretty(true).
 		Size(100).
 		Do(context.Background())
@@ -158,8 +169,9 @@ func (sm *StorageManager) GetSummary(executionsID string) (map[string]storage.Co
 	}
 
 	for resourceName, resourceData := range summary {
-
-		totalSpent, resourceCount, err := sm.getResourceSummaryDetails(resourceName, executionsID)
+		filters["ResourceName"] = resourceName
+		log.WithField("filters", filters).Debug("Going to get resources summary details with the following filters")
+		totalSpent, resourceCount, err := sm.getResourceSummaryDetails(filters)
 
 		if err != nil {
 			continue
@@ -176,34 +188,31 @@ func (sm *StorageManager) GetSummary(executionsID string) (map[string]storage.Co
 }
 
 // getResourceSummaryDetails return total resource spent and total resources detected
-func (sm *StorageManager) getResourceSummaryDetails(resourceName, executionsID string) (float64, int64, error) {
+func (sm *StorageManager) getResourceSummaryDetails(filters map[string]string) (float64, int64, error) {
 
 	var totalSpent float64
 	var resourceCount int64
 
-	resourceNameQuery := elastic.NewMatchQuery("ResourceName", resourceName)
-	eventNameQuery := elastic.NewMatchQuery("EventType", "resource_detected")
-	executionQuery := elastic.NewMatchQuery("ExecutionID", executionsID)
+	dynamicMatchQuery := sm.getDynamicMatchQuery(filters)
+	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery("EventType", "resource_detected"))
 
 	searchResult, err := sm.client.Search().
-		Query(elastic.NewBoolQuery().Must(resourceNameQuery).Must(executionQuery).Must(eventNameQuery)).
+		Query(elastic.NewBoolQuery().Must(dynamicMatchQuery...)).
 		Aggregation("sum", elastic.NewSumAggregation().Field("Data.PricePerMonth")).
 		Size(0).Do(context.Background())
 
 	if nil != err {
 		log.WithError(err).WithFields(log.Fields{
-			"resource_name": resourceName,
-			"executions_id": executionsID,
-			"milliseconds":  searchResult.TookInMillis,
+			"filters":      filters,
+			"milliseconds": searchResult.TookInMillis,
 		}).Error("error when trying to get summary details")
 
 		return totalSpent, resourceCount, err
 	}
 
 	log.WithFields(log.Fields{
-		"resource_name": resourceName,
-		"executions_id": executionsID,
-		"milliseconds":  searchResult.TookInMillis,
+		"filters":      filters,
+		"milliseconds": searchResult.TookInMillis,
 	}).Debug("get execution details")
 
 	resp, ok := searchResult.Aggregations.Terms("sum")
@@ -219,15 +228,13 @@ func (sm *StorageManager) getResourceSummaryDetails(resourceName, executionsID s
 }
 
 // GetExecutions returns collector executions
-func (sm *StorageManager) GetExecutions() ([]storage.Executions, error) {
-
+func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, error) {
 	executions := []storage.Executions{}
 
 	searchResult, err := sm.client.Search().
 		Query(elastic.NewMatchQuery("EventType", "service_status")).
-		Aggregation("uniq", elastic.NewTermsAggregation().Field("ExecutionID.keyword")).
-		Size(0).
-		Do(context.Background())
+		Aggregation("uniq", elastic.NewTermsAggregation().Field("ExecutionID.keyword")).Aggregation("uniq", elastic.NewTermsAggregation().Field("ExecutionID.keyword").
+		Size(0).Order("_term", false).Size(queryLimit)).Do(context.Background())
 
 	if nil != err {
 		log.WithError(err).WithFields(log.Fields{

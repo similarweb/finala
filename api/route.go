@@ -6,10 +6,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
+)
+
+const (
+	getExecutionsqueryLimit = 20
 )
 
 // DetectEventsInfo descrive the incoming HTTP events
@@ -22,10 +28,21 @@ type DetectEventsInfo struct {
 
 // GetSummary return list of summary executions
 func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
-
 	queryErrs := url.Values{}
-	executionID := req.URL.Query().Get("executionID")
-	if executionID == "" {
+	queryParams := req.URL.Query()
+	filters := map[string]string{}
+	for queryParam, value := range queryParams {
+		if strings.HasPrefix(queryParam, "filter_") {
+			filters[strings.TrimPrefix(queryParam, "filter_")] = value[0]
+		}
+	}
+
+	if len(filters) == 0 {
+		queryErrs.Add("filters", "The filters for GetSummary were empty")
+	}
+
+	// We need executionID for every query in this controller.
+	if filters["executionID"] == "" {
 		queryErrs.Add("executionID", "executionID field is mandatory")
 	}
 
@@ -34,7 +51,7 @@ func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response, err := server.storage.GetSummary(executionID)
+	response, err := server.storage.GetSummary(filters)
 	if err != nil {
 		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
 		return
@@ -45,7 +62,13 @@ func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
 
 // GetExecutions return list collector executions
 func (server *Server) GetExecutions(resp http.ResponseWriter, req *http.Request) {
-	results, err := server.storage.GetExecutions()
+	// TODO: Handle error
+	querylimit, _ := strconv.Atoi(req.URL.Query().Get("querylimit"))
+	// If queryLimit is not set we will use the default
+	if querylimit == 0 {
+		querylimit = getExecutionsqueryLimit
+	}
+	results, err := server.storage.GetExecutions(querylimit)
 	if err != nil {
 		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
 		return

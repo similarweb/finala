@@ -6,8 +6,8 @@ import (
 
 type StorageDescriber interface {
 	Save(data string) bool
-	GetSummary(executionsID string) (map[string]CollectorsSummary, error)
-	GetExecutions() ([]Executions, error)
+	GetSummary(filters map[string]string) (map[string]CollectorsSummary, error)
+	GetExecutions(querylimit int) ([]Executions, error)
 	GetResources(resourceType string, executionID string) ([]map[string]interface{}, error)
 }
 

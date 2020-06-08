@@ -62,7 +62,6 @@ func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
 
 // GetExecutions return list collector executions
 func (server *Server) GetExecutions(resp http.ResponseWriter, req *http.Request) {
-	// TODO: Handle error
 	querylimit, _ := strconv.Atoi(req.URL.Query().Get("querylimit"))
 	// If queryLimit is not set we will use the default
 	if querylimit == 0 {

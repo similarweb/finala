@@ -55,6 +55,12 @@ func (sm *Manager) LoadConfig(notifierConfig notifierCommon.NotifierConfig) (err
 
 	// Initialize slack client
 	sm.client = slackApi.New(sm.config.Token)
+	log.Debug("Updating all current slack users list")
+	err = sm.updateUsers()
+	if err != nil {
+		log.WithError(err).Error("The program was unable to update user list from slack")
+		return err
+	}
 
 	return nil
 }
@@ -100,30 +106,22 @@ func (sm *Manager) prepareAttachment(message common.NotifierReport, tags []strin
 
 // Send all slack Notifications to users and channels
 func (sm *Manager) Send(message notifierCommon.NotifierReport) {
-	message.Log.Debug("Updating all current slack users list")
-	err := sm.updateUsers()
-	if err != nil {
-		message.Log.WithError(err).Error("The program was unable to update user list from slack")
-	}
-
 	message.Log.WithField("notify_by_tags", sm.config.NotifyByTags).
 		Debug("notify by tags values")
-	for _, team := range sm.config.NotifyByTags {
-		for _, to := range distinct(append(team.NotifyTo, sm.config.DefaultChannels...)) {
-			if to == "" {
-				message.Log.WithField("to", to).
-					Debug("The command did not get any subscribers to send notifications")
-				continue
-			}
-			elasticFormatTags := sm.formatTagsElasticSearchQuery(team.Tags)
-			toChannel, err := sm.GetChannelID(to)
-			if err == nil {
-				attachments := sm.prepareAttachment(message, elasticFormatTags)
-				sm.send(toChannel, attachments)
+	for _, to := range distinct(append(message.NotifyByTag.NotifyTo, sm.config.DefaultChannels...)) {
+		if to == "" {
+			message.Log.WithField("to", to).
+				Debug("The command did not get any subscribers to send notifications")
+			continue
+		}
+		elasticFormatTags := sm.formatTagsElasticSearchQuery(message.NotifyByTag.Tags)
+		toChannel, err := sm.getChannelID(to)
+		if err == nil {
+			attachments := sm.prepareAttachment(message, elasticFormatTags)
+			sm.send(toChannel, attachments)
 
-			} else {
-				log.WithField("to", to).Debug("Could not send the message  due to slack id was not found")
-			}
+		} else {
+			log.WithField("to", to).Debug("Could not send the message due to slack id was not found")
 		}
 	}
 }
@@ -175,8 +173,8 @@ func (sm *Manager) send(channelID string, attachments []slackApi.Attachment) {
 	log.WithField("channel_id", channelID).Debug("slack message was sent")
 }
 
-// GetChannelID returns the channel id. if is it email, search the user channel id by his email
-func (sm *Manager) GetChannelID(to string) (string, error) {
+// getChannelID returns the channel id. if is it email, search the user channel id by his email
+func (sm *Manager) getChannelID(to string) (string, error) {
 	if strings.HasPrefix(to, "#") {
 		return to, nil
 	}

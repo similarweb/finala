@@ -24,28 +24,28 @@ func (nfc *NotifierConfig) BuildNotifiers() (registeredNotifiers []notifierCommo
 		notifierLoader.RegisterNotifiers()
 
 		if registeredNotifiers, err = notifierLoader.Load(nfc.NotifiersConfigs); err != nil {
-			return
+			return registeredNotifiers, err
 		}
 		nfc.registeredNotifiers = registeredNotifiers
 	} else {
 		registeredNotifiers = []notifierCommon.Notifier{}
 	}
-	return
+	return registeredNotifiers, nil
 }
 
 // Load will load yaml file
-func Load(location string) (config NotifierConfig, err error) {
+func Load(location string, notifierLog log.Entry) (config NotifierConfig, err error) {
 	var data []byte
 	if data, err = ioutil.ReadFile(location); err != nil {
 		if err != nil {
-			log.Errorf("Could not parse configuration file: %s", err)
+			notifierLog.Errorf("Could not parse configuration file: %s", err)
 			return config, err
 		}
 	}
 
 	if err = yaml.Unmarshal(data, &config); err != nil {
-		return
+		return config, err
 	}
 
-	return
+	return config, nil
 }

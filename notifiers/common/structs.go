@@ -1,7 +1,7 @@
 package common
 
 import (
-	"finala/api/storage"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -11,7 +11,8 @@ type NotifierReport struct {
 	GroupName            string
 	ExecutionID          string
 	UIAddr               string
-	ExecutionSummaryData map[string]*storage.CollectorsSummary
+	NotifyByTag          NotifyByTag
+	ExecutionSummaryData map[string]*NotifierCollectorsSummary
 	Log                  log.Entry
 }
 
@@ -25,4 +26,21 @@ type NotifyByTag struct {
 type Tag struct {
 	Name  string `yaml:"name" mapstructure:"name"`
 	Value string `yaml:"value" mapstructure:"value"`
+}
+
+// NotifierExecutionsResponse defines the collector's execution response
+type NotifierExecutionsResponse struct {
+	ID   string
+	Name string
+	Time time.Time
+}
+
+// NotifierCollectorsSummary represnets the response for the Collectors summary
+type NotifierCollectorsSummary struct {
+	ResourceName  string  `json:"ResourceName"`
+	ResourceCount int64   `json:"ResourceCount"`
+	TotalSpent    float64 `json:"TotalSpent"`
+	Status        int     `json:"Status"`
+	ErrorMessage  string  `json:"ErrorMessage"`
+	EventTime     int64   `json:"-"`
 }

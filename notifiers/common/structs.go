@@ -18,8 +18,9 @@ type NotifierReport struct {
 
 // NotifyByTag will represent a list of tags and notify to list
 type NotifyByTag struct {
-	Tags     []Tag    `yaml:"tags" mapstructure:"tags"`
-	NotifyTo []string `yaml:"notify_to" mapstructure:"notify_to"`
+	MinimumCostToPresent float64  `yaml:"minimum_cost_to_present" mapstructure:"minimum_cost_to_present"`
+	Tags                 []Tag    `yaml:"tags" mapstructure:"tags"`
+	NotifyTo             []string `yaml:"notify_to" mapstructure:"notify_to"`
 }
 
 // Tag has a name and value in AWS

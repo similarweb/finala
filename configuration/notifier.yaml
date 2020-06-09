@@ -9,6 +9,7 @@ notifiers:
       - '#default-channel'
     notify_by_tags:
       <notification_group_name>:
+          minimum_cost_to_present: <number>
           tags:
             - name: <tag_name>
               value: <tag_value

@@ -44,7 +44,7 @@ func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	executionID := filters["ExecutionID"]
-	// We need executionID for every query in this controller.
+	// We need ExecutionID for every query in this controller.
 	if executionID == "" {
 		queryErrs.Add("ExecutionID", "ExecutionID field is mandatory")
 	}

@@ -86,8 +86,8 @@ func (sm *Manager) prepareAttachment(message common.NotifierReport, tags []strin
 				strings.Join(tags, " AND ")),
 		}}
 	for _, executionData := range message.ExecutionSummaryData {
-		// If the total spent is 0 we don't want to show it in Slack
-		if executionData.ResourceCount == 0 || executionData.TotalSpent == 0 {
+		// If the total spent is 0 or small than minimum cost to present we don't want to show it in Slack
+		if executionData.TotalSpent == 0 || executionData.TotalSpent <= message.NotifyByTag.MinimumCostToPresent {
 			continue
 		}
 		slackAttachmentFields = append(slackAttachmentFields, slackApi.Attachment{

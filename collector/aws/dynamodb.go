@@ -275,11 +275,10 @@ func (dd *DynamoDBManager) DescribeTables() ([]*dynamodb.TableDescription, error
 	for _, tableName := range resp.TableNames {
 
 		resp, err := dd.client.DescribeTable(&dynamodb.DescribeTableInput{TableName: tableName})
+		if err != nil {
+			continue
+		}
 		if resp.Table.BillingModeSummary == nil {
-			if err != nil {
-				return nil, err
-			}
-
 			tables = append(tables, resp.Table)
 		}
 	}

@@ -11,10 +11,10 @@ import (
 
 var defaultMetricConfig = []config.MetricConfig{
 	config.MetricConfig{
-		Description: "test description",
+		Description: "test description write capacity",
 		Data: []config.MetricDataConfiguration{
 			config.MetricDataConfiguration{
-				Name:      "a",
+				Name:      "ProvisionedWriteCapacityUnits",
 				Statistic: "Sum",
 			},
 		},

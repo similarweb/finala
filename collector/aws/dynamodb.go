@@ -170,11 +170,14 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 					totalPrice = pricePerHour * provisionedWriteCapacityUnits * durationRunningTime.Hours()
 					pricePerMonth = provisionedWriteCapacityUnits * pricePerHour * 720
 
-				} else {
+				} else if strings.Contains(metric.Description, "read capacity") {
 					provisionedReadCapacityUnits := metricsResponseValues["ProvisionedReadCapacityUnits"].(float64)
 					pricePerHour = readPricePerHour
 					totalPrice = pricePerHour * provisionedReadCapacityUnits * durationRunningTime.Hours()
 					pricePerMonth = provisionedReadCapacityUnits * pricePerHour * 720
+				} else {
+					log.Warn("metric name not supported")
+					continue
 				}
 
 				tags, err := dd.client.ListTagsOfResource(&dynamodb.ListTagsOfResourceInput{

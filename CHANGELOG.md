@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] 
+- Fix Dynamodb price calculation
+
 ## [0.2.0] 
 - Split components to UI, API and collector. Support elasticsearch storage [[PR-53](https://github.com/similarweb/finala/pull/53)]
 

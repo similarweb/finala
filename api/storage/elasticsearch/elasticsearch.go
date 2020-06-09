@@ -44,7 +44,7 @@ func getESClient(conf config.ElasticsearchConfig) (*elastic.Client, error) {
 
 	client, err := elastic.NewClient(elastic.SetURL(strings.Join(conf.Endpoints, ",")),
 		elastic.SetErrorLog(log.New()),
-		elastic.SetTraceLog(log.New()), // Uncomment for debugging ElasticSearch Queries
+		//elastic.SetTraceLog(log.New()), // Uncomment for debugging ElasticSearch Queries
 		elastic.SetBasicAuth(conf.Username, conf.Password),
 		elastic.SetSniff(false),
 		elastic.SetHealthcheck(true))
@@ -135,7 +135,7 @@ func (sm *StorageManager) GetSummary(filters map[string]string) (map[string]stor
 
 	if err != nil {
 		log.WithError(err).Error("error when trying to get summary data")
-		return summary, nil
+		return summary, err
 	}
 
 	log.WithFields(log.Fields{

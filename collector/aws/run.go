@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
 	log "github.com/sirupsen/logrus"
@@ -75,6 +76,7 @@ func (app *Analyze) All() {
 			app.AnalyzeDocdb(sess, cloudWatchCLient, pricing)
 			app.IAMUsers(sess)
 			app.AnalyzeDynamoDB(sess, cloudWatchCLient, pricing)
+			app.AnalyzeNeptune(sess, cloudWatchCLient, pricing)
 		}
 	}
 
@@ -263,4 +265,22 @@ func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManage
 		log.WithField("count", len(response)).Info("Total ec2 volumes detected")
 	}
 	return err
+}
+
+// AnalyzeNeptune will analyzes Neptune resources
+func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+	metrics, found := app.metrics["neptune"]
+	if !found {
+		return nil
+	}
+
+	neptune := NewNeptuneManager(app.cl, neptune.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	response, err := neptune.Detect()
+
+	if err == nil {
+		log.WithField("count", len(response)).Info("Total Neptune Databases detected")
+	}
+
+	return err
+
 }

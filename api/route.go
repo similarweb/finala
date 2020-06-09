@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"finala/api/httpparameters"
 	"finala/api/storage"
 	"io/ioutil"
 	"net/http"
@@ -15,7 +16,7 @@ import (
 )
 
 const (
-	getExecutionsqueryLimit = 20
+	queryParamFilterPrefix = "filter_"
 )
 
 // DetectEventsInfo descrive the incoming HTTP events
@@ -31,9 +32,10 @@ func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
 	queryErrs := url.Values{}
 	queryParams := req.URL.Query()
 	filters := map[string]string{}
+
 	for queryParam, value := range queryParams {
-		if strings.HasPrefix(queryParam, "filter_") {
-			filters[strings.TrimPrefix(queryParam, "filter_")] = value[0]
+		if strings.HasPrefix(queryParam, queryParamFilterPrefix) {
+			filters[strings.TrimPrefix(queryParam, queryParamFilterPrefix)] = value[0]
 		}
 	}
 
@@ -41,9 +43,10 @@ func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
 		queryErrs.Add("filters", "The filters for GetSummary were empty")
 	}
 
+	executionID := filters["ExecutionID"]
 	// We need executionID for every query in this controller.
-	if filters["executionID"] == "" {
-		queryErrs.Add("executionID", "executionID field is mandatory")
+	if executionID == "" {
+		queryErrs.Add("ExecutionID", "ExecutionID field is mandatory")
 	}
 
 	if len(queryErrs) > 0 {
@@ -51,7 +54,7 @@ func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	response, err := server.storage.GetSummary(filters)
+	response, err := server.storage.GetSummary(executionID, filters)
 	if err != nil {
 		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
 		return
@@ -62,11 +65,7 @@ func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
 
 // GetExecutions return list collector executions
 func (server *Server) GetExecutions(resp http.ResponseWriter, req *http.Request) {
-	querylimit, _ := strconv.Atoi(req.URL.Query().Get("querylimit"))
-	// If queryLimit is not set we will use the default
-	if querylimit == 0 {
-		querylimit = getExecutionsqueryLimit
-	}
+	querylimit, _ := strconv.Atoi(httpparameters.QueryParamWithDefault(req, "querylimit", storage.GetExecutionsqueryLimit))
 	results, err := server.storage.GetExecutions(querylimit)
 	if err != nil {
 		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})

@@ -118,10 +118,11 @@ func (sm *StorageManager) getDynamicMatchQuery(filters map[string]string) []elas
 }
 
 // GetSummary returns executions summary
-func (sm *StorageManager) GetSummary(filters map[string]string) (map[string]storage.CollectorsSummary, error) {
+func (sm *StorageManager) GetSummary(executionID string, filters map[string]string) (map[string]storage.CollectorsSummary, error) {
 	summary := map[string]storage.CollectorsSummary{}
-	executionIDQuery := elastic.NewMatchQuery("ExecutionID", filters["ExecutionID"])
+	executionIDQuery := elastic.NewMatchQuery("ExecutionID", executionID)
 	eventTypeQuery := elastic.NewMatchQuery("EventType", "service_status")
+
 	log.WithFields(log.Fields{
 		"execution_id": executionIDQuery,
 		"event_type":   eventTypeQuery,

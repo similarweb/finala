@@ -4,9 +4,14 @@ import (
 	"time"
 )
 
+const (
+	// GetExecutionsqueryLimit Describes the query limit results for GetExecutions API
+	GetExecutionsqueryLimit = "20"
+)
+
 type StorageDescriber interface {
 	Save(data string) bool
-	GetSummary(filters map[string]string) (map[string]CollectorsSummary, error)
+	GetSummary(executionID string, filters map[string]string) (map[string]CollectorsSummary, error)
 	GetExecutions(querylimit int) ([]Executions, error)
 	GetResources(resourceType string, executionID string) ([]map[string]interface{}, error)
 }

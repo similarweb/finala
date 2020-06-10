@@ -10,6 +10,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	// ErrActionNotSupported returned when metrics statistics (from yaml configuration) is not equal to: Average, Maximum, Sum
+	ErrActionNotSupported = errors.New("action not supported")
+)
+
 // CloudwatchClientDescreptor defining the aws cloudwatch client
 type CloudwatchClientDescreptor interface {
 	GetMetricStatistics(*cloudwatch.GetMetricStatisticsInput) (*cloudwatch.GetMetricStatisticsOutput, error)
@@ -53,7 +58,7 @@ func (cw *CloudwatchManager) GetMetric(metricInput *cloudwatch.GetMetricStatisti
 		case "Sum":
 			calculatedMetricValue = cw.SumDatapoint(metricData)
 		default:
-			return calculatedMetricValue, metricsResponseValue, errors.New("Action not supported")
+			return calculatedMetricValue, metricsResponseValue, ErrActionNotSupported
 		}
 		metricsResponseValue[metric.Name] = calculatedMetricValue
 
@@ -63,6 +68,11 @@ func (cw *CloudwatchManager) GetMetric(metricInput *cloudwatch.GetMetricStatisti
 		return calculatedMetricValue, metricsResponseValue, nil
 	}
 
+	// Evaluate the formula (from yaml configuration) to value.
+	// for example:
+	// 		formula: (ConsumedReadCapacityUnits / 100)
+	// 		metricsResponseValue: ["ConsumedReadCapacityUnits"] = 50
+	//		The formula response will be : 0.5
 	formulaResponse, err := expression.ExpressionWithParams(metrics.Constraint.Formula, metricsResponseValue)
 	if err != nil {
 		return calculatedMetricValue, metricsResponseValue, err

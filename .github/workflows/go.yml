@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Install
-        run: curl -L spectralops.io/get | sudo sh
+        run: curl -L spectralops.io/next | sudo sh
       - name: Scan
         run: spectral run
 

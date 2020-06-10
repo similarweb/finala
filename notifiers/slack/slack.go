@@ -76,7 +76,7 @@ func (sm *Manager) GetNotifyByTags(notifierConfig common.ConfigByName) map[strin
 
 // prepareAttachmentFields will prepare all the Attachment and all the fields
 func (sm *Manager) prepareAttachment(message common.NotifierReport, tags []string) []slackApi.Attachment {
-	slackAttachmentFields := []slackApi.Attachment{
+	slackAttachments := []slackApi.Attachment{
 		{
 			Color:      MessageColor,
 			AuthorName: AuthorName,
@@ -90,7 +90,7 @@ func (sm *Manager) prepareAttachment(message common.NotifierReport, tags []strin
 		if executionData.TotalSpent == 0 || executionData.TotalSpent <= message.NotifyByTag.MinimumCostToPresent {
 			continue
 		}
-		slackAttachmentFields = append(slackAttachmentFields, slackApi.Attachment{
+		slackAttachments = append(slackAttachments, slackApi.Attachment{
 			Color: MessageColor,
 			Fields: []slackApi.AttachmentField{
 				{
@@ -101,7 +101,7 @@ func (sm *Manager) prepareAttachment(message common.NotifierReport, tags []strin
 			},
 		})
 	}
-	return slackAttachmentFields
+	return slackAttachments
 }
 
 // Send all slack Notifications to users and channels

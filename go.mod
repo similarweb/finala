@@ -22,7 +22,7 @@ require (
 	github.com/spf13/cobra v1.0.0
 	gopkg.in/yaml.v2 v2.3.0
 	k8s.io/api v0.18.3 // indirect
-	k8s.io/client-go v11.0.0+incompatible // indirect
+	k8s.io/client-go v11.0.0+incompatible
 	k8s.io/helm v2.16.7+incompatible // indirect
 	k8s.io/utils v0.0.0-20200520001619-278ece378a50 // indirect
 )

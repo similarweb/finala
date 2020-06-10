@@ -200,7 +200,7 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 						LaunchTime:      *table.CreationDateTime,
 						PricePerHour:    pricePerHour,
 						PricePerMonth:   pricePerMonth,
-						TotalSpendPrice: totalPrice, // get the percentage
+						TotalSpendPrice: totalPrice,
 						Tag:             tagsData,
 					},
 				}

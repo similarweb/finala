@@ -68,11 +68,11 @@ func (cw *CloudwatchManager) GetMetric(metricInput *cloudwatch.GetMetricStatisti
 		return calculatedMetricValue, metricsResponseValue, nil
 	}
 
-	// Evaluate the formula (from yaml configuration) to value.
+	// Evaluate the formula (from yaml configuration).
 	// for example:
 	// 		formula: (ConsumedReadCapacityUnits / 100)
 	// 		metricsResponseValue: ["ConsumedReadCapacityUnits"] = 50
-	//		The formula response will be : 0.5
+	//		formula response: 0.5
 	formulaResponse, err := expression.ExpressionWithParams(metrics.Constraint.Formula, metricsResponseValue)
 	if err != nil {
 		return calculatedMetricValue, metricsResponseValue, err

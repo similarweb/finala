@@ -55,7 +55,5 @@ func TestConfig(t *testing.T) {
 		if err == nil {
 			t.Fatalf("unexpected error message when loading config file")
 		}
-
 	})
-
 }

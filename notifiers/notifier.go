@@ -52,7 +52,7 @@ func (dfm *DataFetcherManager) GetLatestExecution() (latestExecution string, err
 	var executions []notifierCommon.NotifierExecutionsResponse
 	err = json.NewDecoder(res.Body).Decode(&executions)
 
-	return executions[0].ID, nil
+	return executions[0].ID, err
 }
 
 // GetExecutionSummary will get the Collector's execution summary by given filters
@@ -78,5 +78,5 @@ func (dfm *DataFetcherManager) GetExecutionSummary(filterOptions map[string]stri
 	var executionSummary map[string]*notifierCommon.NotifierCollectorsSummary
 	err = json.NewDecoder(res.Body).Decode(&executionSummary)
 
-	return executionSummary, nil
+	return executionSummary, err
 }

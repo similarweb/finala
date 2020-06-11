@@ -14,6 +14,13 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// OrderedExecutionIDs will be the unmarshal response for ElasticSearch query  GetExecutions function
+type orderedExecutionIDs struct {
+	Buckets []struct {
+		Key string `json:"key"`
+	} `json:"buckets"`
+}
+
 const (
 	// indexMapping define the default index mapping
 	indexMapping = `{
@@ -68,7 +75,7 @@ func NewStorageManager(conf config.ElasticsearchConfig) (*StorageManager, error)
 			}
 			log.WithFields(log.Fields{
 				"endpoint": conf.Endpoints,
-			}).WithError(err).Warn("could not initialize connection to elasticsearch, retrying for 5 seconds")
+			}).WithError(err).Warn("could not initialize connection to elasticsearch, retrying in 5 seconds")
 			time.Sleep(5 * time.Second)
 		}
 		c <- 1
@@ -232,10 +239,14 @@ func (sm *StorageManager) getResourceSummaryDetails(filters map[string]string) (
 func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, error) {
 	executions := []storage.Executions{}
 
-	searchResult, err := sm.client.Search().
-		Query(elastic.NewMatchQuery("EventType", "service_status")).
-		Aggregation("uniq", elastic.NewTermsAggregation().Field("ExecutionID.keyword")).Aggregation("uniq", elastic.NewTermsAggregation().Field("ExecutionID.keyword").
-		Size(0).Order("_term", false).Size(queryLimit)).Do(context.Background())
+	// First search for all message with eventType: service_status
+	// Second look for message which have the field ExecutionID
+	// Third Order the ExecutionID by EventTime Desc
+	searchResult, err := sm.client.Search().Aggregation("orderedExecutionID", elastic.NewFiltersAggregation().
+		Filters(elastic.NewBoolQuery().Filter(elastic.NewBoolQuery().Should(elastic.NewMatchQuery("EventType", "service_status")))).
+		SubAggregation("ExecutionIDDesc", elastic.NewTermsAggregation().Field("ExecutionID.keyword").Size(queryLimit).Order("MaxEventTime", false).
+			SubAggregation("MaxEventTime", elastic.NewMaxAggregation().Field("EventTime")))).
+		Do(context.Background())
 
 	if nil != err {
 		log.WithError(err).WithFields(log.Fields{
@@ -244,33 +255,42 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 		return executions, nil
 	}
 
-	resp, ok := searchResult.Aggregations.Terms("uniq")
+	resp, ok := searchResult.Aggregations.Terms("orderedExecutionID")
 	if !ok {
-		log.Error("uniq field term not exists")
+		log.Error("orderedExecutionID field term does not exist")
 		return executions, nil
 	}
 
-	for _, res := range resp.Buckets {
-		executionID := string(res.KeyNumber)
-		data := strings.Split(executionID, "_")
-		if len(data) != 2 {
-			log.WithField("ExecutionID", executionID).Error("Invalid schema")
-			continue
-		}
+	for _, ExecutionIDBuckets := range resp.Buckets {
+		descOrderedExecutionIDs := ExecutionIDBuckets.Aggregations["ExecutionIDDesc"]
 
-		i, _ := strconv.ParseInt(data[1], 10, 64)
+		var executionsIDs orderedExecutionIDs
+		err := json.Unmarshal([]byte(string(descOrderedExecutionIDs)), &executionsIDs)
 		if err != nil {
-			log.WithField("value", data[1]).Info("could not parse to int64")
+			panic(err)
 		}
 
-		executions = append(executions, storage.Executions{
-			ID:   executionID,
-			Name: data[0],
-			Time: time.Unix(i, 0),
-		})
+		for _, executionIDValue := range executionsIDs.Buckets {
+			executionID := string(executionIDValue.Key)
+			data := strings.Split(executionID, "_")
+			if len(data) != 2 {
+				log.WithField("ExecutionID", executionID).Error("Invalid schema")
+				continue
+			}
+
+			i, _ := strconv.ParseInt(data[1], 10, 64)
+			if err != nil {
+				log.WithField("value", data[1]).Info("could not parse to int64")
+			}
+
+			executions = append(executions, storage.Executions{
+				ID:   executionID,
+				Name: data[0],
+				Time: time.Unix(i, 0),
+			})
+		}
 	}
 	return executions, nil
-
 }
 
 // GetResources return resource data

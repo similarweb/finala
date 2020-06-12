@@ -97,8 +97,8 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 		return detectedTables, err
 	}
 
-	writePrice, _ := dd.pricingClient.GetPrice(dd.GetPricingWriteFilterInput(), rateCode)
-	readPrice, _ := dd.pricingClient.GetPrice(dd.GetPricingReadFilterInput(), rateCode)
+	writePrice, _ := dd.pricingClient.GetPrice(dd.GetPricingWriteFilterInput(), rateCode, dd.region)
+	readPrice, _ := dd.pricingClient.GetPrice(dd.GetPricingReadFilterInput(), rateCode, dd.region)
 
 	for _, table := range tables {
 

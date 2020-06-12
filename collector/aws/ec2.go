@@ -91,7 +91,7 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 	for _, instance := range instances {
 		log.WithField("instance_id", *instance.InstanceId).Debug("checking ec2 instance")
 
-		price, _ := ec.pricingClient.GetPrice(ec.GetPricingFilterInput(instance), "")
+		price, _ := ec.pricingClient.GetPrice(ec.GetPricingFilterInput(instance), "", ec.region)
 
 		for _, metric := range ec.metrics {
 			log.WithFields(log.Fields{

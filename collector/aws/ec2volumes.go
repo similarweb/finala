@@ -94,7 +94,7 @@ func (ev *EC2VolumeManager) Detect() ([]DetectedAWSEC2Volume, error) {
 
 		log.WithField("id", *vol.VolumeId).Debug("cheking ec2 volume")
 
-		price, err := ev.pricingClient.GetPrice(ev.GetBasePricingFilterInput(vol, filters), "")
+		price, err := ev.pricingClient.GetPrice(ev.GetBasePricingFilterInput(vol, filters), "", ev.region)
 		if err != nil {
 			log.WithError(err).WithFields(log.Fields{
 				"volume_id": *vol.VolumeId,
@@ -155,7 +155,7 @@ func (ev *EC2VolumeManager) GetCalculatedPrice(vol *ec2.Volume, basePrice float6
 			},
 		}
 
-		iopsPrice, err := ev.pricingClient.GetPrice(ev.GetBasePricingFilterInput(vol, extraFilter), "")
+		iopsPrice, err := ev.pricingClient.GetPrice(ev.GetBasePricingFilterInput(vol, extraFilter), "", ev.region)
 		if err != nil {
 			iopsPrice = 0
 		}

@@ -94,7 +94,7 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 
 		log.WithField("name", *instance.DBInstanceIdentifier).Debug("checking documentDB")
 
-		price, _ := dd.pricingClient.GetPrice(dd.GetPricingFilterInput(instance), "")
+		price, _ := dd.pricingClient.GetPrice(dd.GetPricingFilterInput(instance), "", dd.region)
 
 		for _, metric := range dd.metrics {
 			log.WithFields(log.Fields{

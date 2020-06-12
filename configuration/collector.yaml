@@ -10,10 +10,10 @@ providers:
     accounts: 
       - name: <account_name>
         # access_key: <access_key>
-        # secret_key: <secret_key>
+        # secret_key: <secret_key>      
         regions:
           - us-east-1
-          - us-west-2
+          - us-west-2          
     metrics:
       rds:
         - description: Database connection count
@@ -116,13 +116,26 @@ providers:
             - name: GremlinRequestsPerSec
               statistic: Sum
             - name: SparqlRequestsPerSec
-              statistic: Sum              
+              statistic: Sum
           period: 24h 
           start_time: 168h # 24h * 7d
           constraint:
             formula: GremlinRequestsPerSec + SparqlRequestsPerSec
             operator: "=="
             value: 0
+      kinesis:
+        - description: Kinesis Put Record(s) Sum (Bytes)
+          metrics:
+            - name: "PutRecords.Bytes"
+              statistic: Sum
+            - name: "PutRecord.Bytes"
+              statistic: Sum              
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            formula: "[PutRecord.Bytes] + [PutRecords.Bytes]"
+            operator: "=="
+            value: 0            
     resources:
       iamLastActivity:
         description: Last user activity

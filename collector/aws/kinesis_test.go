@@ -21,6 +21,7 @@ var defaultKinesisDescribeStreamMock = kinesis.DescribeStreamOutput{
 		StreamCreationTimestamp: testutils.TimePointer(time.Now()),
 		StreamName:              awsClient.String("stream-a"),
 		StreamARN:               awsClient.String("arn::a"),
+		RetentionPeriodHours:    awsClient.Int64(48),
 		Shards: []*kinesis.Shard{
 			{
 				ShardId: awsClient.String("a"),

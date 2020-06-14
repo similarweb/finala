@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	expectedLatestExecutionID        = "general_1591084693"
 	expectedLatestExecutionsResponse = `[
 		{
 		  "ID": "general_1591084693",
@@ -59,7 +60,7 @@ func (mc *dataFetcherMockClient) DO(r *http.Request) (*http.Response, error) {
 	switch r.URL.Path {
 	case "/api/v1/executions":
 		newBody = ioutil.NopCloser(strings.NewReader(expectedLatestExecutionsResponse))
-	case "/api/v1/summary":
+	case fmt.Sprintf("/api/v1/summary/%s", expectedLatestExecutionID):
 		newBody = ioutil.NopCloser(strings.NewReader(expectedSummaryResponse))
 	}
 	return &http.Response{
@@ -104,7 +105,7 @@ func TestGetLatestExecution(t *testing.T) {
 func TestGetExecutionSummary(t *testing.T) {
 	filterOptions := map[string]string{}
 	dataFetcher := MockDataFetcherManager()
-	executionSummary, _ := dataFetcher.GetExecutionSummary(filterOptions)
+	executionSummary, _ := dataFetcher.GetExecutionSummary(expectedLatestExecutionID, filterOptions)
 	t.Run("check tags format", func(t *testing.T) {
 		if len(executionSummary) != 2 {
 			t.Fatalf("unexpected value of executionSummary items , got %d want %d", len(executionSummary), 2)

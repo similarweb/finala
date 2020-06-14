@@ -40,7 +40,7 @@ var notifierCMD = &cobra.Command{
 
 		registeredNotifiers, err := notifierConfig.BuildNotifiers()
 		if err != nil {
-			notifierLog.WithError(err).Panic("notifier failed to initialize available notifiers")
+			notifierLog.WithError(err).Error("notifier failed to initialize available notifiers")
 			os.Exit(1)
 		}
 
@@ -66,7 +66,6 @@ var notifierCMD = &cobra.Command{
 
 			for notificationGroup, notificationGroupSettings := range notifier.GetNotifyByTags(notifierConfig.NotifiersConfigs) {
 				filterOptions := map[string]string{}
-				filterOptions["filter_ExecutionID"] = latestExecutionID
 
 				groupName = notificationGroup
 				for _, notifyTag := range notificationGroupSettings.Tags {
@@ -75,7 +74,7 @@ var notifierCMD = &cobra.Command{
 				notifierLog.WithField("filter_options", filterOptions).
 					Debug("Going to get the execution summary from Finala API with the filters")
 
-				latestExecutionSummaryData, err := dataFetcherManager.GetExecutionSummary(filterOptions)
+				latestExecutionSummaryData, err := dataFetcherManager.GetExecutionSummary(latestExecutionID, filterOptions)
 				if err != nil {
 					notifierLog.WithFields(log.Fields{
 						"filters": filterOptions,

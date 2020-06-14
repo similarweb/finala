@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	// GetExecutionsqueryLimit Describes the query limit results for GetExecutions API
-	GetExecutionsqueryLimit = "20"
+	// GetExecutionsQueryLimit Describes the query limit results for GetExecutions API
+	GetExecutionsQueryLimit = "20"
 )
 
 type StorageDescriber interface {

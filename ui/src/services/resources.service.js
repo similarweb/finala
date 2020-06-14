@@ -19,7 +19,7 @@ function GetExecutions() {
  * Get resources metadata
  */
 function Summary(executionID) {
-    return http.send(`api/v1/summary?filter_ExecutionID=${executionID}`, `get`).then(this.handleResponse).then(response => {
+    return http.send(`api/v1/summary/executionID=${executionID}`, `get`).then(this.handleResponse).then(response => {
         return response;
     })
 }

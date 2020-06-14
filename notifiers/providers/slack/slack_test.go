@@ -2,7 +2,7 @@ package slack_test
 
 import (
 	"finala/notifiers/common"
-	"finala/notifiers/slack"
+	"finala/notifiers/providers/slack"
 	"testing"
 )
 

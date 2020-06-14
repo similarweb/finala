@@ -3,7 +3,7 @@ package load
 import (
 	"finala/notifiers"
 	"finala/notifiers/common"
-	"finala/notifiers/slack"
+	"finala/notifiers/providers/slack"
 )
 
 // RegisterNotifiers registers existing notifier ctor to the ctor map we use to initiate all notifiers

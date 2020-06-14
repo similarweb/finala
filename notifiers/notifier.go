@@ -56,12 +56,12 @@ func (dfm *DataFetcherManager) GetLatestExecution() (latestExecution string, err
 }
 
 // GetExecutionSummary will get the Collector's execution summary by given filters
-func (dfm *DataFetcherManager) GetExecutionSummary(filterOptions map[string]string) (map[string]*notifierCommon.NotifierCollectorsSummary, error) {
+func (dfm *DataFetcherManager) GetExecutionSummary(executionID string, filterOptions map[string]string) (map[string]*notifierCommon.NotifierCollectorsSummary, error) {
 	v := url.Values{}
 	for filterName, filterValue := range filterOptions {
 		v.Set(filterName, filterValue)
 	}
-	req, err := dfm.client.Request("GET", fmt.Sprintf("%s/api/v1/summary", dfm.apiEndpoint), v, nil)
+	req, err := dfm.client.Request("GET", fmt.Sprintf("%s/api/v1/summary/%s", dfm.apiEndpoint, executionID), v, nil)
 	if err != nil {
 		dfm.log.WithError(err).Error("could not create HTTP client request")
 		return nil, err

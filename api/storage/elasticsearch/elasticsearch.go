@@ -179,7 +179,7 @@ func (sm *StorageManager) GetSummary(executionID string, filters map[string]stri
 	for resourceName, resourceData := range summary {
 		filters["ResourceName"] = resourceName
 		log.WithField("filters", filters).Debug("Going to get resources summary details with the following filters")
-		totalSpent, resourceCount, err := sm.getResourceSummaryDetails(filters)
+		totalSpent, resourceCount, err := sm.getResourceSummaryDetails(executionID, filters)
 
 		if err != nil {
 			continue
@@ -195,13 +195,14 @@ func (sm *StorageManager) GetSummary(executionID string, filters map[string]stri
 
 }
 
-// getResourceSummaryDetails return total resource spent and total resources detected
-func (sm *StorageManager) getResourceSummaryDetails(filters map[string]string) (float64, int64, error) {
+// getResourceSummaryDetails returns total resource spent and total resources detected
+func (sm *StorageManager) getResourceSummaryDetails(executionID string, filters map[string]string) (float64, int64, error) {
 
 	var totalSpent float64
 	var resourceCount int64
 
 	dynamicMatchQuery := sm.getDynamicMatchQuery(filters)
+	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery("ExecutionID", executionID))
 	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery("EventType", "resource_detected"))
 
 	searchResult, err := sm.client.Search().
@@ -267,26 +268,27 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 		var executionsIDs orderedExecutionIDs
 		err := json.Unmarshal([]byte(string(descOrderedExecutionIDs)), &executionsIDs)
 		if err != nil {
-			panic(err)
+			log.WithError(err).Error("error when trying to parse bucket aggregations execution ids")
 		}
 
 		for _, executionIDValue := range executionsIDs.Buckets {
 			executionID := string(executionIDValue.Key)
 			data := strings.Split(executionID, "_")
-			if len(data) != 2 {
-				log.WithField("ExecutionID", executionID).Error("Invalid schema")
-				continue
-			}
 
-			i, _ := strconv.ParseInt(data[1], 10, 64)
+			// Remove the last element of Data which is the timestamp and leave all the others elements
+			// Which construct the executionName
+			executionName := strings.Join(data[:len(data)-1], "_")
+
+			// Always take the last element which is the timestamp of the collector's run
+			collectorExecutionTime, err := strconv.ParseInt(data[len(data)-1], 10, 64)
 			if err != nil {
-				log.WithField("value", data[1]).Info("could not parse to int64")
+				log.WithField("collector_execution_time", collectorExecutionTime).Info("could not parse to int64")
 			}
 
 			executions = append(executions, storage.Executions{
 				ID:   executionID,
-				Name: data[0],
-				Time: time.Unix(i, 0),
+				Name: executionName,
+				Time: time.Unix(collectorExecutionTime, 0),
 			})
 		}
 	}
@@ -319,7 +321,7 @@ func (sm *StorageManager) GetResources(resourceType string, executionID string) 
 		rowData := make(map[string]interface{})
 		err := json.Unmarshal([]byte(string(hit.Source)), &rowData)
 		if err != nil {
-			panic(err)
+			log.WithError(err).Error("error when trying to parse search result hits data")
 		}
 
 		resources = append(resources, rowData)

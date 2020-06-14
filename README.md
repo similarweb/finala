@@ -28,6 +28,8 @@ More to come...
 ### Unused RDS report
 ![alt Resources](https://raw.githubusercontent.com/similarweb/finala/master/docs/resource.jpg)
 
+### Notifications
+![alt Slack](docs/slack.png)
 
 ## Getting Started
 

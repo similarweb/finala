@@ -29,29 +29,15 @@ type DetectEventsInfo struct {
 
 // GetSummary return list of summary executions
 func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
-	queryErrs := url.Values{}
 	queryParams := req.URL.Query()
+	params := mux.Vars(req)
+	executionID := params["executionID"]
 	filters := map[string]string{}
 
 	for queryParam, value := range queryParams {
 		if strings.HasPrefix(queryParam, queryParamFilterPrefix) {
 			filters[strings.TrimPrefix(queryParam, queryParamFilterPrefix)] = value[0]
 		}
-	}
-
-	if len(filters) == 0 {
-		queryErrs.Add("filters", "The filters for GetSummary were empty")
-	}
-
-	executionID := filters["ExecutionID"]
-	// We need ExecutionID for every query in this controller.
-	if executionID == "" {
-		queryErrs.Add("ExecutionID", "ExecutionID field is mandatory")
-	}
-
-	if len(queryErrs) > 0 {
-		server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{ErrorQuery: queryErrs})
-		return
 	}
 
 	response, err := server.storage.GetSummary(executionID, filters)
@@ -65,7 +51,7 @@ func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
 
 // GetExecutions return list collector executions
 func (server *Server) GetExecutions(resp http.ResponseWriter, req *http.Request) {
-	querylimit, _ := strconv.Atoi(httpparameters.QueryParamWithDefault(req, "querylimit", storage.GetExecutionsqueryLimit))
+	querylimit, _ := strconv.Atoi(httpparameters.QueryParamWithDefault(req, "querylimit", storage.GetExecutionsQueryLimit))
 	results, err := server.storage.GetExecutions(querylimit)
 	if err != nil {
 		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1]
+### Fixed
+- Fix a bug where we did not return the correct collector resource status
+
 ## [0.3.0] 
 - Add the option to notify by tags a notification group [[PR-56](https://github.com/similarweb/finala/pull/56)]
 - Fix Dynamodb price calculation [[PR-57](https://github.com/similarweb/finala/pull/57)]

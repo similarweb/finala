@@ -8,8 +8,6 @@ import (
 type EventStatus int
 
 const (
-	// TotalMonthHours the total amount of hours in a month
-	TotalMonthHours = 730
 	// EventFetch describe the collector started to collect data
 	EventFetch EventStatus = iota
 
@@ -18,6 +16,9 @@ const (
 
 	// EventFinish describe that data resource collection was finished
 	EventFinish
+
+	// TotalMonthHours the total amount of hours in a month
+	TotalMonthHours = 730
 )
 
 // EventStatusData descrive the struct of the resource statuses

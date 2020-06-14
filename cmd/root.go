@@ -20,7 +20,7 @@ var (
 	err error
 
 	// Finala version
-	mainVersion = "0.3.0"
+	mainVersion = "0.3.1"
 )
 
 // rootCmd represents the base command when called without any subcommands

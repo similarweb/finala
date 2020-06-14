@@ -10,10 +10,10 @@ providers:
     accounts: 
       - name: <account_name>
         # access_key: <access_key>
-        # secret_key: <secret_key>      
+        # secret_key: <secret_key>
         regions:
           - us-east-1
-          - us-west-2          
+          - us-west-2
     metrics:
       rds:
         - description: Database connection count
@@ -133,9 +133,12 @@ providers:
           period: 24h 
           start_time: 168h # 24h * 7d
           constraint:
+            # The go module Knetic/govaluate has a built in escaping
+            # https://github.com/Knetic/govaluate#escaping-characters
+            # [PutRecord.Bytes] will escape the parameter name
             formula: "[PutRecord.Bytes] + [PutRecords.Bytes]"
             operator: "=="
-            value: 0            
+            value: 0
     resources:
       iamLastActivity:
         description: Last user activity

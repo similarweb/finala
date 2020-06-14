@@ -169,7 +169,7 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 						LaunchTime:      *instance.CacheClusterCreateTime,
 						ResourceID:      *instance.CacheClusterId,
 						PricePerHour:    price,
-						PricePerMonth:   price * 720,
+						PricePerMonth:   price * collector.TotalMonthHours,
 						TotalSpendPrice: totalPrice,
 						Tag:             tagsData,
 					},

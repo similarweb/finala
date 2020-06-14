@@ -95,6 +95,7 @@ func (km *KinesisManager) Detect() ([]DetectedKinesis, error) {
 				Value: awsClient.String("Provisioned shard hour"),
 			}}), "", km.region)
 	if err != nil {
+		log.WithError(err).Error("Could not get shard price")
 		return detectedStreams, err
 	}
 	// Get Price for extended Shard Hour retention
@@ -106,6 +107,7 @@ func (km *KinesisManager) Detect() ([]DetectedKinesis, error) {
 				Value: awsClient.String("Addon shard hour"),
 			}}), "", km.region)
 	if err != nil {
+		log.WithError(err).Error("Could not get shard extended retention price")
 		return detectedStreams, err
 	}
 
@@ -114,8 +116,8 @@ func (km *KinesisManager) Detect() ([]DetectedKinesis, error) {
 		"extended_shard_hour_retention_price": extendedRetentionPrice,
 		"region":                              km.region}).Info("Found the following price list")
 
+	now := time.Now()
 	for _, stream := range streams {
-		now := time.Now()
 		log.WithField("stream_name", *stream.StreamName).Debug("checking kinesis stearm")
 		for _, metric := range km.metrics {
 
@@ -140,7 +142,7 @@ func (km *KinesisManager) Detect() ([]DetectedKinesis, error) {
 				},
 			}
 
-			metricResponse, err := km.cloudWatchCLient.GetMetric(&metricInput, metric)
+			metricResponse, _, err := km.cloudWatchCLient.GetMetric(&metricInput, metric)
 			if err != nil {
 				log.WithError(err).WithFields(log.Fields{
 					"name":        *stream.StreamName,
@@ -148,18 +150,6 @@ func (km *KinesisManager) Detect() ([]DetectedKinesis, error) {
 				}).Error("Could not get cloudwatch metric data")
 				continue
 			}
-
-			streamCreateTime := *stream.StreamCreationTimestamp
-			durationRunningTime := now.Sub(streamCreateTime)
-			// AWS Kinesis charges for extended data retention bigger than the deafult
-			// which is 24 Hours
-			var finalExtendedRetentionPrice float64
-			if *stream.RetentionPeriodHours > int64(24) {
-				finalExtendedRetentionPrice = extendedRetentionPrice
-			}
-
-			totalShardsPerHourPrice := (shardPrice + finalExtendedRetentionPrice) * float64(len(stream.Shards))
-			totalPrice := totalShardsPerHourPrice * durationRunningTime.Hours()
 
 			expression, err := expression.BoolExpression(metricResponse, metric.Constraint.Value, metric.Constraint.Operator)
 			if err != nil {
@@ -188,6 +178,17 @@ func (km *KinesisManager) Detect() ([]DetectedKinesis, error) {
 					}
 				}
 
+				durationRunningTime := now.Sub(*stream.StreamCreationTimestamp)
+				// AWS Kinesis charges for extended data retention bigger than the deafult
+				// which is 24 Hours
+				var finalExtendedRetentionPrice float64
+				if *stream.RetentionPeriodHours > int64(24) {
+					finalExtendedRetentionPrice = extendedRetentionPrice
+				}
+
+				totalShardsPerHourPrice := (shardPrice + finalExtendedRetentionPrice) * float64(len(stream.Shards))
+				totalPrice := totalShardsPerHourPrice * durationRunningTime.Hours()
+
 				stream := DetectedKinesis{
 					Region: km.region,
 					Metric: metric.Description,
@@ -195,7 +196,7 @@ func (km *KinesisManager) Detect() ([]DetectedKinesis, error) {
 						ResourceID:      *stream.StreamName,
 						LaunchTime:      *stream.StreamCreationTimestamp,
 						PricePerHour:    totalShardsPerHourPrice,
-						PricePerMonth:   totalShardsPerHourPrice * 730, // 730 Hours in a month
+						PricePerMonth:   totalShardsPerHourPrice * collector.TotalMonthHours,
 						TotalSpendPrice: totalPrice,
 						Tag:             tagsData,
 					},

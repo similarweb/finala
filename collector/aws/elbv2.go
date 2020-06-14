@@ -173,7 +173,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 						ResourceID:      *instance.LoadBalancerName,
 						LaunchTime:      *instance.CreatedTime,
 						PricePerHour:    price,
-						PricePerMonth:   price * 720,
+						PricePerMonth:   price * collector.TotalMonthHours,
 						TotalSpendPrice: totalPrice,
 						Tag:             tagsData,
 					},

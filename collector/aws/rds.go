@@ -169,7 +169,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 						ResourceID:      *instance.DBInstanceArn,
 						LaunchTime:      *instance.InstanceCreateTime,
 						PricePerHour:    price,
-						PricePerMonth:   price * 720,
+						PricePerMonth:   price * collector.TotalMonthHours,
 						TotalSpendPrice: totalPrice,
 						Tag:             tagsData,
 					},

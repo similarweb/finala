@@ -168,7 +168,7 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 						ResourceID:      *instance.InstanceId,
 						LaunchTime:      *instance.LaunchTime,
 						PricePerHour:    price,
-						PricePerMonth:   price * 720,
+						PricePerMonth:   price * collector.TotalMonthHours,
 						TotalSpendPrice: totalPrice,
 						Tag:             tagsData,
 					},

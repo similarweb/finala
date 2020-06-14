@@ -46,7 +46,7 @@ providers:
             operator: "=="
             value: 0      
       elb:
-        - description: RequestCount
+        - description: Request count
           metrics:
             - name: RequestCount
               statistic: Sum
@@ -56,7 +56,7 @@ providers:
             operator: "=="
             value: 0  
       elbv2:
-        - description: RequestCount
+        - description: Request count
           metrics:
             - name: RequestCount
               statistic: Sum
@@ -111,7 +111,7 @@ providers:
             operator: "=="
             value: 0
       neptune:
-        - description: Requests Gremlin/Sparql
+        - description: Requests gremlin/sparql
           metrics:
             - name: GremlinRequestsPerSec
               statistic: Sum
@@ -124,7 +124,7 @@ providers:
             operator: "=="
             value: 0
       kinesis:
-        - description: Total Put Records
+        - description: Total put records
           metrics:
             - name: "PutRecords.Bytes"
               statistic: Sum

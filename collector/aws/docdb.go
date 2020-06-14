@@ -117,7 +117,7 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 				},
 			}
 
-			metricResponse, err := dd.cloudWatchClient.GetMetric(&metricInput, metric)
+			formulaValue, _, err := dd.cloudWatchClient.GetMetric(&metricInput, metric)
 
 			if err != nil {
 				log.WithError(err).WithFields(log.Fields{
@@ -127,7 +127,7 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 				continue
 			}
 
-			expression, err := expression.BoolExpression(metricResponse, metric.Constraint.Value, metric.Constraint.Operator)
+			expression, err := expression.BoolExpression(formulaValue, metric.Constraint.Value, metric.Constraint.Operator)
 			if err != nil {
 				continue
 			}
@@ -141,7 +141,7 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 					"metric_name":         metric.Description,
 					"Constraint_operator": metric.Constraint.Operator,
 					"Constraint_Value":    metric.Constraint.Value,
-					"metric_response":     metricResponse,
+					"formula_value":       formulaValue,
 					"name":                *instance.DBInstanceIdentifier,
 					"instance_type":       *instance.DBInstanceClass,
 					"region":              dd.region,

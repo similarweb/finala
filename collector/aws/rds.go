@@ -118,7 +118,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 				},
 			}
 
-			metricResponse, err := r.cloudWatchClient.GetMetric(&metricInput, metric)
+			formulaValue, _, err := r.cloudWatchClient.GetMetric(&metricInput, metric)
 
 			if err != nil {
 				log.WithError(err).WithFields(log.Fields{
@@ -128,7 +128,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 				continue
 			}
 
-			expression, err := expression.BoolExpression(metricResponse, metric.Constraint.Value, metric.Constraint.Operator)
+			expression, err := expression.BoolExpression(formulaValue, metric.Constraint.Value, metric.Constraint.Operator)
 			if err != nil {
 				continue
 			}
@@ -142,7 +142,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 					"metric_name":         metric.Description,
 					"Constraint_operator": metric.Constraint.Operator,
 					"Constraint_Value":    metric.Constraint.Value,
-					"metric_response":     metricResponse,
+					"formula_value":       formulaValue,
 					"name":                *instance.DBInstanceIdentifier,
 					"instance_type":       *instance.DBInstanceClass,
 					"region":              r.region,

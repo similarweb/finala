@@ -116,7 +116,7 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 				},
 			}
 
-			metricResponse, err := ec.cloudWatchCLient.GetMetric(&metricInput, metric)
+			formulaValue, _, err := ec.cloudWatchCLient.GetMetric(&metricInput, metric)
 			if err != nil {
 				log.WithError(err).WithFields(log.Fields{
 					"instance_id": *instance.InstanceId,
@@ -125,7 +125,7 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 				continue
 			}
 
-			expression, err := expression.BoolExpression(metricResponse, metric.Constraint.Value, metric.Constraint.Operator)
+			expression, err := expression.BoolExpression(formulaValue, metric.Constraint.Value, metric.Constraint.Operator)
 			if err != nil {
 				continue
 			}
@@ -143,7 +143,7 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 					"metric_name":         metric.Description,
 					"Constraint_operator": metric.Constraint.Operator,
 					"Constraint_Value":    metric.Constraint.Value,
-					"metric_response":     metricResponse,
+					"formula_value":       formulaValue,
 					"instance_id":         *instance.InstanceId,
 					"instance_type":       *instance.InstanceType,
 					"region":              ec.region,

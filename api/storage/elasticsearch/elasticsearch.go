@@ -282,7 +282,8 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 			// Always take the last element which is the timestamp of the collector's run
 			collectorExecutionTime, err := strconv.ParseInt(data[len(data)-1], 10, 64)
 			if err != nil {
-				log.WithField("collector_execution_time", collectorExecutionTime).Info("could not parse to int64")
+				log.WithError(err).WithField("collector_execution_time", collectorExecutionTime).Error("could not parse to int64")
+				continue
 			}
 
 			executions = append(executions, storage.Executions{

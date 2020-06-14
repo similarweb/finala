@@ -29,6 +29,8 @@ More to come...
 ### Unused RDS report
 ![alt Resources](https://raw.githubusercontent.com/similarweb/finala/master/docs/resource.jpg)
 
+### Notifications
+![alt Slack](docs/slack.png)
 
 ## Getting Started
 
@@ -41,6 +43,9 @@ Finala is built from 3 components:
 * **API** - RESTful API server that receives events from the collector and serves the UI. See [example API configuration file](./configuration/api.yaml).
 
 * **UI** - The User Interface, display the data in a way that it'll look nice :).
+
+* **Notifier** - Notifies notification groups with the support of multiple notifiers defined in [notifier.yaml](./configuration/notifier.yaml). All resources that marked as "under utilized" are reported to the notification groups.
+Currently we only support Slack notifier type [notifier.yaml](./configuration/notifier.yaml). If you wish to contribute and add a new Notifier please read [How To add a new Notifier?](docs/notifiers/add-new-notifier.md)
 
 * **Collector** - Collects and analyzes resources against their thresholds defined in [collector.yaml](./configuration/collector.yaml). All resources that marked as "under utilized" are reported back to the API component.
 You can define multiple accounts and regions in the [collector.yaml](./configuration/collector.yaml) file.
@@ -87,6 +92,12 @@ You may use either approach in order to deploy Finala.
 
 ```shell
 go run main.go collector -c ./configuration/collector.yaml
+```
+
+#### Notifier
+
+```shell
+go run main.go notifier -c ./configuration/notifier.yaml
 ```
 
 #### API

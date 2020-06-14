@@ -2,14 +2,21 @@ package api
 
 import (
 	"encoding/json"
+	"finala/api/httpparameters"
 	"finala/api/storage"
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
+)
+
+const (
+	queryParamFilterPrefix = "filter_"
 )
 
 // DetectEventsInfo descrive the incoming HTTP events
@@ -22,19 +29,18 @@ type DetectEventsInfo struct {
 
 // GetSummary return list of summary executions
 func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
+	queryParams := req.URL.Query()
+	params := mux.Vars(req)
+	executionID := params["executionID"]
+	filters := map[string]string{}
 
-	queryErrs := url.Values{}
-	executionID := req.URL.Query().Get("executionID")
-	if executionID == "" {
-		queryErrs.Add("executionID", "executionID field is mandatory")
+	for queryParam, value := range queryParams {
+		if strings.HasPrefix(queryParam, queryParamFilterPrefix) {
+			filters[strings.TrimPrefix(queryParam, queryParamFilterPrefix)] = value[0]
+		}
 	}
 
-	if len(queryErrs) > 0 {
-		server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{ErrorQuery: queryErrs})
-		return
-	}
-
-	response, err := server.storage.GetSummary(executionID)
+	response, err := server.storage.GetSummary(executionID, filters)
 	if err != nil {
 		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
 		return
@@ -45,7 +51,8 @@ func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
 
 // GetExecutions return list collector executions
 func (server *Server) GetExecutions(resp http.ResponseWriter, req *http.Request) {
-	results, err := server.storage.GetExecutions()
+	querylimit, _ := strconv.Atoi(httpparameters.QueryParamWithDefault(req, "querylimit", storage.GetExecutionsQueryLimit))
+	results, err := server.storage.GetExecutions(querylimit)
 	if err != nil {
 		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
 		return

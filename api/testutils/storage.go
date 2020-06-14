@@ -22,9 +22,9 @@ func (ms *MockStorage) Save(data string) bool {
 	return true
 }
 
-func (ms *MockStorage) GetSummary(executionsID string) (map[string]storage.CollectorsSummary, error) {
+func (ms *MockStorage) GetSummary(executionID string, filters map[string]string) (map[string]storage.CollectorsSummary, error) {
 
-	if executionsID == "err" {
+	if executionID == "err" {
 		return nil, errors.New("error")
 	}
 	response := map[string]storage.CollectorsSummary{
@@ -49,7 +49,7 @@ func (ms *MockStorage) GetSummary(executionsID string) (map[string]storage.Colle
 	return response, nil
 }
 
-func (ms *MockStorage) GetExecutions() ([]storage.Executions, error) {
+func (ms *MockStorage) GetExecutions(queryLimit int) ([]storage.Executions, error) {
 	response := []storage.Executions{
 		{
 			ID:   "1",

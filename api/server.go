@@ -73,7 +73,7 @@ func (server *Server) Serve() serverutil.StopFunc {
 // BindEndpoints sets up the router to handle API endpoints
 func (server *Server) BindEndpoints() {
 
-	server.router.HandleFunc("/api/v1/summary", server.GetSummary).Methods("GET")
+	server.router.HandleFunc("/api/v1/summary/{executionID}", server.GetSummary).Methods("GET")
 	server.router.HandleFunc("/api/v1/executions", server.GetExecutions).Methods("GET")
 	server.router.HandleFunc("/api/v1/resources/{type}", server.GetResourceData).Methods("GET")
 	server.router.HandleFunc("/api/v1/detect-events/{executionID}", server.DetectEvents).Methods("POST")

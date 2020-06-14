@@ -90,9 +90,9 @@ func TestGetSummary(t *testing.T) {
 		expectedStatusCode int
 		Count              int
 	}{
-		{"/api/v1/summary", http.StatusBadRequest, 0},
-		{"/api/v1/summary?executionID=1", http.StatusOK, 2},
-		{"/api/v1/summary?executionID=err", http.StatusInternalServerError, 2},
+		{"/api/v1/summary", http.StatusNotFound, 0},
+		{"/api/v1/summary/1", http.StatusOK, 2},
+		{"/api/v1/summary/err", http.StatusInternalServerError, 2},
 	}
 
 	for _, test := range testCases {

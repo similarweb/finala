@@ -81,25 +81,25 @@ providers:
             - name: ConsumedReadCapacityUnits
               statistic: Sum
             - name: ProvisionedReadCapacityUnits
-              statistic: Sum
+              statistic: Average
           period: 24h 
           start_time: 168h # 24h * 7d
           constraint:
-            formula: ConsumedReadCapacityUnits / ProvisionedReadCapacityUnits * 100 
+            formula: ( ConsumedReadCapacityUnits / 7 / 86400 ) / ProvisionedReadCapacityUnits * 100
             operator: "<"
-            value: 10
+            value: 80
         - description: Provisioned write capacity units
           metrics:
             - name: ConsumedWriteCapacityUnits
               statistic: Sum
             - name: ProvisionedWriteCapacityUnits
-              statistic: Sum
+              statistic: Average
           period: 24h 
           start_time: 168h # 24h * 7d
           constraint:
-            formula: ConsumedWriteCapacityUnits / ProvisionedWriteCapacityUnits * 100 
+            formula: ( ConsumedWriteCapacityUnits / 7 / 86400 ) / ProvisionedWriteCapacityUnits * 100
             operator: "<"
-            value: 10
+            value: 80
       lambda:
         - description: Lambda invocations count
           metrics:

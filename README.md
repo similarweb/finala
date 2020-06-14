@@ -17,7 +17,7 @@ AWS:
 * IAM user last activity
 * Lambda
 * Neptune
-
+* Kinesis
 More to come...
 
 ## Screenshots

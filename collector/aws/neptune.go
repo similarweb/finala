@@ -117,7 +117,7 @@ func (np *NeptuneManager) Detect() ([]DetectedAWSNeptune, error) {
 				},
 			}
 
-			metricResponse, err := np.cloudWatchClient.GetMetric(&metricInput, metric)
+			metricResponse, _, err := np.cloudWatchClient.GetMetric(&metricInput, metric)
 
 			if err != nil {
 				log.WithError(err).WithFields(log.Fields{

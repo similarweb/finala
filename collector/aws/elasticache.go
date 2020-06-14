@@ -120,7 +120,7 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 				},
 			}
 
-			metricResponse, err := ec.cloudWatchCLient.GetMetric(&metricInput, metric)
+			formulaValue, _, err := ec.cloudWatchCLient.GetMetric(&metricInput, metric)
 			if err != nil {
 				log.WithError(err).WithFields(log.Fields{
 					"cluster_id":  *instance.CacheClusterId,
@@ -129,7 +129,7 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 				continue
 			}
 
-			expression, err := expression.BoolExpression(metricResponse, metric.Constraint.Value, metric.Constraint.Operator)
+			expression, err := expression.BoolExpression(formulaValue, metric.Constraint.Value, metric.Constraint.Operator)
 			if err != nil {
 				continue
 			}
@@ -142,7 +142,7 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 					"metric_name":         metric.Description,
 					"Constraint_operator": metric.Constraint.Operator,
 					"Constraint_Value":    metric.Constraint.Value,
-					"metric_response":     metricResponse,
+					"formula_value":       formulaValue,
 					"cluster_id":          *instance.CacheClusterId,
 					"node_type":           *instance.CacheNodeType,
 					"region":              ec.region,

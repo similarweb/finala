@@ -97,8 +97,8 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 		return detectedTables, err
 	}
 
-	writePricePerHour, _ := dd.pricingClient.GetPrice(dd.GetPricingWriteFilterInput(), rateCode)
-	readPricePerHour, _ := dd.pricingClient.GetPrice(dd.GetPricingReadFilterInput(), rateCode)
+	writePricePerHour, _ := dd.pricingClient.GetPrice(dd.GetPricingWriteFilterInput(), rateCode, dd.region)
+	readPricePerHour, _ := dd.pricingClient.GetPrice(dd.GetPricingReadFilterInput(), rateCode, dd.region)
 
 	for _, table := range tables {
 
@@ -168,13 +168,13 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 					provisionedWriteCapacityUnits := metricsResponseValues["ProvisionedWriteCapacityUnits"].(float64)
 					pricePerHour = writePricePerHour
 					totalPrice = pricePerHour * provisionedWriteCapacityUnits * durationRunningTime.Hours()
-					pricePerMonth = provisionedWriteCapacityUnits * pricePerHour * 720
+					pricePerMonth = provisionedWriteCapacityUnits * pricePerHour * collector.TotalMonthHours
 
 				} else if strings.Contains(metric.Description, "read capacity") {
 					provisionedReadCapacityUnits := metricsResponseValues["ProvisionedReadCapacityUnits"].(float64)
 					pricePerHour = readPricePerHour
 					totalPrice = pricePerHour * provisionedReadCapacityUnits * durationRunningTime.Hours()
-					pricePerMonth = provisionedReadCapacityUnits * pricePerHour * 720
+					pricePerMonth = provisionedReadCapacityUnits * pricePerHour * collector.TotalMonthHours
 				} else {
 					log.Warn("metric name not supported")
 					continue

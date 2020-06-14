@@ -16,7 +16,7 @@ providers:
           - us-west-2
     metrics:
       rds:
-        - description: Database connection count
+        - description: Connection count
           metrics:
             - name: DatabaseConnections
               statistic: Sum
@@ -26,7 +26,7 @@ providers:
             operator: "=="
             value: 0
       docDB:
-        - description: Database connection count
+        - description: Connection count
           metrics:
             - name: DatabaseConnections
               statistic: Sum
@@ -36,7 +36,7 @@ providers:
             operator: "=="
             value: 0
       elasticache:
-        - description: connection count
+        - description: Connection count
           metrics:
             - name: CurrConnections
               statistic: Sum
@@ -46,7 +46,7 @@ providers:
             operator: "=="
             value: 0      
       elb:
-        - description: Loadbalancer requests count
+        - description: Request count
           metrics:
             - name: RequestCount
               statistic: Sum
@@ -56,7 +56,7 @@ providers:
             operator: "=="
             value: 0  
       elbv2:
-        - description: Application Loadbalancer RequestCount
+        - description: Request count
           metrics:
             - name: RequestCount
               statistic: Sum
@@ -66,7 +66,7 @@ providers:
             operator: "=="
             value: 0    
       ec2:
-        - description: EC2 CPU utilization 
+        - description: CPU utilization 
           metrics:
             - name: CPUUtilization
               statistic: Maximum
@@ -101,7 +101,7 @@ providers:
             operator: "<"
             value: 80
       lambda:
-        - description: Lambda invocations count
+        - description: Invocations count
           metrics:
             - name: Invocations
               statistic: Sum
@@ -111,16 +111,32 @@ providers:
             operator: "=="
             value: 0
       neptune:
-        - description: Neptune Requests Gremlin/Sparql
+        - description: Requests gremlin/sparql
           metrics:
             - name: GremlinRequestsPerSec
               statistic: Sum
             - name: SparqlRequestsPerSec
-              statistic: Sum              
+              statistic: Sum
           period: 24h 
           start_time: 168h # 24h * 7d
           constraint:
             formula: GremlinRequestsPerSec + SparqlRequestsPerSec
+            operator: "=="
+            value: 0
+      kinesis:
+        - description: Total put records
+          metrics:
+            - name: "PutRecords.Bytes"
+              statistic: Sum
+            - name: "PutRecord.Bytes"
+              statistic: Sum              
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            # The go module Knetic/govaluate has a built in escaping
+            # https://github.com/Knetic/govaluate#escaping-characters
+            # [PutRecord.Bytes] will escape the parameter name
+            formula: "[PutRecord.Bytes] + [PutRecords.Bytes]"
             operator: "=="
             value: 0
     resources:

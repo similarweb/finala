@@ -38,10 +38,13 @@ var regionToLocation = map[string]string{
 	"eu-west-1":      "EU (Ireland)",
 	"eu-west-2":      "EU (London)",
 	"eu-west-3":      "EU (Paris)",
+	"eu-south-1":     "EU (Milan)",
 	"eu-north-1":     "EU (Stockholm)",
 	"sa-east-1":      "South America (Sao Paulo)",
 	"us-gov-east-1":  "AWS GovCloud (US-East)",
 	"us-gov-west-1":  "AWS GovCloud (US)",
+	"af-south-1":     "Africa (Cape Town)",
+	"me-south-1":     "Middle East (Bahrain)",
 }
 
 // PricingClientDescreptor is an interface defining the aws pricing client
@@ -98,17 +101,16 @@ func NewPricingManager(client PricingClientDescreptor, region string) *PricingMa
 		region:         region,
 		priceResponses: make(map[uint64]float64, 0),
 	}
-
 }
 
 // GetPrice return the product price by given product filter
 // The result (of the given product input) should be only one product.
-func (p *PricingManager) GetPrice(input *pricing.GetProductsInput, rateCode string) (float64, error) {
+func (p *PricingManager) GetPrice(input *pricing.GetProductsInput, rateCode string, region string) (float64, error) {
 
 	if rateCode == "" {
 		rateCode = defaultRateCode
 	}
-	location, found := regionToLocation[p.region]
+	location, found := regionToLocation[region]
 	if !found {
 		return 0, errors.New("Given region not found")
 	}

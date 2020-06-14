@@ -96,7 +96,7 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 	for _, instance := range instances {
 		log.WithField("cluster_id", *instance.CacheClusterId).Debug("checking elasticache")
 
-		price, _ := ec.pricingClient.GetPrice(ec.GetPricingFilterInput(instance), "")
+		price, _ := ec.pricingClient.GetPrice(ec.GetPricingFilterInput(instance), "", ec.region)
 
 		for _, metric := range ec.metrics {
 			log.WithFields(log.Fields{
@@ -169,7 +169,7 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 						LaunchTime:      *instance.CacheClusterCreateTime,
 						ResourceID:      *instance.CacheClusterId,
 						PricePerHour:    price,
-						PricePerMonth:   price * 720,
+						PricePerMonth:   price * collector.TotalMonthHours,
 						TotalSpendPrice: totalPrice,
 						Tag:             tagsData,
 					},

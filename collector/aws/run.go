@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/pricing"
@@ -77,6 +78,7 @@ func (app *Analyze) All() {
 			app.IAMUsers(sess)
 			app.AnalyzeDynamoDB(sess, cloudWatchCLient, pricing)
 			app.AnalyzeNeptune(sess, cloudWatchCLient, pricing)
+			app.AnalyzeKinesis(sess, cloudWatchCLient, pricing)
 		}
 	}
 
@@ -279,6 +281,24 @@ func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *Clou
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total Neptune Databases detected")
+	}
+
+	return err
+
+}
+
+// AnalyzeKinesis will analyzes Kinesis resources
+func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+	metrics, found := app.metrics["kinesis"]
+	if !found {
+		return nil
+	}
+
+	kinesis := NewKinesisManager(app.cl, kinesis.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	response, err := kinesis.Detect()
+
+	if err == nil {
+		log.WithField("count", len(response)).Info("Total Kinesis data streams detected")
 	}
 
 	return err

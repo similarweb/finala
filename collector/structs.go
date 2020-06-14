@@ -8,6 +8,8 @@ import (
 type EventStatus int
 
 const (
+	// TotalMonthHours the total amount of hours in a month
+	TotalMonthHours = 730
 	// EventFetch describe the collector started to collect data
 	EventFetch EventStatus = iota
 

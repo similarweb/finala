@@ -135,8 +135,8 @@ func TestPrepareAttachment(t *testing.T) {
 
 	attachments := slackManager.prepareAttachment(*notifierReport, formattedTags)
 	t.Run("check slack attachments", func(t *testing.T) {
-		if len(attachments) != 2 {
-			t.Fatalf("unexpected len of slack attachments , got %d expected %d", len(attachments), 2)
+		if len(attachments) != 3 {
+			t.Fatalf("unexpected len of slack attachments , got %d expected %d", len(attachments), 3)
 		}
 	})
 }

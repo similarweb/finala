@@ -4,6 +4,7 @@ import (
 	"finala/notifiers/common"
 	notifierCommon "finala/notifiers/common"
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -22,7 +23,9 @@ const (
 	// AuthorName Slack will use while sending the name
 	AuthorName = "Finala Notifier"
 	// MessageColor color to use
-	MessageColor = "#2EB67D"
+	greenMessageColor = "#2EB67D"
+	// MessageColor color to use
+	blueMessageColor = "#3aa3e3"
 )
 
 // NewManager returns the notifier
@@ -76,31 +79,45 @@ func (sm *Manager) GetNotifyByTags(notifierConfig common.ConfigByName) map[strin
 
 // prepareAttachmentFields will prepare all the Attachment and all the fields
 func (sm *Manager) prepareAttachment(message common.NotifierReport, tags []string) []slackApi.Attachment {
+	// Finala's intro message Attachment
 	slackAttachments := []slackApi.Attachment{
 		{
-			Color:      MessageColor,
+			Color:      greenMessageColor,
 			AuthorName: AuthorName,
-			Pretext: fmt.Sprintf("Here is the <%s|Cost report> for your notification group: %s filtered by: %s",
+			Pretext: fmt.Sprintf("Here is the <%s|Cost report> for your notification group: %s *filtered by: %s*",
 				message.UIAddr,
 				message.GroupName,
 				strings.Join(tags, " AND ")),
 		}}
+	var totalPotentialSaving float64
 	for _, executionData := range message.ExecutionSummaryData {
 		// If the total spent is 0 or small than minimum cost to present we don't want to show it in Slack
 		if executionData.TotalSpent == 0 || executionData.TotalSpent <= message.NotifyByTag.MinimumCostToPresent {
 			continue
 		}
+		totalPotentialSaving = totalPotentialSaving + executionData.TotalSpent
 		slackAttachments = append(slackAttachments, slackApi.Attachment{
-			Color: MessageColor,
+			Color: greenMessageColor,
 			Fields: []slackApi.AttachmentField{
 				{
 					Title: strings.ToUpper(executionData.ResourceName),
-					Value: fmt.Sprintf("Potential Saving: $%s", humanize.Commaf(executionData.TotalSpent)),
+					Value: fmt.Sprintf("Potential Saving: $%s", humanize.Commaf(math.Floor(executionData.TotalSpent))),
 					Short: false,
 				},
 			},
 		})
 	}
+
+	// Add the total potential savings as the last attachment
+	slackAttachments = append(slackAttachments, slackApi.Attachment{
+		Color: blueMessageColor,
+		Fields: []slackApi.AttachmentField{
+			{
+				Title: fmt.Sprintf("Total Potential Savings: $%s", humanize.Commaf(math.Floor(totalPotentialSaving))),
+				Short: false,
+			},
+		},
+	})
 	return slackAttachments
 }
 

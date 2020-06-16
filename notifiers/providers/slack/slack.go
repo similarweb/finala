@@ -84,7 +84,7 @@ func (sm *Manager) prepareAttachment(message common.NotifierReport, tags []strin
 		{
 			Color:      greenMessageColor,
 			AuthorName: AuthorName,
-			Pretext: fmt.Sprintf("Here is the <%s|Cost report> for your notification group: %s *filtered by: %s*",
+			Pretext: fmt.Sprintf("Here is the *Monthly* <%s|Cost report> for your notification group: %s *filtered by: %s*",
 				message.UIAddr,
 				message.GroupName,
 				strings.Join(tags, " AND ")),

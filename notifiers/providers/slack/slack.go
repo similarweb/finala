@@ -22,9 +22,9 @@ var (
 const (
 	// AuthorName Slack will use while sending the name
 	AuthorName = "Finala Notifier"
-	// MessageColor color to use
+	// greenMessageColor color to use
 	greenMessageColor = "#2EB67D"
-	// MessageColor color to use
+	// blueMessageColor color to use
 	blueMessageColor = "#3aa3e3"
 )
 

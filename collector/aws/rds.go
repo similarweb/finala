@@ -95,7 +95,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 
 		log.WithField("name", *instance.DBInstanceIdentifier).Debug("checking RDS")
 
-		price, _ := r.pricingClient.GetPrice(r.GetPricingFilterInput(instance), "")
+		price, _ := r.pricingClient.GetPrice(r.GetPricingFilterInput(instance), "", r.region)
 
 		for _, metric := range r.metrics {
 			log.WithFields(log.Fields{
@@ -169,7 +169,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 						ResourceID:      *instance.DBInstanceArn,
 						LaunchTime:      *instance.InstanceCreateTime,
 						PricePerHour:    price,
-						PricePerMonth:   price * 720,
+						PricePerMonth:   price * collector.TotalMonthHours,
 						TotalSpendPrice: totalPrice,
 						Tag:             tagsData,
 					},

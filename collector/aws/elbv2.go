@@ -92,7 +92,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 
 		log.WithField("name", *instance.LoadBalancerName).Debug("cheking elbV2")
 
-		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput(), "")
+		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput(), "", el.region)
 
 		for _, metric := range el.metrics {
 
@@ -173,7 +173,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 						ResourceID:      *instance.LoadBalancerName,
 						LaunchTime:      *instance.CreatedTime,
 						PricePerHour:    price,
-						PricePerMonth:   price * 720,
+						PricePerMonth:   price * collector.TotalMonthHours,
 						TotalSpendPrice: totalPrice,
 						Tag:             tagsData,
 					},

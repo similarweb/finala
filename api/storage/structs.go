@@ -4,21 +4,26 @@ import (
 	"time"
 )
 
+const (
+	// GetExecutionsQueryLimit Describes the query limit results for GetExecutions API
+	GetExecutionsQueryLimit = "20"
+)
+
 type StorageDescriber interface {
 	Save(data string) bool
-	GetSummary(executionsID string) (map[string]CollectorsSummary, error)
-	GetExecutions() ([]Executions, error)
+	GetSummary(executionID string, filters map[string]string) (map[string]CollectorsSummary, error)
+	GetExecutions(querylimit int) ([]Executions, error)
 	GetResources(resourceType string, executionID string) ([]map[string]interface{}, error)
 }
 
-// Executions define the execution collectors data
+// Executions defines the collectors execution  data
 type Executions struct {
 	ID   string
 	Name string
 	Time time.Time
 }
 
-// CollectorsSummary define unused resource summery
+// CollectorsSummary defines unused resource summary
 type CollectorsSummary struct {
 	ResourceName  string  `json:"ResourceName"`
 	ResourceCount int64   `json:"ResourceCount"`

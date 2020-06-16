@@ -50,7 +50,7 @@ func TestGetPrice(t *testing.T) {
 
 		pricingManager := aws.NewPricingManager(&defaultPricingMock, "us-east-1")
 		pricingInput := pricing.GetProductsInput{}
-		result, err := pricingManager.GetPrice(&pricingInput, "")
+		result, err := pricingManager.GetPrice(&pricingInput, "", "us-east-1")
 
 		if err != nil {
 			t.Fatalf("unexpected err getPrice results to be empty")
@@ -86,7 +86,7 @@ func TestGetPrice(t *testing.T) {
 		}
 		pricingManager := aws.NewPricingManager(&mockClient, "us-east-1")
 		pricingInput := pricing.GetProductsInput{}
-		result, err := pricingManager.GetPrice(&pricingInput, "1234")
+		result, err := pricingManager.GetPrice(&pricingInput, "1234", "us-east-1")
 
 		if err != nil {
 			t.Fatalf("unexpected err getPrice results to be empty")

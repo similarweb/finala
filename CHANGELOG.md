@@ -5,7 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.3.1]
+### Fixed
+- Fix a bug where we did not return the correct collector resource status
+
+## [0.3.0] 
+- Add the option to notify by tags a notification group [[PR-56](https://github.com/similarweb/finala/pull/56)]
 - Fix Dynamodb price calculation [[PR-57](https://github.com/similarweb/finala/pull/57)]
+- Add Kinesis unused resource detection [[PR-59](https://github.com/similarweb/finala/pull/59)]
 
 ## [0.2.1] 
 - Add Neptune unused database detection [[PR-52](https://github.com/similarweb/finala/pull/52)]

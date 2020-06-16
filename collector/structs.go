@@ -16,6 +16,9 @@ const (
 
 	// EventFinish describe that data resource collection was finished
 	EventFinish
+
+	// TotalMonthHours the total amount of hours in a month
+	TotalMonthHours = 730
 )
 
 // EventStatusData descrive the struct of the resource statuses

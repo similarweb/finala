@@ -1,0 +1,20 @@
+---
+log_level: info
+api_server_address: "http://127.0.0.1:8081"
+ui_address: "http://127.0.0.1:8080"
+notifiers:
+  slack:
+    token: <slack_token>
+    default_channels:
+      - '#default-channel'
+    notify_by_tags:
+      <notification_group_name>:
+          minimum_cost_to_present: <number>
+          tags:
+            - name: <tag_name>
+              value: <tag_value
+            - name: <tag_name>
+              value: <tag_value
+          notify_to:
+            - <slack_username>
+            - "#<slack_channel>"

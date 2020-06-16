@@ -29,6 +29,7 @@ var rootCmd = &cobra.Command{
 	Short: "Analyze wasteful and unused resources to cut unwanted expenses ",
 	Long: `A resource cloud scanner that analyzes and reports about wasteful and unused resources to cut unwanted expenses.
 The tool is based on yaml definitions (no code), by default configuration OR given yaml file and the report output will be saved in a given storage.`,
+	Version: mainVersion,
 }
 
 // Execute will expose all cobra commands

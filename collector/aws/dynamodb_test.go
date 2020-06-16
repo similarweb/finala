@@ -30,11 +30,17 @@ var defaultDynamoDBDescribeTableMock = dynamodb.DescribeTableOutput{
 type MockAWSDynamoDBClient struct {
 	responseListTable     dynamodb.ListTablesOutput
 	responseDescribeTable dynamodb.DescribeTableOutput
+	listTableCountRequest int
 	err                   error
 }
 
 func (r *MockAWSDynamoDBClient) ListTables(*dynamodb.ListTablesInput) (*dynamodb.ListTablesOutput, error) {
-
+	r.listTableCountRequest += 1
+	if r.listTableCountRequest == 2 {
+		return &dynamodb.ListTablesOutput{
+			TableNames: []*string{},
+		}, r.err
+	}
 	return &r.responseListTable, r.err
 
 }
@@ -65,7 +71,7 @@ func TestDescribeDynamoDBTables(t *testing.T) {
 
 		dynamoDBManager := aws.NewDynamoDBManager(collector, &mockClient, nil, nil, metrics, "us-east-1")
 
-		result, _ := dynamoDBManager.DescribeTables()
+		result, _ := dynamoDBManager.DescribeTables(nil, nil)
 
 		if len(result) != len(defaultDynamoDBListTableMock.TableNames) {
 			t.Fatalf("unexpected dynamoDB tables count, got %d expected %d", len(result), len(defaultDynamoDBListTableMock.TableNames))
@@ -82,7 +88,7 @@ func TestDescribeDynamoDBTables(t *testing.T) {
 
 		dynamoDBManager := aws.NewDynamoDBManager(collector, &mockClient, nil, nil, metrics, "us-east-1")
 
-		_, err := dynamoDBManager.DescribeTables()
+		_, err := dynamoDBManager.DescribeTables(nil, nil)
 
 		if err == nil {
 			t.Fatalf("unexpected describe table error, return empty")
@@ -105,9 +111,9 @@ func TestDetectDynamoDB(t *testing.T) {
 			},
 			"Terms": aws.PricingTerms{
 				OnDemand: map[string]*aws.PricingOfferTerm{
-					"R6PXMNYCEDGZ2EYN.JRTCKXETXF": &aws.PricingOfferTerm{
+					"R6PXMNYCEDGZ2EYN.JRTCKXETXF": {
 						PriceDimensions: map[string]*aws.PriceRateCode{
-							"R6PXMNYCEDGZ2EYN.JRTCKXETXF.E63J5HTPNN": &aws.PriceRateCode{
+							"R6PXMNYCEDGZ2EYN.JRTCKXETXF.E63J5HTPNN": {
 								Unit: "USD",
 								PricePerUnit: aws.PriceCurrencyCode{
 									USD: "1.2",

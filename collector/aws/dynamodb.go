@@ -81,25 +81,29 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 	})
 
 	detectedTables := []DetectedAWSDynamoDB{}
-	tables, err := dd.DescribeTables()
-	now := time.Now()
+	tables, err := dd.DescribeTables(nil, nil)
 
 	if err != nil {
-		log.WithField("error", err).Error("could not describe rds instances")
-		dd.collector.UpdateServiceStatus(collector.EventCollector{
-			ResourceName: dd.Name,
-			Data: collector.EventStatusData{
-				Status:       collector.EventError,
-				ErrorMessage: err.Error(),
-			},
-		})
-
+		log.WithField("error", err).Error("could not describe dynamoDB tables")
+		dd.updateErrorServiceStatus(err)
 		return detectedTables, err
 	}
 
-	writePricePerHour, _ := dd.pricingClient.GetPrice(dd.GetPricingWriteFilterInput(), rateCode, dd.region)
-	readPricePerHour, _ := dd.pricingClient.GetPrice(dd.GetPricingReadFilterInput(), rateCode, dd.region)
+	writePricePerHour, err := dd.pricingClient.GetPrice(dd.GetPricingWriteFilterInput(), rateCode, dd.region)
+	if err != nil {
+		log.WithField("error", err).Error("could not get write dynamoDB price")
+		dd.updateErrorServiceStatus(err)
+		return detectedTables, err
+	}
 
+	readPricePerHour, err := dd.pricingClient.GetPrice(dd.GetPricingReadFilterInput(), rateCode, dd.region)
+	if err != nil {
+		log.WithField("error", err).Error("could not get read dynamoDB price")
+		dd.updateErrorServiceStatus(err)
+		return detectedTables, err
+	}
+
+	now := time.Now()
 	for _, table := range tables {
 
 		log.WithField("table_name", *table.TableName).Debug("checking dynamodb table")
@@ -120,7 +124,7 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 				StartTime:  &metricEndTime,
 				EndTime:    &now,
 				Dimensions: []*cloudwatch.Dimension{
-					&cloudwatch.Dimension{
+					{
 						Name:  awsClient.String("TableName"),
 						Value: table.TableName,
 					},
@@ -233,10 +237,15 @@ func (dd *DynamoDBManager) GetPricingWriteFilterInput() *pricing.GetProductsInpu
 	input := &pricing.GetProductsInput{
 		ServiceCode: awsClient.String(dd.servicePricingCode),
 		Filters: []*pricing.Filter{
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("usagetype"),
-				Value: awsClient.String("WriteCapacityUnit-Hrs"),
+				Field: awsClient.String("termType"),
+				Value: awsClient.String("Reserved"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("group"),
+				Value: awsClient.String("DDB-WriteUnits"),
 			},
 		},
 	}
@@ -250,10 +259,15 @@ func (dd *DynamoDBManager) GetPricingReadFilterInput() *pricing.GetProductsInput
 	input := &pricing.GetProductsInput{
 		ServiceCode: &dd.servicePricingCode,
 		Filters: []*pricing.Filter{
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("usagetype"),
-				Value: awsClient.String("ReadCapacityUnit-Hrs"),
+				Field: awsClient.String("termType"),
+				Value: awsClient.String("Reserved"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("group"),
+				Value: awsClient.String("DDB-ReadUnits"),
 			},
 		},
 	}
@@ -262,26 +276,50 @@ func (dd *DynamoDBManager) GetPricingReadFilterInput() *pricing.GetProductsInput
 }
 
 // DescribeTables return all dynamoDB tables
-func (dd *DynamoDBManager) DescribeTables() ([]*dynamodb.TableDescription, error) {
+func (dd *DynamoDBManager) DescribeTables(exclusiveStartTableName *string, tables []*dynamodb.TableDescription) ([]*dynamodb.TableDescription, error) {
 
-	input := &dynamodb.ListTablesInput{}
+	input := &dynamodb.ListTablesInput{
+		ExclusiveStartTableName: exclusiveStartTableName,
+	}
 
 	resp, err := dd.client.ListTables(input)
 	if err != nil {
+		log.WithField("error", err).Error("could not list any dynamoDB tables")
 		return nil, err
 	}
 
-	tables := []*dynamodb.TableDescription{}
-	for _, tableName := range resp.TableNames {
+	if tables == nil {
+		tables = []*dynamodb.TableDescription{}
+	}
 
+	var lastTableName string
+	for _, tableName := range resp.TableNames {
+		lastTableName = *tableName
 		resp, err := dd.client.DescribeTable(&dynamodb.DescribeTableInput{TableName: tableName})
 		if err != nil {
+			log.WithField("error", err).WithField("table", *tableName).Error("could not describe dynamoDB table")
 			continue
 		}
 		if resp.Table.BillingModeSummary == nil {
 			tables = append(tables, resp.Table)
 		}
+
+	}
+
+	if lastTableName != "" {
+		return dd.DescribeTables(&lastTableName, tables)
 	}
 
 	return tables, nil
+}
+
+// updateErrorServiceStatus reports when dynamoDB can't collect data
+func (dd *DynamoDBManager) updateErrorServiceStatus(err error) {
+	dd.collector.UpdateServiceStatus(collector.EventCollector{
+		ResourceName: dd.Name,
+		Data: collector.EventStatusData{
+			Status:       collector.EventError,
+			ErrorMessage: err.Error(),
+		},
+	})
 }

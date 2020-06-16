@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2]
+### Added
+- Add the total price for notification group in slack [[PR-63](https://github.com/similarweb/finala/pull/63)]
+### Fixed
+- Fix a bug wich supports mutilple regions prices [[PR-64](https://github.com/similarweb/finala/pull/64)]
+
 ## [0.3.1]
 ### Fixed
 - Fix a bug where we did not return the correct collector resource status

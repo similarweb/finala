@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.3]
+### Added
+- Add version command [[PR-66](https://github.com/similarweb/finala/pull/66)]
+
 ## [0.3.2]
 ### Added
 - Add the total price for notification group in slack [[PR-63](https://github.com/similarweb/finala/pull/63)]

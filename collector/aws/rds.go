@@ -258,8 +258,9 @@ func (r *RDSManager) DescribeInstances(Marker *string, instances []*rds.DBInstan
 	}
 
 	for _, instance := range resp.DBInstances {
-		// Bug in AWS api response. when filter RDS documentDB returned also.
-		if *instance.Engine != "docdb" {
+		// Ignore DocumentDB and Neptune engine types as we have a seperate
+		// module for them and the default API call returns them
+		if *instance.Engine != "docdb" && *instance.Engine != "neptune" {
 			instances = append(instances, instance)
 		}
 	}

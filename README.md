@@ -22,6 +22,8 @@ More to come...
 
 ## Screenshots
 
+### Architecture
+![alt Architecture](https://app.lucidchart.com/documents/view/acfd95e8-21ad-4b4e-9621-19b468a8078a)
 ### Dashboard
 ![alt Summary](https://raw.githubusercontent.com/similarweb/finala/master/docs/dashboard.png)
 
@@ -30,7 +32,7 @@ More to come...
 ![alt Resources](https://raw.githubusercontent.com/similarweb/finala/master/docs/resource.jpg)
 
 ### Notifications
-![alt Slack](docs/slack.png)
+![alt Slack](https://raw.githubusercontent.com/similarweb/finala/master/docs/slack.png)
 
 ## Getting Started
 

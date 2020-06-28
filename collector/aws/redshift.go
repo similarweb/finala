@@ -130,6 +130,7 @@ func (rdm *RedShiftManager) Detect() ([]DetectedRedShift, error) {
 
 			expression, err := expression.BoolExpression(formulaValue, metric.Constraint.Value, metric.Constraint.Operator)
 			if err != nil {
+				log.WithField("error", err).Error("could not parse expression")
 				continue
 			}
 

@@ -34,13 +34,18 @@ func TestQueryParamWithDefault(t *testing.T) {
 func TestGetFilterQueryParamWithOutPrefix(t *testing.T) {
 	queryPrefix := "bla_"
 	expectedValue := "stays"
+	expectedFiltersLen := 1
 	v := url.Values{}
+	v.Set(fmt.Sprintf("wrongprefix_%s", expectedValue), "value")
 	v.Set(fmt.Sprintf("bla_%s", expectedValue), "value")
 	filters := httpparameters.GetFilterQueryParamWithOutPrefix(queryPrefix, v)
 
 	t.Run("check_expected", func(t *testing.T) {
 		if _, ok := filters[expectedValue]; !ok {
 			t.Fatalf("The map of filters has unexpected filter key name, got:%v expected: %s", filters, expectedValue)
+		}
+		if len(filters) != expectedFiltersLen {
+			t.Fatalf("The amount of filters is unexpected, got:%d expected: %d", len(filters), expectedFiltersLen)
 		}
 	})
 }

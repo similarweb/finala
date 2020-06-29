@@ -263,6 +263,7 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 		err := json.Unmarshal([]byte(string(descOrderedExecutionIDs)), &executionsIDs)
 		if err != nil {
 			log.WithError(err).Error("error when trying to parse bucket aggregations execution ids")
+			return executions, nil
 		}
 
 		for _, executionIDValue := range executionsIDs.Buckets {
@@ -317,6 +318,7 @@ func (sm *StorageManager) GetResources(resourceType string, executionID string, 
 		err := json.Unmarshal([]byte(string(hit.Source)), &rowData)
 		if err != nil {
 			log.WithError(err).Error("error when trying to parse search result hits data")
+			continue
 		}
 
 		resources = append(resources, rowData)
@@ -336,7 +338,7 @@ func (sm *StorageManager) GetExecutionTags(executionID string) (map[string][]str
 	searchResult, err := sm.client.Search().
 		Query(elasticQuery).
 		Pretty(true).
-		Size(100).
+		Size(0).
 		Do(context.Background())
 
 	if err != nil {
@@ -349,6 +351,7 @@ func (sm *StorageManager) GetExecutionTags(executionID string) (map[string][]str
 		err := json.Unmarshal([]byte(string(hit.Source)), &availableTags)
 		if err != nil {
 			log.WithError(err).Error("error when trying to parse tags map")
+			continue
 		}
 
 		for key, value := range availableTags.Data.Tag {

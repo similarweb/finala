@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/aws/aws-sdk-go/service/redshift"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -79,6 +80,7 @@ func (app *Analyze) All() {
 			app.AnalyzeDynamoDB(sess, cloudWatchCLient, pricing)
 			app.AnalyzeNeptune(sess, cloudWatchCLient, pricing)
 			app.AnalyzeKinesis(sess, cloudWatchCLient, pricing)
+			app.AnalyzeRedShift(sess, cloudWatchCLient, pricing)
 		}
 	}
 
@@ -302,5 +304,21 @@ func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *Clou
 	}
 
 	return err
+}
 
+// AnalyzeRedShift will analyzes Redshift resources
+func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+	metrics, found := app.metrics["redshift"]
+	if !found {
+		return nil
+	}
+
+	redshift := NewRedShiftManager(app.cl, redshift.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	response, err := redshift.Detect()
+
+	if err == nil {
+		log.WithField("count", len(response)).Info("Total redshift resources detected")
+	}
+
+	return err
 }

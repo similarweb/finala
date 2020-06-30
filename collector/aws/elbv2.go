@@ -29,7 +29,6 @@ type ELBV2Manager struct {
 	pricingClient      *PricingManager
 	metrics            []config.MetricConfig
 	region             string
-	namespace          string
 	servicePricingCode string
 	Name               string
 }
@@ -38,7 +37,13 @@ type ELBV2Manager struct {
 type DetectedELBV2 struct {
 	Metric string
 	Region string
+	Type   string
 	collector.PriceDetectedFields
+}
+
+var loadBalancerCWNameSpace = map[string]string{
+	"application": "AWS/ApplicationELB",
+	"network":     "AWS/NetworkELB",
 }
 
 // NewELBV2Manager implements AWS GO SDK
@@ -51,8 +56,7 @@ func NewELBV2Manager(collector collector.CollectorDescriber, client ELBV2ClientD
 		metrics:            metrics,
 		pricingClient:      pricing,
 		region:             region,
-		namespace:          "AWS/ApplicationELB",
-		servicePricingCode: "AmazonEC2",
+		servicePricingCode: "AWSELB",
 		Name:               fmt.Sprintf("%s_elbv2", ResourcePrefix),
 	}
 }
@@ -89,10 +93,13 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 	now := time.Now()
 
 	for _, instance := range instances {
+		var cloudWatchNameSpace string
+		if cloudWatchNS, found := loadBalancerCWNameSpace[*instance.Type]; found {
+			cloudWatchNameSpace = cloudWatchNS
+		}
 
-		log.WithField("name", *instance.LoadBalancerName).Debug("cheking elbV2")
-
-		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput(), "", el.region)
+		log.WithField("name", *instance.LoadBalancerName).Debug("checking elbV2")
+		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput(instance), "", el.region)
 
 		for _, metric := range el.metrics {
 
@@ -110,13 +117,13 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 			elbv2Name := regx.ReplaceAllString(*instance.LoadBalancerArn, "")
 
 			metricInput := cloudwatch.GetMetricStatisticsInput{
-				Namespace:  &el.namespace,
+				Namespace:  &cloudWatchNameSpace,
 				MetricName: &metric.Description,
 				Period:     &period,
 				StartTime:  &metricEndTime,
 				EndTime:    &now,
 				Dimensions: []*cloudwatch.Dimension{
-					&cloudwatch.Dimension{
+					{
 						Name:  awsClient.String("LoadBalancer"),
 						Value: &elbv2Name,
 					},
@@ -169,6 +176,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 				elbv2 := DetectedELBV2{
 					Region: el.region,
 					Metric: metric.Description,
+					Type:   *instance.Type,
 					PriceDetectedFields: collector.PriceDetectedFields{
 						ResourceID:      *instance.LoadBalancerName,
 						LaunchTime:      *instance.CreatedTime,
@@ -203,32 +211,31 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 }
 
 // GetPricingFilterInput prepare document elb pricing filter
-func (el *ELBV2Manager) GetPricingFilterInput() *pricing.GetProductsInput {
+func (el *ELBV2Manager) GetPricingFilterInput(loadbalancer *elbv2.LoadBalancer) *pricing.GetProductsInput {
+
+	var loadBalancerProductFamily string
+	var loadBalancerGroupDescription string
+	switch *loadbalancer.Type {
+	case "application":
+		loadBalancerProductFamily = "Load Balancer-Application"
+		loadBalancerGroupDescription = "LoadBalancer hourly usage by Application Load Balancer"
+	case "network":
+		loadBalancerProductFamily = "Load Balancer-Network"
+		loadBalancerGroupDescription = "LoadBalancer hourly usage by Network Load Balancer"
+	}
 
 	return &pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
 		Filters: []*pricing.Filter{
-
-			&pricing.Filter{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("usagetype"),
-				Value: awsClient.String("LoadBalancerUsage"),
-			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("productFamily"),
-				Value: awsClient.String("Load Balancer-Application"),
+				Value: &loadBalancerProductFamily,
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("TermType"),
-				Value: awsClient.String("OnDemand"),
-			},
-
-			&pricing.Filter{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("group"),
-				Value: awsClient.String("ELB:Balancer"),
+				Field: awsClient.String("groupDescription"),
+				Value: &loadBalancerGroupDescription,
 			},
 		},
 	}

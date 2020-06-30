@@ -51,7 +51,7 @@ func NewELBManager(collector collector.CollectorDescriber, client ELBClientDescr
 		pricingClient:      pricing,
 		region:             region,
 		namespace:          "AWS/ELB",
-		servicePricingCode: "AmazonEC2",
+		servicePricingCode: "AWSELB",
 		Name:               fmt.Sprintf("%s_elb", ResourcePrefix),
 	}
 }
@@ -109,7 +109,7 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 				StartTime:  &metricEndTime,
 				EndTime:    &now,
 				Dimensions: []*cloudwatch.Dimension{
-					&cloudwatch.Dimension{
+					{
 						Name:  awsClient.String("LoadBalancerName"),
 						Value: instance.LoadBalancerName,
 					},
@@ -201,27 +201,15 @@ func (el *ELBManager) GetPricingFilterInput() *pricing.GetProductsInput {
 	return &pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
 		Filters: []*pricing.Filter{
-
-			&pricing.Filter{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("usagetype"),
-				Value: awsClient.String("LoadBalancerUsage"),
-			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("productFamily"),
-				Value: awsClient.String("Load Balancer-Application"),
+				Value: awsClient.String("Load Balancer"),
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("TermType"),
-				Value: awsClient.String("OnDemand"),
-			},
-
-			&pricing.Filter{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("group"),
-				Value: awsClient.String("ELB:Balancer"),
+				Field: awsClient.String("groupDescription"),
+				Value: awsClient.String("LoadBalancer hourly usage by Classic Load Balancer"),
 			},
 		},
 	}

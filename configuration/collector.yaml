@@ -139,6 +139,16 @@ providers:
             formula: "[PutRecord.Bytes] + [PutRecords.Bytes]"
             operator: "=="
             value: 0
+      redshift:
+        - description: Connection count
+          metrics:
+            - name: DatabaseConnections
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "=="
+            value: 0            
     resources:
       iamLastActivity:
         description: Last user activity

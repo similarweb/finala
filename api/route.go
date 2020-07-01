@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -32,13 +31,7 @@ func (server *Server) GetSummary(resp http.ResponseWriter, req *http.Request) {
 	queryParams := req.URL.Query()
 	params := mux.Vars(req)
 	executionID := params["executionID"]
-	filters := map[string]string{}
-
-	for queryParam, value := range queryParams {
-		if strings.HasPrefix(queryParam, queryParamFilterPrefix) {
-			filters[strings.TrimPrefix(queryParam, queryParamFilterPrefix)] = value[0]
-		}
-	}
+	filters := httpparameters.GetFilterQueryParamWithOutPrefix(queryParamFilterPrefix, queryParams)
 
 	response, err := server.storage.GetSummary(executionID, filters)
 	if err != nil {
@@ -63,10 +56,11 @@ func (server *Server) GetExecutions(resp http.ResponseWriter, req *http.Request)
 
 // GetResourceData return resuts details by resource type
 func (server *Server) GetResourceData(resp http.ResponseWriter, req *http.Request) {
-
+	queryParams := req.URL.Query()
 	queryErrs := url.Values{}
 	params := mux.Vars(req)
 	resourceType := params["type"]
+	filters := httpparameters.GetFilterQueryParamWithOutPrefix(queryParamFilterPrefix, queryParams)
 
 	executionID := req.URL.Query().Get("executionID")
 	if executionID == "" {
@@ -78,7 +72,22 @@ func (server *Server) GetResourceData(resp http.ResponseWriter, req *http.Reques
 		return
 	}
 
-	response, err := server.storage.GetResources(resourceType, executionID)
+	response, err := server.storage.GetResources(resourceType, executionID, filters)
+	if err != nil {
+		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
+		return
+
+	}
+	server.JSONWrite(resp, http.StatusOK, response)
+}
+
+// GetExecutionTags return resuts details by resource type
+func (server *Server) GetExecutionTags(resp http.ResponseWriter, req *http.Request) {
+
+	params := mux.Vars(req)
+	executionID := params["executionID"]
+
+	response, err := server.storage.GetExecutionTags(executionID)
 	if err != nil {
 		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
 		return

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"finala/api/config"
 	"finala/api/storage"
+	"finala/interpolation"
 	"reflect"
 	"strconv"
 	"strings"
@@ -13,13 +14,6 @@ import (
 	elastic "github.com/olivere/elastic/v7"
 	log "github.com/sirupsen/logrus"
 )
-
-// OrderedExecutionIDs will be the unmarshal response for ElasticSearch query  GetExecutions function
-type orderedExecutionIDs struct {
-	Buckets []struct {
-		Key string `json:"key"`
-	} `json:"buckets"`
-}
 
 const (
 	// indexMapping define the default index mapping
@@ -269,6 +263,7 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 		err := json.Unmarshal([]byte(string(descOrderedExecutionIDs)), &executionsIDs)
 		if err != nil {
 			log.WithError(err).Error("error when trying to parse bucket aggregations execution ids")
+			return executions, nil
 		}
 
 		for _, executionIDValue := range executionsIDs.Buckets {
@@ -297,15 +292,15 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 }
 
 // GetResources return resource data
-func (sm *StorageManager) GetResources(resourceType string, executionID string) ([]map[string]interface{}, error) {
+func (sm *StorageManager) GetResources(resourceType string, executionID string, filters map[string]string) ([]map[string]interface{}, error) {
 
 	var resources []map[string]interface{}
+	dynamicMatchQuery := sm.getDynamicMatchQuery(filters)
 	componentQ := elastic.NewMatchQuery("EventType", "resource_detected")
 	deploymentQ := elastic.NewMatchQuery("ExecutionID", executionID)
 	ResourceNameQ := elastic.NewMatchQuery("ResourceName", resourceType)
 	generalQ := elastic.NewBoolQuery()
-	generalQ = generalQ.Must(componentQ).Must(deploymentQ).Must(ResourceNameQ)
-
+	generalQ = generalQ.Must(componentQ).Must(deploymentQ).Must(ResourceNameQ).Must(dynamicMatchQuery...)
 	searchResult, err := sm.client.Search().
 		Query(generalQ).
 		Pretty(true).
@@ -323,12 +318,53 @@ func (sm *StorageManager) GetResources(resourceType string, executionID string) 
 		err := json.Unmarshal([]byte(string(hit.Source)), &rowData)
 		if err != nil {
 			log.WithError(err).Error("error when trying to parse search result hits data")
+			continue
 		}
 
 		resources = append(resources, rowData)
 	}
 
 	return resources, nil
+}
+
+// GetExecutionTags will return the tags according to a given executionID
+func (sm *StorageManager) GetExecutionTags(executionID string) (map[string][]string, error) {
+
+	tags := map[string][]string{}
+	eventTypeMatchQuery := elastic.NewMatchQuery("EventType", "resource_detected")
+	executionIDMatchQuery := elastic.NewMatchQuery("ExecutionID", executionID)
+	elasticQuery := elastic.Query(elastic.NewBoolQuery().Must(eventTypeMatchQuery, executionIDMatchQuery))
+
+	searchResult, err := sm.client.Search().
+		Query(elasticQuery).
+		Pretty(true).
+		Size(0).
+		Do(context.Background())
+
+	if err != nil {
+		log.WithError(err).Error("got an elasticsearch error while running the query")
+		return tags, err
+	}
+	var availableTags TagsData
+	for _, hit := range searchResult.Hits.Hits {
+
+		err := json.Unmarshal([]byte(string(hit.Source)), &availableTags)
+		if err != nil {
+			log.WithError(err).Error("error when trying to parse tags map")
+			continue
+		}
+
+		for key, value := range availableTags.Data.Tag {
+			tags[strings.Title(key)] = append(tags[strings.Title(key)], strings.ToLower(value))
+		}
+	}
+
+	// Make sure the values of each tag unique
+	for tagName, tagValues := range tags {
+		tags[tagName] = interpolation.UniqueStr(tagValues)
+	}
+
+	return tags, nil
 }
 
 // createIndex creating create elasticsearch index if not exists

@@ -289,3 +289,56 @@ func TestSave(t *testing.T) {
 	}
 
 }
+
+func TestGetExecutionTags(t *testing.T) {
+	ms, _ := MockServer()
+	ms.BindEndpoints()
+	ms.Serve()
+
+	testCases := []struct {
+		endpoint           string
+		expectedStatusCode int
+		Count              int
+	}{
+		{"/api/v1/tags/1", http.StatusOK, 2},
+		{"/api/v1/tags/err", http.StatusInternalServerError, 2},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.endpoint, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", test.endpoint, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			ms.Router().ServeHTTP(rr, req)
+			if rr.Code != test.expectedStatusCode {
+				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
+			}
+			if test.expectedStatusCode == http.StatusOK {
+				body, err := ioutil.ReadAll(rr.Body)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				tagsData := &map[string][]string{}
+
+				err = json.Unmarshal(body, tagsData)
+				if err != nil {
+					t.Fatalf("Could not parse http response")
+				}
+
+				if len(*tagsData) != test.Count {
+					t.Fatalf("unexpected tags response, got %d expected %d", len(*tagsData), test.Count)
+				}
+			} else {
+				if test.expectedStatusCode != rr.Code {
+					t.Fatalf("unexpected status code, got %d expected %d", rr.Code, test.expectedStatusCode)
+				}
+			}
+
+		})
+	}
+
+}

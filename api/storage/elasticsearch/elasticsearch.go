@@ -335,16 +335,32 @@ func (sm *StorageManager) GetExecutionTags(executionID string) (map[string][]str
 	executionIDMatchQuery := elastic.NewMatchQuery("ExecutionID", executionID)
 	elasticQuery := elastic.Query(elastic.NewBoolQuery().Must(eventTypeMatchQuery, executionIDMatchQuery))
 
-	searchResult, err := sm.client.Search().
+	// First get the Query Size for all the hits
+	searchResultHits, err := sm.client.Search().
 		Query(elasticQuery).
 		Pretty(true).
 		Size(0).
 		Do(context.Background())
 
 	if err != nil {
+		log.WithError(err).Error("got an elasticsearch error while running the query to get the hits number")
+		return tags, err
+	}
+
+	searchResultQuerySize := int(searchResultHits.TotalHits())
+
+	// Second query with the size of the hits
+	searchResult, err := sm.client.Search().
+		Query(elasticQuery).
+		Pretty(true).
+		Size(searchResultQuerySize).
+		Do(context.Background())
+
+	if err != nil {
 		log.WithError(err).Error("got an elasticsearch error while running the query")
 		return tags, err
 	}
+
 	var availableTags TagsData
 	for _, hit := range searchResult.Hits.Hits {
 

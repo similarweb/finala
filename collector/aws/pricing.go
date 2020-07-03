@@ -19,32 +19,38 @@ const (
 	defaultRateCode = "6YS6EN2CT7"
 )
 
-var regionToLocation = map[string]string{
-	"us-east-2":      "US East (Ohio)",
-	"us-east-1":      "US East (N. Virginia)",
-	"us-west-1":      "US West (N. California)",
-	"us-west-2":      "US West (Oregon)",
-	"ap-east-1":      "Asia Pacific (Hong Kong)",
-	"ap-south-1":     "Asia Pacific (Mumbai)",
-	"ap-northeast-3": "Asia Pacific (Osaka-Local)",
-	"ap-northeast-2": "Asia Pacific (Seoul)",
-	"ap-southeast-1": "Asia Pacific (Singapore)",
-	"ap-southeast-2": "Asia Pacific (Sydney)",
-	"ap-northeast-1": "Asia Pacific (Tokyo)",
-	"ca-central-1":   "Canada (Central)",
-	"cn-north-1":     "China (Beijing)",
-	"cn-northwest-1": "China (Ningxia)",
-	"eu-central-1":   "EU (Frankfurt)",
-	"eu-west-1":      "EU (Ireland)",
-	"eu-west-2":      "EU (London)",
-	"eu-west-3":      "EU (Paris)",
-	"eu-south-1":     "EU (Milan)",
-	"eu-north-1":     "EU (Stockholm)",
-	"sa-east-1":      "South America (Sao Paulo)",
-	"us-gov-east-1":  "AWS GovCloud (US-East)",
-	"us-gov-west-1":  "AWS GovCloud (US)",
-	"af-south-1":     "Africa (Cape Town)",
-	"me-south-1":     "Middle East (Bahrain)",
+// regionInfo will hold data about a region pricing options
+type regionInfo struct {
+	fullName string
+	prefix   string
+}
+
+var regionsInfo = map[string]regionInfo{
+	"us-east-2":      {fullName: "US East (Ohio)", prefix: "USE2"},
+	"us-east-1":      {fullName: "US East (N. Virginia)", prefix: ""},
+	"us-west-1":      {fullName: "US West (N. California)", prefix: "USW1"},
+	"us-west-2":      {fullName: "US West (Oregon)", prefix: "USW2"},
+	"ap-east-1":      {fullName: "Asia Pacific (Hong Kong)", prefix: "APE1"},
+	"ap-south-1":     {fullName: "Asia Pacific (Mumbai)", prefix: ""},
+	"ap-northeast-3": {fullName: "Asia Pacific (Osaka-Local)", prefix: "APN3"},
+	"ap-northeast-2": {fullName: "Asia Pacific (Seoul)", prefix: "APN2"},
+	"ap-southeast-1": {fullName: "Asia Pacific (Singapore)", prefix: "APS1"},
+	"ap-southeast-2": {fullName: "Asia Pacific (Sydney)", prefix: "APS2"},
+	"ap-northeast-1": {fullName: "Asia Pacific (Tokyo)", prefix: "APN1"},
+	"ca-central-1":   {fullName: "Canada (Central)", prefix: "CAN1"},
+	"cn-north-1":     {fullName: "China (Beijing)", prefix: ""},
+	"cn-northwest-1": {fullName: "China (Ningxia)", prefix: ""},
+	"eu-central-1":   {fullName: "EU (Frankfurt)", prefix: "EUC1"},
+	"eu-west-1":      {fullName: "EU (Ireland)", prefix: "EUW1"},
+	"eu-west-2":      {fullName: "EU (London)", prefix: "EUW2"},
+	"eu-west-3":      {fullName: "EU (Paris)", prefix: "EUW3"},
+	"eu-south-1":     {fullName: "EU (Milan)", prefix: "EUS1"},
+	"eu-north-1":     {fullName: "EU (Stockholm)", prefix: "EUN1"},
+	"sa-east-1":      {fullName: "South America (Sao Paulo)", prefix: "SAE1"},
+	"us-gov-east-1":  {fullName: "AWS GovCloud (US-East)", prefix: "UGE1"},
+	"us-gov-west-1":  {fullName: "AWS GovCloud (US)", prefix: "UGW1"},
+	"af-south-1":     {fullName: "Africa (Cape Town)", prefix: "AFS1"},
+	"me-south-1":     {fullName: "Middle East (Bahrain)", prefix: "MES1"},
 }
 
 // PricingClientDescreptor is an interface defining the aws pricing client
@@ -95,7 +101,7 @@ type PriceCurrencyCode struct {
 // NewPricingManager implements AWS GO SDK
 func NewPricingManager(client PricingClientDescreptor, region string) *PricingManager {
 
-	log.Debug("Init aws pricing SDK client")
+	log.Debug("Initializing aws pricing SDK client")
 	return &PricingManager{
 		client:         client,
 		region:         region,
@@ -103,22 +109,24 @@ func NewPricingManager(client PricingClientDescreptor, region string) *PricingMa
 	}
 }
 
-// GetPrice return the product price by given product filter
-// The result (of the given product input) should be only one product.
+// GetPrice returns the product price filtered by product filters
+// The result (of the given product input) should be only one product as a specific product with specific usage
+// Should have only 1 price to calculate total price
 func (p *PricingManager) GetPrice(input *pricing.GetProductsInput, rateCode string, region string) (float64, error) {
 
 	if rateCode == "" {
 		rateCode = defaultRateCode
 	}
-	location, found := regionToLocation[region]
+
+	regionInfo, found := regionsInfo[region]
 	if !found {
-		return 0, errors.New("Given region not found")
+		return 0, errors.New("Given region was not found")
 	}
 
 	input.Filters = append(input.Filters, &pricing.Filter{
 		Type:  awsClient.String("TERM_MATCH"),
 		Field: awsClient.String("location"),
-		Value: awsClient.String(location),
+		Value: awsClient.String(regionInfo.fullName),
 	})
 
 	hash, err := hashstructure.Hash(input, nil)
@@ -145,7 +153,7 @@ func (p *PricingManager) GetPrice(input *pricing.GetProductsInput, rateCode stri
 			"products":     len(priceResponse.PriceList),
 		}).Error("Price list response should be equal to 1 product")
 
-		return 0, errors.New(fmt.Sprint("Pricelice response should be equal to 1 product"))
+		return 0, errors.New(fmt.Sprint("Price list response should be equal only to 1 product"))
 	}
 
 	product := priceResponse.PriceList[0]
@@ -155,7 +163,7 @@ func (p *PricingManager) GetPrice(input *pricing.GetProductsInput, rateCode stri
 		log.WithError(err).WithFields(log.Fields{
 			"search_query": input,
 			"product":      product,
-		}).Error("could not encoded JSON value")
+		}).Error("could not encode JSON value")
 		return 0, err
 	}
 
@@ -177,7 +185,7 @@ func (p *PricingManager) GetPrice(input *pricing.GetProductsInput, rateCode stri
 		log.WithError(err).WithFields(log.Fields{
 			"search_query": input,
 			"product":      product,
-		}).Error("could not pare USD price from string to float64")
+		}).Error("could not parse USD price from string to float64")
 		return 0, err
 	}
 
@@ -188,4 +196,19 @@ func (p *PricingManager) GetPrice(input *pricing.GetProductsInput, rateCode stri
 		"price": price,
 	}).Debug("AWS resource price was found")
 	return price, nil
+}
+
+// GetRegionPrefix will return the prefix for a
+// pricing filter value according to a given region.
+// For example:
+// Region: "us-east-2" prefix will be: "USE2-"
+func (p *PricingManager) GetRegionPrefix(region string) string {
+	var prefix string
+	switch regionsInfo[region].prefix {
+	case "":
+		prefix = ""
+	default:
+		prefix = fmt.Sprintf("%s-", regionsInfo[region].prefix)
+	}
+	return prefix
 }

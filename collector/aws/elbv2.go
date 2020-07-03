@@ -33,7 +33,7 @@ type ELBV2Manager struct {
 	Name               string
 }
 
-// DetectedELBV2 define the detected AWS ELB instances
+// DetectedELBV2 defines the detected AWS ELB instances
 type DetectedELBV2 struct {
 	Metric string
 	Region string
@@ -41,9 +41,33 @@ type DetectedELBV2 struct {
 	collector.PriceDetectedFields
 }
 
-var loadBalancerCWNameSpace = map[string]string{
-	"application": "AWS/ApplicationELB",
-	"network":     "AWS/NetworkELB",
+// loadBalancerConfig defines loadbalancer's configuration of metrics and pricing
+type loadBalancerConfig struct {
+	cloudWatchNamespace string
+	pricingfilters      []*pricing.Filter
+}
+
+var loadBalancersConfig = map[string]loadBalancerConfig{
+	"application": {
+		cloudWatchNamespace: "AWS/ApplicationELB",
+		pricingfilters: []*pricing.Filter{
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("productFamily"),
+				Value: awsClient.String("Load Balancer-Application"),
+			},
+		},
+	},
+	"network": {
+		cloudWatchNamespace: "AWS/NetworkELB",
+		pricingfilters: []*pricing.Filter{
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("productFamily"),
+				Value: awsClient.String("Load Balancer-Network"),
+			},
+		},
+	},
 }
 
 // NewELBV2Manager implements AWS GO SDK
@@ -94,13 +118,28 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 
 	for _, instance := range instances {
 		var cloudWatchNameSpace string
-		if cloudWatchNS, found := loadBalancerCWNameSpace[*instance.Type]; found {
-			cloudWatchNameSpace = cloudWatchNS
+		var price float64
+		if loadBalancerConfig, found := loadBalancersConfig[*instance.Type]; found {
+			cloudWatchNameSpace = loadBalancerConfig.cloudWatchNamespace
+
+			if cloudWatchNameSpace == "" {
+				log.WithError(err).WithFields(log.Fields{
+					"name": *instance.LoadBalancerName,
+					"type": *instance.Type,
+				}).Error("Could not get CloudWatch namespace because of unknown loadbalancer type")
+				continue
+			}
+
+			log.WithField("name", *instance.LoadBalancerName).Debug("checking elbV2")
+			pricingRegionPrefix := el.pricingClient.GetRegionPrefix(el.region)
+			loadBalancerConfig.pricingfilters = append(
+				loadBalancerConfig.pricingfilters, &pricing.Filter{
+					Type:  awsClient.String("TERM_MATCH"),
+					Field: awsClient.String("usagetype"),
+					Value: awsClient.String(fmt.Sprintf("%sLoadBalancerUsage", pricingRegionPrefix)),
+				})
+			price, _ = el.pricingClient.GetPrice(el.GetPricingFilterInput(loadBalancerConfig.pricingfilters), "", el.region)
 		}
-
-		log.WithField("name", *instance.LoadBalancerName).Debug("checking elbV2")
-		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput(instance), "", el.region)
-
 		for _, metric := range el.metrics {
 
 			log.WithFields(log.Fields{
@@ -211,33 +250,22 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 }
 
 // GetPricingFilterInput prepare document elb pricing filter
-func (el *ELBV2Manager) GetPricingFilterInput(loadbalancer *elbv2.LoadBalancer) *pricing.GetProductsInput {
+func (el *ELBV2Manager) GetPricingFilterInput(extraFilters []*pricing.Filter) *pricing.GetProductsInput {
+	filters := []*pricing.Filter{
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("termType"),
+			Value: awsClient.String("OnDemand"),
+		},
+	}
 
-	var loadBalancerProductFamily string
-	var loadBalancerGroupDescription string
-	switch *loadbalancer.Type {
-	case "application":
-		loadBalancerProductFamily = "Load Balancer-Application"
-		loadBalancerGroupDescription = "LoadBalancer hourly usage by Application Load Balancer"
-	case "network":
-		loadBalancerProductFamily = "Load Balancer-Network"
-		loadBalancerGroupDescription = "LoadBalancer hourly usage by Network Load Balancer"
+	if extraFilters != nil {
+		filters = append(filters, extraFilters...)
 	}
 
 	return &pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
-		Filters: []*pricing.Filter{
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("productFamily"),
-				Value: &loadBalancerProductFamily,
-			},
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("groupDescription"),
-				Value: &loadBalancerGroupDescription,
-			},
-		},
+		Filters:     filters,
 	}
 }
 

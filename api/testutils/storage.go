@@ -65,7 +65,7 @@ func (ms *MockStorage) GetExecutions(queryLimit int) ([]storage.Executions, erro
 	return response, nil
 }
 
-func (ms *MockStorage) GetResources(resourceType string, executionID string) ([]map[string]interface{}, error) {
+func (ms *MockStorage) GetResources(resourceType string, executionID string, filters map[string]string) ([]map[string]interface{}, error) {
 
 	var response []map[string]interface{}
 
@@ -83,6 +83,21 @@ func (ms *MockStorage) GetResources(resourceType string, executionID string) ([]
 	rowData1["test1"] = tempStruct{Data: "1"}
 	response = append(response, rowData)
 	response = append(response, rowData1)
+
+	return response, nil
+
+}
+
+func (ms *MockStorage) GetExecutionTags(executionID string) (map[string][]string, error) {
+
+	response := map[string][]string{}
+
+	if executionID == "err" {
+		return response, errors.New("error")
+	}
+
+	response["Tagfact_worker_group"] = []string{"b2c", "web-staging", "data-collecton"}
+	response["Team"] = []string{"df", "web", "b2c", "bidev", "data-collection", "production-engineers"}
 
 	return response, nil
 

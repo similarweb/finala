@@ -25,6 +25,9 @@ jobs:
       uses: actions/checkout@v1   
     - name: Run tests
       run: |
-        make test 
+        make test
+    - name: CodeCov
+      run: |
+        bash <(curl -s https://codecov.io/bash) -f cover.out
     
         

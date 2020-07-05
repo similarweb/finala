@@ -115,6 +115,13 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 	}
 
 	now := time.Now()
+	pricingRegionPrefix, err := el.pricingClient.GetRegionPrefix(el.region)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"region": el.region,
+		}).Error("Could not get pricing region prefix")
+		return detectedELBV2, err
+	}
 
 	for _, instance := range instances {
 		var cloudWatchNameSpace string
@@ -122,16 +129,8 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 		if loadBalancerConfig, found := loadBalancersConfig[*instance.Type]; found {
 			cloudWatchNameSpace = loadBalancerConfig.cloudWatchNamespace
 
-			if cloudWatchNameSpace == "" {
-				log.WithError(err).WithFields(log.Fields{
-					"name": *instance.LoadBalancerName,
-					"type": *instance.Type,
-				}).Error("Could not get CloudWatch namespace because of unknown loadbalancer type")
-				continue
-			}
-
 			log.WithField("name", *instance.LoadBalancerName).Debug("checking elbV2")
-			pricingRegionPrefix := el.pricingClient.GetRegionPrefix(el.region)
+
 			loadBalancerConfig.pricingfilters = append(
 				loadBalancerConfig.pricingfilters, &pricing.Filter{
 					Type:  awsClient.String("TERM_MATCH"),

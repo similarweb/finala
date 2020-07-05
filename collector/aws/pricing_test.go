@@ -107,14 +107,22 @@ func TestGetRegionPrefix(t *testing.T) {
 		{"us-east-1", ""},
 		{"us-west-1", "USW1-"},
 		{"ap-northeast-2", "APN2-"},
+		{"bla", ""},
 	}
 
 	pricingManager := aws.NewPricingManager(&defaultPricingMock, "us-east-1")
 	for _, tc := range testCases {
 		t.Run(tc.region, func(t *testing.T) {
-			pricingValuePrefix := pricingManager.GetRegionPrefix(tc.region)
-			if tc.expectedPrefix != pricingValuePrefix {
-				t.Fatalf("unexpected pricing value prefix, got: %s, expected: %s", pricingValuePrefix, tc.expectedPrefix)
+			if tc.region != "bla" {
+				pricingValuePrefix, _ := pricingManager.GetRegionPrefix(tc.region)
+				if tc.expectedPrefix != pricingValuePrefix {
+					t.Fatalf("unexpected pricing value prefix, got: %s, expected: %s", pricingValuePrefix, tc.expectedPrefix)
+				}
+			} else {
+				_, err := pricingManager.GetRegionPrefix(tc.region)
+				if err == nil {
+					t.Fatalf("expected an error for getRegionPrefix")
+				}
 			}
 		})
 	}

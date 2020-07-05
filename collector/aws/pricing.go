@@ -153,7 +153,7 @@ func (p *PricingManager) GetPrice(input *pricing.GetProductsInput, rateCode stri
 			"products":     len(priceResponse.PriceList),
 		}).Error("Price list response should be equal to 1 product")
 
-		return 0, errors.New(fmt.Sprint("Price list response should be equal only to 1 product"))
+		return 0, errors.New("Price list response should be equal only to 1 product")
 	}
 
 	product := priceResponse.PriceList[0]
@@ -202,13 +202,18 @@ func (p *PricingManager) GetPrice(input *pricing.GetProductsInput, rateCode stri
 // pricing filter value according to a given region.
 // For example:
 // Region: "us-east-2" prefix will be: "USE2-"
-func (p *PricingManager) GetRegionPrefix(region string) string {
+func (p *PricingManager) GetRegionPrefix(region string) (string, error) {
 	var prefix string
-	switch regionsInfo[region].prefix {
+	regionInfo, found := regionsInfo[region]
+	if !found {
+		return "", errors.New("region was not found as part of the regionsInfo map")
+	}
+
+	switch regionInfo.prefix {
 	case "":
 		prefix = ""
 	default:
 		prefix = fmt.Sprintf("%s-", regionsInfo[region].prefix)
 	}
-	return prefix
+	return prefix, nil
 }

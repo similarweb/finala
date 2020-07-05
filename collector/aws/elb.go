@@ -88,9 +88,16 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 
 	now := time.Now()
 
+	pricingRegionPrefix, err := el.pricingClient.GetRegionPrefix(el.region)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"region": el.region,
+		}).Error("Could not get pricing region prefix")
+		return detectedELB, err
+	}
+
 	for _, instance := range instances {
 		log.WithField("name", *instance.LoadBalancerName).Debug("checking elb")
-		pricingRegionPrefix := el.pricingClient.GetRegionPrefix(el.region)
 		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput([]*pricing.Filter{
 			{
 				Type:  awsClient.String("TERM_MATCH"),

@@ -85,7 +85,7 @@ func NewStorageManager(conf config.ElasticsearchConfig) (*StorageManager, error)
 		client:       esclient,
 		defaultIndex: conf.Index,
 	}
-
+	storageManager.createIndex(conf.Index)
 	return storageManager, nil
 }
 
@@ -405,5 +405,7 @@ func (sm *StorageManager) createIndex(index string) {
 			"index": index,
 		}).WithError(err).Error("Error when trying to create elasticsearch index")
 	}
+
+	log.WithField("index", index).Info("index created successfully")
 
 }

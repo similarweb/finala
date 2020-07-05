@@ -16,9 +16,6 @@ var (
 	// cfgFile contine the path to the configuration file
 	cfgFile string
 
-	// err define for a global cmd error
-	err error
-
 	// Finala version
 	mainVersion = "0.3.3"
 )

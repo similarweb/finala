@@ -232,12 +232,10 @@ func (rdm *RedShiftManager) DescribeClusters(Marker *string, redshiftsClusters [
 		redshiftsClusters = []*redshift.Cluster{}
 	}
 
-	for _, redshiftCluster := range resp.Clusters {
-		redshiftsClusters = append(redshiftsClusters, redshiftCluster)
-	}
+	redshiftsClusters = append(redshiftsClusters, resp.Clusters...)
 
 	if resp.Marker != nil {
-		rdm.DescribeClusters(resp.Marker, redshiftsClusters)
+		return rdm.DescribeClusters(resp.Marker, redshiftsClusters)
 	}
 
 	return redshiftsClusters, nil

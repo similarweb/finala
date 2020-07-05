@@ -110,7 +110,7 @@ func (np *NeptuneManager) Detect() ([]DetectedAWSNeptune, error) {
 				StartTime: &metricEndTime,
 				EndTime:   &now,
 				Dimensions: []*cloudwatch.Dimension{
-					&cloudwatch.Dimension{
+					{
 						Name:  awsClient.String("DBInstanceIdentifier"),
 						Value: instance.DBInstanceIdentifier,
 					},
@@ -204,18 +204,17 @@ func (np *NeptuneManager) GetPricingFilterInput(instance *neptune.DBInstance) *p
 	return &pricing.GetProductsInput{
 		ServiceCode: &np.servicePricingCode,
 		Filters: []*pricing.Filter{
-
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("databaseEngine"),
 				Value: awsClient.String("Amazon Neptune"),
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("instanceType"),
 				Value: instance.DBInstanceClass,
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("deploymentOption"),
 				Value: &deploymentOption,
@@ -230,7 +229,7 @@ func (np *NeptuneManager) DescribeInstances(Marker *string, instances []*neptune
 	input := &neptune.DescribeDBInstancesInput{
 		Marker: Marker,
 		Filters: []*neptune.Filter{
-			&neptune.Filter{
+			{
 				Name:   awsClient.String("engine"),
 				Values: []*string{awsClient.String("neptune")},
 			},
@@ -246,12 +245,10 @@ func (np *NeptuneManager) DescribeInstances(Marker *string, instances []*neptune
 		instances = []*neptune.DBInstance{}
 	}
 
-	for _, instance := range resp.DBInstances {
-		instances = append(instances, instance)
-	}
+	instances = append(instances, resp.DBInstances...)
 
 	if resp.Marker != nil {
-		np.DescribeInstances(resp.Marker, instances)
+		return np.DescribeInstances(resp.Marker, instances)
 	}
 
 	return instances, nil

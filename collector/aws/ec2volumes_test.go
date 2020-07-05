@@ -157,7 +157,7 @@ func TestGetBasePricingFilterInput(t *testing.T) {
 	})
 	t.Run("default filters", func(t *testing.T) {
 		extraFilter := []*pricing.Filter{
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("test"),
 				Value: awsClient.String("foo"),

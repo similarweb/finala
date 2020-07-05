@@ -210,11 +210,10 @@ func (ev *EC2VolumeManager) Describe(token *string, volumes []*ec2.Volume) ([]*e
 		volumes = []*ec2.Volume{}
 	}
 
-	for _, vol := range resp.Volumes {
-		volumes = append(volumes, vol)
-	}
+	volumes = append(volumes, resp.Volumes...)
+
 	if resp.NextToken != nil {
-		ev.Describe(resp.NextToken, volumes)
+		return ev.Describe(resp.NextToken, volumes)
 	}
 
 	return volumes, nil

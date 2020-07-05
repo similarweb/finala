@@ -1,0 +1,10 @@
+on: [push]
+name: Fmt
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: fmt
+      run: |  
+        make fmt 

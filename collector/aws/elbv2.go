@@ -116,7 +116,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 				StartTime:  &metricEndTime,
 				EndTime:    &now,
 				Dimensions: []*cloudwatch.Dimension{
-					&cloudwatch.Dimension{
+					{
 						Name:  awsClient.String("LoadBalancer"),
 						Value: &elbv2Name,
 					},
@@ -208,24 +208,23 @@ func (el *ELBV2Manager) GetPricingFilterInput() *pricing.GetProductsInput {
 	return &pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
 		Filters: []*pricing.Filter{
-
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("usagetype"),
 				Value: awsClient.String("LoadBalancerUsage"),
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("productFamily"),
 				Value: awsClient.String("Load Balancer-Application"),
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("TermType"),
 				Value: awsClient.String("OnDemand"),
 			},
 
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("group"),
 				Value: awsClient.String("ELB:Balancer"),
@@ -251,12 +250,10 @@ func (el *ELBV2Manager) DescribeLoadbalancers(marker *string, loadbalancers []*e
 		loadbalancers = []*elbv2.LoadBalancer{}
 	}
 
-	for _, lb := range resp.LoadBalancers {
-		loadbalancers = append(loadbalancers, lb)
-	}
+	loadbalancers = append(loadbalancers, resp.LoadBalancers...)
 
 	if resp.NextMarker != nil {
-		el.DescribeLoadbalancers(resp.NextMarker, loadbalancers)
+		return el.DescribeLoadbalancers(resp.NextMarker, loadbalancers)
 	}
 
 	return loadbalancers, nil

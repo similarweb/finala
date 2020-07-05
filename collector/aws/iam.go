@@ -174,12 +174,10 @@ func (im *IAMManager) GetUsers(marker *string, users []*iam.User) ([]*iam.User, 
 		users = []*iam.User{}
 	}
 
-	for _, user := range resp.Users {
-		users = append(users, user)
-	}
+	users = append(users, resp.Users...)
 
 	if resp.Marker != nil {
-		im.GetUsers(resp.Marker, users)
+		return im.GetUsers(resp.Marker, users)
 	}
 
 	return users, nil

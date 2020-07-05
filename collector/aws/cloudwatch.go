@@ -39,7 +39,7 @@ func (cw *CloudwatchManager) GetMetric(metricInput *cloudwatch.GetMetricStatisti
 
 	log.WithField("filter", metrics).Debug("Get cloudwatch metric")
 
-	metricsResponseValue := make(map[string]interface{}, 0)
+	metricsResponseValue := make(map[string]interface{})
 
 	var calculatedMetricValue float64
 	for _, metric := range metrics.Data {

@@ -230,7 +230,6 @@ func (el *ELBManager) GetPricingFilterInput(extraFilters []*pricing.Filter) *pri
 	return &pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
 		Filters:     filters,
-
 	}
 }
 

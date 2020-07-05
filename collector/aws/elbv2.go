@@ -265,7 +265,6 @@ func (el *ELBV2Manager) GetPricingFilterInput(extraFilters []*pricing.Filter) *p
 	return &pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
 		Filters:     filters,
-
 	}
 }
 

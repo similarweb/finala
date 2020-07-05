@@ -300,15 +300,13 @@ func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *Clou
 		log.WithField("count", len(response)).Info("Total Kinesis data streams detected")
 	}
 
-
-	return err
 }
 
 // AnalyzeRedShift will analyzes Redshift resources
-func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager)  {
+func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["redshift"]
 	if !found {
-    log.WithField("resource_name", "redshift").Info("resource not configure")
+		log.WithField("resource_name", "redshift").Info("resource not configure")
 		return
 	}
 

@@ -13,7 +13,8 @@ type StorageDescriber interface {
 	Save(data string) bool
 	GetSummary(executionID string, filters map[string]string) (map[string]CollectorsSummary, error)
 	GetExecutions(querylimit int) ([]Executions, error)
-	GetResources(resourceType string, executionID string) ([]map[string]interface{}, error)
+	GetResources(resourceType string, executionID string, filters map[string]string) ([]map[string]interface{}, error)
+	GetExecutionTags(executionID string) (map[string][]string, error)
 }
 
 // Executions defines the collectors execution  data

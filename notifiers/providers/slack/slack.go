@@ -1,6 +1,7 @@
 package slack
 
 import (
+	"finala/interpolation"
 	"finala/notifiers/common"
 	notifierCommon "finala/notifiers/common"
 	"fmt"
@@ -125,7 +126,7 @@ func (sm *Manager) prepareAttachment(message common.NotifierReport, tags []strin
 func (sm *Manager) Send(message notifierCommon.NotifierReport) {
 	message.Log.WithField("notify_by_tags", sm.config.NotifyByTags).
 		Debug("notify by tags values")
-	for _, to := range distinct(append(message.NotifyByTag.NotifyTo, sm.config.DefaultChannels...)) {
+	for _, to := range interpolation.UniqueStr(append(message.NotifyByTag.NotifyTo, sm.config.DefaultChannels...)) {
 		if to == "" {
 			message.Log.WithField("to", to).
 				Debug("The command did not get any subscribers to send notifications")
@@ -196,17 +197,4 @@ func (sm *Manager) getChannelID(to string) (string, error) {
 		return to, nil
 	}
 	return sm.getUserIDByEmail(to)
-}
-
-// distinct de-duplicates a slice
-func distinct(inputSlice []string) []string {
-	keys := make(map[string]struct{})
-	var list []string
-	for _, entry := range inputSlice {
-		if _, value := keys[entry]; !value {
-			keys[entry] = struct{}{}
-			list = append(list, entry)
-		}
-	}
-	return list
 }

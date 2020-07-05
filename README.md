@@ -20,6 +20,8 @@ AWS:
 * Lambda
 * Neptune
 * Kinesis
+* RedShift
+
 More to come...
 
 ## Screenshots

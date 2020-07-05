@@ -90,8 +90,14 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 
 	for _, instance := range instances {
 		log.WithField("name", *instance.LoadBalancerName).Debug("checking elb")
-
-		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput(), "", el.region)
+		pricingRegionPrefix := el.pricingClient.GetRegionPrefix(el.region)
+		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput([]*pricing.Filter{
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("usagetype"),
+				Value: awsClient.String(fmt.Sprintf("%sLoadBalancerUsage", pricingRegionPrefix)),
+			},
+		}), "", el.region)
 
 		for _, metric := range el.metrics {
 
@@ -196,22 +202,28 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 }
 
 // GetPricingFilterInput prepare document elb pricing filter
-func (el *ELBManager) GetPricingFilterInput() *pricing.GetProductsInput {
+func (el *ELBManager) GetPricingFilterInput(extraFilters []*pricing.Filter) *pricing.GetProductsInput {
+
+	filters := []*pricing.Filter{
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("termType"),
+			Value: awsClient.String("OnDemand"),
+		},
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("productFamily"),
+			Value: awsClient.String("Load Balancer"),
+		},
+	}
+
+	if extraFilters != nil {
+		filters = append(filters, extraFilters...)
+	}
 
 	return &pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
-		Filters: []*pricing.Filter{
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("productFamily"),
-				Value: awsClient.String("Load Balancer"),
-			},
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("groupDescription"),
-				Value: awsClient.String("LoadBalancer hourly usage by Classic Load Balancer"),
-			},
-		},
+		Filters:     filters,
 	}
 }
 

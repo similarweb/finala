@@ -90,7 +90,7 @@ func (app *Analyze) All() {
 func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["ec2"]
 	if !found {
-		log.WithField("resource_name", "ec2").Info("resource not configure")
+		log.WithField("resource_name", "ec2").Info("resource was not configured")
 		return
 	}
 
@@ -109,7 +109,7 @@ func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient 
 func (app *Analyze) IAMUsers(sess *session.Session) {
 	resource, found := app.resources["iamLastActivity"]
 	if !found {
-		log.WithField("resource_name", "iamLastActivity").Info("resource not configure")
+		log.WithField("resource_name", "iamLastActivity").Info("resource was not configured")
 		return
 	}
 
@@ -134,7 +134,7 @@ func (app *Analyze) IAMUsers(sess *session.Session) {
 func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["elb"]
 	if !found {
-		log.WithField("resource_name", "elb").Info("resource not configure")
+		log.WithField("resource_name", "elb").Info("resource was not configured")
 		return
 	}
 
@@ -152,7 +152,7 @@ func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *Cloudwat
 func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["elbv2"]
 	if !found {
-		log.WithField("resource_name", "elbv2").Info("resource not configure")
+		log.WithField("resource_name", "elbv2").Info("resource was not configured")
 		return
 	}
 
@@ -170,7 +170,7 @@ func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *Cloudw
 func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["elasticache"]
 	if !found {
-		log.WithField("resource_name", "elasticache").Info("resource not configure")
+		log.WithField("resource_name", "elasticache").Info("resource was not configured")
 		return
 	}
 
@@ -188,7 +188,7 @@ func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *
 func (app *Analyze) AnalyzeRDS(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["rds"]
 	if !found {
-		log.WithField("resource_name", "rds").Info("resource not configure")
+		log.WithField("resource_name", "rds").Info("resource was not configured")
 		return
 	}
 
@@ -206,7 +206,7 @@ func (app *Analyze) AnalyzeRDS(sess *session.Session, cloudWatchCLient *Cloudwat
 func (app *Analyze) AnalyzeDynamoDB(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["dynamodb"]
 	if !found {
-		log.WithField("resource_name", "dynamodb").Info("resource not configure")
+		log.WithField("resource_name", "dynamodb").Info("resource was not configured")
 		return
 	}
 
@@ -224,7 +224,7 @@ func (app *Analyze) AnalyzeDynamoDB(sess *session.Session, cloudWatchCLient *Clo
 func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["docDB"]
 	if !found {
-		log.WithField("resource_name", "docDB").Info("resource not configure")
+		log.WithField("resource_name", "docDB").Info("resource was not configured")
 		return
 	}
 
@@ -242,7 +242,7 @@ func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *Cloudw
 func (app *Analyze) AnalyzeLambda(sess *session.Session, cloudWatchCLient *CloudwatchManager) {
 	metrics, found := app.metrics["lambda"]
 	if !found {
-		log.WithField("resource_name", "lambda").Info("resource not configure")
+		log.WithField("resource_name", "lambda").Info("resource was not configured")
 		return
 	}
 
@@ -272,7 +272,7 @@ func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManage
 func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["neptune"]
 	if !found {
-		log.WithField("resource_name", "neptune").Info("resource not configure")
+		log.WithField("resource_name", "neptune").Info("resource was not configured")
 		return
 	}
 
@@ -289,7 +289,7 @@ func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *Clou
 func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["kinesis"]
 	if !found {
-		log.WithField("resource_name", "kinesis").Info("resource not configure")
+		log.WithField("resource_name", "kinesis").Info("resource was not configured")
 		return
 	}
 
@@ -306,7 +306,7 @@ func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *Clou
 func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["redshift"]
 	if !found {
-		log.WithField("resource_name", "redshift").Info("resource not configure")
+		log.WithField("resource_name", "redshift").Info("resource was not configured")
 		return
 	}
 

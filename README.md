@@ -1,5 +1,7 @@
 ![Go](https://github.com/similarweb/finala/workflows/Go/badge.svg?event=push)
-[![Coverage Status](https://coveralls.io/repos/github/similarweb/finala/badge.svg?branch=master)](https://coveralls.io/github/similarweb/finala?branch=master)
+![Lint](https://github.com/similarweb/finala/workflows/Lint/badge.svg)
+![Fmt](https://github.com/similarweb/finala/workflows/Fmt/badge.svg)
+
 # Finala
 
 A resource cloud scanner that analyzes and reports about wasteful and unused resources to cut unwanted expenses.

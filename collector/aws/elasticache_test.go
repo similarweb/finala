@@ -14,7 +14,7 @@ import (
 
 var defaultElasticacheMock = elasticache.DescribeCacheClustersOutput{
 	CacheClusters: []*elasticache.CacheCluster{
-		&elasticache.CacheCluster{
+		{
 			CacheClusterId:         awsClient.String("i-1"),
 			CacheNodeType:          awsClient.String("cache.t2.micro"),
 			Engine:                 awsClient.String("redis"),

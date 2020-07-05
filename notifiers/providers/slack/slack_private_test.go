@@ -18,7 +18,6 @@ type MockApiClient struct {
 	sentMessages []SentMessage
 	users        []slack.User
 	err          error
-	idx          int
 }
 
 var commonTags = []common.Tag{
@@ -172,7 +171,11 @@ func TestUpdateUsers(t *testing.T) {
 			emailToUser: mockEmailToUser,
 		}
 
-		slackManager.updateUsers()
+		err := slackManager.updateUsers()
+
+		if err == nil {
+			t.Errorf("expected updateUsers error. got %s, expected %s", "nil", "error message")
+		}
 
 		if len(slackManager.emailToUser) != 3 {
 			t.Errorf("expected emailToUsers contain exactly 3 emails instead has %d", len(slackManager.emailToUser))
@@ -182,6 +185,32 @@ func TestUpdateUsers(t *testing.T) {
 			if _, exists := slackManager.emailToUser[val]; !exists {
 				t.Errorf("expected %s to remain in the emailToUser map", val)
 			}
+		}
+
+	})
+
+	t.Run("update users error handler", func(t *testing.T) {
+		mockClient := &MockApiClient{
+			users: []slack.User{
+				{ID: "user-1", Profile: slack.UserProfile{Email: "foo@foo.com"}},
+				{ID: "user-2"},
+				{ID: "user-3", Profile: slack.UserProfile{Email: "foo1@foo.com"}},
+			},
+		}
+
+		slackManager := Manager{
+			client:      mockClient,
+			emailToUser: map[string]string{},
+		}
+		err := slackManager.updateUsers()
+		expectedEmailToUser := 2
+
+		if err != nil {
+			t.Errorf("expected updateUsers error. got %s, expected %s", "nil", "error message")
+		}
+
+		if len(slackManager.emailToUser) != expectedEmailToUser {
+			t.Errorf("expected emailToUsers contain exactly %d emails instead has %d", expectedEmailToUser, len(slackManager.emailToUser))
 		}
 
 	})

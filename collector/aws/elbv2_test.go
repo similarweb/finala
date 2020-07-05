@@ -14,7 +14,7 @@ import (
 
 var defaultELBV2Mock = elbv2.DescribeLoadBalancersOutput{
 	LoadBalancers: []*elbv2.LoadBalancer{
-		&elbv2.LoadBalancer{
+		{
 			LoadBalancerName: awsClient.String("i-1"),
 			LoadBalancerArn:  awsClient.String("i-1"),
 			CreatedTime:      testutils.TimePointer(time.Now()),

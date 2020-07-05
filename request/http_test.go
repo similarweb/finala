@@ -13,7 +13,10 @@ import (
 
 func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	io.WriteString(w, `foo`)
+	_, err := io.WriteString(w, `foo`)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
 
 func TestClient(t *testing.T) {

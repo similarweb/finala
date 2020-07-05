@@ -21,14 +21,13 @@ type LambdaClientDescreptor interface {
 
 //LambdaManager describe lambda manager
 type LambdaManager struct {
-	collector          collector.CollectorDescriber
-	client             LambdaClientDescreptor
-	cloudWatchClient   *CloudwatchManager
-	metrics            []config.MetricConfig
-	region             string
-	namespace          string
-	servicePricingCode string
-	Name               string
+	collector        collector.CollectorDescriber
+	client           LambdaClientDescreptor
+	cloudWatchClient *CloudwatchManager
+	metrics          []config.MetricConfig
+	region           string
+	namespace        string
+	Name             string
 }
 
 // DetectedAWSLambda define the detected AWS Lambda instances
@@ -104,7 +103,7 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 				StartTime: &metricEndTime,
 				EndTime:   &now,
 				Dimensions: []*cloudwatch.Dimension{
-					&cloudwatch.Dimension{
+					{
 						Name:  awsClient.String("FunctionName"),
 						Value: fun.FunctionName,
 					},
@@ -197,12 +196,10 @@ func (lm *LambdaManager) Describe(marker *string, functions []*lambda.FunctionCo
 		functions = []*lambda.FunctionConfiguration{}
 	}
 
-	for _, fun := range resp.Functions {
-		functions = append(functions, fun)
-	}
+	functions = append(functions, resp.Functions...)
 
 	if resp.NextMarker != nil {
-		lm.Describe(resp.NextMarker, functions)
+		return lm.Describe(resp.NextMarker, functions)
 	}
 
 	return functions, nil

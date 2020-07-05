@@ -61,7 +61,10 @@ func (server *Server) Serve() serverutil.StopFunc {
 	}()
 	go func() {
 		log.WithField("address", server.httpserver.Addr).Info("server listening on")
-		server.httpserver.ListenAndServe()
+		err := server.httpserver.ListenAndServe()
+		if err != nil {
+			log.WithError(err).Info("HTTP server status")
+		}
 	}()
 	return func() {
 		cancelFn()
@@ -88,10 +91,13 @@ func (server *Server) Router() *mux.Router {
 }
 
 // JSONWrite return JSON response to the client
-func (server *Server) JSONWrite(resp http.ResponseWriter, statusCode int, data interface{}) error {
+func (server *Server) JSONWrite(resp http.ResponseWriter, statusCode int, data interface{}) {
 	resp.Header().Set("Content-Type", "application/json")
 	resp.WriteHeader(statusCode)
 	encoder := json.NewEncoder(resp)
 	encoder.SetIndent("", "  ")
-	return encoder.Encode(data)
+	err := encoder.Encode(data)
+	if err != nil {
+		log.WithError(err).Error("could not set message error in json response")
+	}
 }

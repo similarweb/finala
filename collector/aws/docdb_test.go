@@ -14,7 +14,7 @@ import (
 
 var defaultDocdbMock = docdb.DescribeDBInstancesOutput{
 	DBInstances: []*docdb.DBInstance{
-		&docdb.DBInstance{
+		{
 			DBInstanceArn:        awsClient.String("ARN::1"),
 			DBInstanceIdentifier: awsClient.String("id-1"),
 			DBInstanceClass:      awsClient.String("DBInstanceClass"),

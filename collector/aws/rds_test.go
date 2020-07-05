@@ -14,7 +14,7 @@ import (
 
 var defaultRDSMock = rds.DescribeDBInstancesOutput{
 	DBInstances: []*rds.DBInstance{
-		&rds.DBInstance{
+		{
 			DBInstanceArn:        awsClient.String("ARN::1"),
 			DBInstanceIdentifier: awsClient.String("i-1"),
 			MultiAZ:              testutils.BoolPointer(true),
@@ -22,7 +22,7 @@ var defaultRDSMock = rds.DescribeDBInstancesOutput{
 			Engine:               awsClient.String("postgres"),
 			InstanceCreateTime:   testutils.TimePointer(time.Now()),
 		},
-		&rds.DBInstance{
+		{
 			DBInstanceArn:        awsClient.String("ARN::2"),
 			DBInstanceIdentifier: awsClient.String("i-2"),
 			MultiAZ:              testutils.BoolPointer(false),
@@ -30,7 +30,7 @@ var defaultRDSMock = rds.DescribeDBInstancesOutput{
 			Engine:               awsClient.String("aurora"),
 			InstanceCreateTime:   testutils.TimePointer(time.Now()),
 		},
-		&rds.DBInstance{
+		{
 			DBInstanceArn:        awsClient.String("ARN::3"),
 			DBInstanceIdentifier: awsClient.String("i-3"),
 			MultiAZ:              testutils.BoolPointer(false),
@@ -38,7 +38,7 @@ var defaultRDSMock = rds.DescribeDBInstancesOutput{
 			Engine:               awsClient.String("mysql"),
 			InstanceCreateTime:   testutils.TimePointer(time.Now()),
 		},
-		&rds.DBInstance{
+		{
 			DBInstanceArn:        awsClient.String("ARN::4"),
 			DBInstanceIdentifier: awsClient.String("i-4"),
 			MultiAZ:              testutils.BoolPointer(false),
@@ -199,7 +199,7 @@ func TestDetectRDS(t *testing.T) {
 		mockClient := MockAWSRDSClient{
 			responseDescribeDBInstances: rds.DescribeDBInstancesOutput{
 				DBInstances: []*rds.DBInstance{
-					&rds.DBInstance{
+					{
 						DBInstanceArn:        awsClient.String("ARN::1"),
 						DBInstanceIdentifier: awsClient.String("i-1"),
 						MultiAZ:              testutils.BoolPointer(true),

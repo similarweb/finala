@@ -14,7 +14,7 @@ import (
 
 var defaultNeptuneMock = neptune.DescribeDBInstancesOutput{
 	DBInstances: []*neptune.DBInstance{
-		&neptune.DBInstance{
+		{
 			DBInstanceArn:        awsClient.String("ARN::1"),
 			DBInstanceIdentifier: awsClient.String("id-1"),
 			DBInstanceClass:      awsClient.String("DBInstanceClass"),
@@ -77,7 +77,7 @@ func TestDescribeNeptune(t *testing.T) {
 }
 
 func TestDetectNeptune(t *testing.T) {
-	
+
 	collector := testutils.NewMockCollector()
 	mockCloudwatchClient := MockAWSCloudwatchClient{
 		responseMetricStatistics: defaultResponseMetricStatistics,
@@ -90,7 +90,7 @@ func TestDetectNeptune(t *testing.T) {
 		responseDescribeDBInstances: defaultNeptuneMock,
 	}
 
-	neptuneManager := aws.NewNeptuneManager(collector,&mockClient, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	neptuneManager := aws.NewNeptuneManager(collector, &mockClient, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
 
 	response, _ := neptuneManager.Detect()
 
@@ -106,7 +106,6 @@ func TestDetectNeptune(t *testing.T) {
 		t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
 	}
 }
-
 
 func TestDetectNeptuneError(t *testing.T) {
 

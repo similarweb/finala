@@ -8,38 +8,37 @@ import (
 )
 
 type ServeStruct struct {
-	Request chan string
-	isStop  bool
-	init    bool
+	ctx      context.Context
+	cancelFn context.CancelFunc
+	Request  chan string
+	isStop   bool
+	init     bool
 }
 
 func MockServeStruct() *ServeStruct {
+	ctx, cancelFn := context.WithCancel(context.Background())
 	return &ServeStruct{
-		Request: make(chan string),
-		isStop:  false,
-		init:    false,
+		ctx:      ctx,
+		cancelFn: cancelFn,
+		Request:  make(chan string),
+		isStop:   false,
+		init:     false,
 	}
 
 }
 
 func (m *ServeStruct) Serve() serverutil.StopFunc {
 
-	ctx, cancelFn := context.WithCancel(context.Background())
 	stopped := make(chan bool)
 	go func() {
 		m.init = true
-		for {
-			select {
-			case <-ctx.Done():
-				m.isStop = true
-				stopped <- true
-				return
-			}
-		}
+		<-m.ctx.Done()
+		m.isStop = true
+		stopped <- true
 	}()
 
 	return func() {
-		cancelFn()
+		m.cancelFn()
 		<-stopped
 	}
 }
@@ -51,10 +50,12 @@ func TestServe(t *testing.T) {
 		t.Fatalf("unexpected serve init, got %t expected %t", serverStruct.isStop, false)
 	}
 
-	serverutil.RunAll(serverStruct)
+	runners := serverutil.RunAll(serverStruct)
 	time.Sleep(time.Second)
 	if !serverStruct.init {
 		t.Fatalf("unexpected init serve funtion, got %t expected %t", serverStruct.isStop, true)
 	}
+
+	runners.StopFunc()
 
 }

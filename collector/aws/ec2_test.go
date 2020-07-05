@@ -14,9 +14,9 @@ import (
 
 var defaultEC2Mock = ec2.DescribeInstancesOutput{
 	Reservations: []*ec2.Reservation{
-		&ec2.Reservation{
+		{
 			Instances: []*ec2.Instance{
-				&ec2.Instance{
+				{
 					InstanceId:   awsClient.String("1"),
 					InstanceType: awsClient.String("t2.micro"),
 					LaunchTime:   testutils.TimePointer(time.Now()),

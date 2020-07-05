@@ -28,7 +28,7 @@ func (ms *MockStorage) GetSummary(executionID string, filters map[string]string)
 		return nil, errors.New("error")
 	}
 	response := map[string]storage.CollectorsSummary{
-		"resource_1": storage.CollectorsSummary{
+		"resource_1": {
 			ResourceName:  "resource_name_1",
 			ResourceCount: 3,
 			TotalSpent:    100,
@@ -36,7 +36,7 @@ func (ms *MockStorage) GetSummary(executionID string, filters map[string]string)
 			ErrorMessage:  "description",
 			EventTime:     123456,
 		},
-		"resource_2": storage.CollectorsSummary{
+		"resource_2": {
 			ResourceName:  "resource_name_2",
 			ResourceCount: 3,
 			TotalSpent:    100,

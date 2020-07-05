@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Ignore Neptune based instances for RDS instances collection
+- Implement golangci-lint and golang fmt
 
 ## [0.3.3]
 ### Added

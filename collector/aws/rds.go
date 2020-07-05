@@ -111,7 +111,7 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 				StartTime: &metricEndTime,
 				EndTime:   &now,
 				Dimensions: []*cloudwatch.Dimension{
-					&cloudwatch.Dimension{
+					{
 						Name:  awsClient.String("DBInstanceIdentifier"),
 						Value: instance.DBInstanceIdentifier,
 					},
@@ -219,18 +219,17 @@ func (r *RDSManager) GetPricingFilterInput(instance *rds.DBInstance) *pricing.Ge
 	return &pricing.GetProductsInput{
 		ServiceCode: &r.servicePricingCode,
 		Filters: []*pricing.Filter{
-
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("databaseEngine"),
 				Value: &databaseEngine,
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("instanceType"),
 				Value: instance.DBInstanceClass,
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("deploymentOption"),
 				Value: &deploymentOption,
@@ -266,7 +265,7 @@ func (r *RDSManager) DescribeInstances(Marker *string, instances []*rds.DBInstan
 	}
 
 	if resp.Marker != nil {
-		r.DescribeInstances(resp.Marker, instances)
+		return r.DescribeInstances(resp.Marker, instances)
 	}
 
 	return instances, nil

@@ -109,7 +109,7 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 				StartTime:  &metricEndTime,
 				EndTime:    &now,
 				Dimensions: []*cloudwatch.Dimension{
-					&cloudwatch.Dimension{
+					{
 						Name:  awsClient.String("InstanceId"),
 						Value: instance.InstanceId,
 					},
@@ -209,38 +209,37 @@ func (ec *EC2Manager) GetPricingFilterInput(instance *ec2.Instance) *pricing.Get
 	input := &pricing.GetProductsInput{
 		ServiceCode: &ec.servicePricingCode,
 		Filters: []*pricing.Filter{
-
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("TermType"),
 				Value: awsClient.String("OnDemand"),
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("capacitystatus"),
 				Value: awsClient.String("Used"),
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("tenancy"),
 				Value: awsClient.String("Shared"),
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("preInstalledSw"),
 				Value: awsClient.String("NA"),
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("operatingSystem"),
 				Value: &platform,
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("instanceType"),
 				Value: instance.InstanceType,
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("operatingSystem"),
 				Value: &platform,
@@ -267,7 +266,7 @@ func (ec *EC2Manager) DescribeInstances(nextToken *string, instances []*ec2.Inst
 	input := &ec2.DescribeInstancesInput{
 		NextToken: nextToken,
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   awsClient.String("instance-state-name"),
 				Values: []*string{awsClient.String("running")},
 			},
@@ -285,13 +284,11 @@ func (ec *EC2Manager) DescribeInstances(nextToken *string, instances []*ec2.Inst
 	}
 
 	for _, reservations := range resp.Reservations {
-		for _, instance := range reservations.Instances {
-			instances = append(instances, instance)
-		}
+		instances = append(instances, reservations.Instances...)
 	}
 
 	if resp.NextToken != nil {
-		ec.DescribeInstances(resp.NextToken, instances)
+		return ec.DescribeInstances(resp.NextToken, instances)
 	}
 
 	return instances, nil

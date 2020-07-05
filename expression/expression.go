@@ -12,7 +12,7 @@ func BoolExpression(left interface{}, right interface{}, operator string) (bool,
 
 	formula := fmt.Sprintf("%f %s %f", left.(float64), operator, right.(float64))
 
-	parameters := make(map[string]interface{}, 0)
+	parameters := make(map[string]interface{})
 	result, err := ExpressionWithParams(formula, parameters)
 	if err != nil {
 		return false, err

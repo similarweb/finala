@@ -10,10 +10,10 @@ import (
 )
 
 var defaultMetricConfig = []config.MetricConfig{
-	config.MetricConfig{
+	{
 		Description: "test description write capacity",
 		Data: []config.MetricDataConfiguration{
-			config.MetricDataConfiguration{
+			{
 				Name:      "ProvisionedWriteCapacityUnits",
 				Statistic: "Sum",
 			},
@@ -29,13 +29,13 @@ var defaultMetricConfig = []config.MetricConfig{
 
 var defaultResponseMetricStatistics = cloudwatch.GetMetricStatisticsOutput{
 	Datapoints: []*cloudwatch.Datapoint{
-		&cloudwatch.Datapoint{
+		{
 			Sum:     testutils.Float64Pointer(3),
 			Average: testutils.Float64Pointer(4),
 			Maximum: testutils.Float64Pointer(5),
 			Minimum: testutils.Float64Pointer(5),
 		},
-		&cloudwatch.Datapoint{
+		{
 			Sum:     testutils.Float64Pointer(2),
 			Average: testutils.Float64Pointer(2),
 			Maximum: testutils.Float64Pointer(0),
@@ -64,15 +64,15 @@ func TestGetMetricFormula(t *testing.T) {
 	metricConfig := config.MetricConfig{
 		Description: "test description",
 		Data: []config.MetricDataConfiguration{
-			config.MetricDataConfiguration{
+			{
 				Name:      "a",
 				Statistic: "Sum",
 			},
-			config.MetricDataConfiguration{
+			{
 				Name:      "b",
 				Statistic: "Maximum",
 			},
-			config.MetricDataConfiguration{
+			{
 				Name:      "c",
 				Statistic: "Average",
 			},
@@ -102,7 +102,7 @@ func TestGetMetricErrors(t *testing.T) {
 	metricConfig := config.MetricConfig{
 		Description: "test description",
 		Data: []config.MetricDataConfiguration{
-			config.MetricDataConfiguration{
+			{
 				Name:      "a",
 				Statistic: "invalid",
 			},
@@ -126,7 +126,7 @@ func TestGetMetricNoneFormula(t *testing.T) {
 	metricConfig := config.MetricConfig{
 		Description: "test description",
 		Data: []config.MetricDataConfiguration{
-			config.MetricDataConfiguration{
+			{
 				Name:      "a",
 				Statistic: "Sum",
 			},
@@ -153,13 +153,13 @@ func TestDatapointMath(t *testing.T) {
 
 	statistics := cloudwatch.GetMetricStatisticsOutput{
 		Datapoints: []*cloudwatch.Datapoint{
-			&cloudwatch.Datapoint{
+			{
 				Sum:     testutils.Float64Pointer(2),
 				Average: testutils.Float64Pointer(4),
 				Maximum: testutils.Float64Pointer(4),
 				Minimum: testutils.Float64Pointer(1),
 			},
-			&cloudwatch.Datapoint{
+			{
 				Sum:     testutils.Float64Pointer(2),
 				Average: testutils.Float64Pointer(2),
 				Maximum: testutils.Float64Pointer(0),

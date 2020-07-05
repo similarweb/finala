@@ -22,7 +22,6 @@ type DetectEvents struct {
 }
 
 type ReceivedData struct {
-	apiEndpoint      string
 	receivedCount    int
 	returnStatusCode int
 }
@@ -43,15 +42,14 @@ func (rd *ReceivedData) HandleRequestHandler(resp http.ResponseWriter, req *http
 	}
 
 	rd.receivedCount = len(e)
-	return
 
 }
 
-func newCollector(wg sync.WaitGroup, ctx context.Context, port int) *collector.CollectorManager {
+func newCollector(wg *sync.WaitGroup, ctx context.Context, port int) *collector.CollectorManager {
 
 	req := request.NewHTTPClient()
 	duration := time.Duration(time.Second * 1)
-	coll := collector.NewCollectorManager(ctx, &wg, req, duration, "collector_name", fmt.Sprintf("http://127.0.0.1:%d", port))
+	coll := collector.NewCollectorManager(ctx, wg, req, duration, "collector_name", fmt.Sprintf("http://127.0.0.1:%d", port))
 	return coll
 }
 func TestAddEvent(t *testing.T) {
@@ -63,7 +61,7 @@ func TestAddEvent(t *testing.T) {
 		returnStatusCode: http.StatusAccepted,
 	}
 
-	coll := newCollector(wg, ctx, 5001)
+	coll := newCollector(&wg, ctx, 5001)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/v1/detect-events/{executionID}", receivedData.HandleRequestHandler)
@@ -110,7 +108,7 @@ func TestAddEventServerUnavailable(t *testing.T) {
 		returnStatusCode: http.StatusInternalServerError,
 	}
 
-	coll := newCollector(wg, ctx, 5002)
+	coll := newCollector(&wg, ctx, 5002)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/v1/detect-events/{executionID}", receivedData.HandleRequestHandler)

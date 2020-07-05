@@ -1,7 +1,7 @@
-![Go](https://github.com/similarweb/finala/workflows/Go/badge.svg?event=push)
+[![codecov](https://codecov.io/gh/similarweb/finala/branch/master/graph/badge.svg)](https://codecov.io/gh/similarweb/finala)
 ![Lint](https://github.com/similarweb/finala/workflows/Lint/badge.svg)
 ![Fmt](https://github.com/similarweb/finala/workflows/Fmt/badge.svg)
-[![codecov](https://codecov.io/gh/similarweb/finala/branch/master/graph/badge.svg)](https://codecov.io/gh/similarweb/finala)
+
 
 # Finala
 

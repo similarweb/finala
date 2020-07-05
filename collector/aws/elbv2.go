@@ -47,6 +47,8 @@ type loadBalancerConfig struct {
 	pricingfilters      []*pricing.Filter
 }
 
+// loadBalancersConfig defines loadbalancers configuration of metrics and pricing for
+// Multiple types of LoadBalancers.
 var loadBalancersConfig = map[string]loadBalancerConfig{
 	"application": {
 		cloudWatchNamespace: "AWS/ApplicationELB",
@@ -102,26 +104,22 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 
 	detectedELBV2 := []DetectedELBV2{}
 
-	instances, err := el.DescribeLoadbalancers(nil, nil)
-	if err != nil {
-		el.collector.UpdateServiceStatus(collector.EventCollector{
-			ResourceName: el.Name,
-			Data: collector.EventStatusData{
-				Status:       collector.EventError,
-				ErrorMessage: err.Error(),
-			},
-		})
-		return detectedELBV2, err
-	}
-
-	now := time.Now()
 	pricingRegionPrefix, err := el.pricingClient.GetRegionPrefix(el.region)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
 			"region": el.region,
 		}).Error("Could not get pricing region prefix")
+		el.updateErrorServiceStatus(err)
 		return detectedELBV2, err
 	}
+
+	instances, err := el.DescribeLoadbalancers(nil, nil)
+	if err != nil {
+		el.updateErrorServiceStatus(err)
+		return detectedELBV2, err
+	}
+
+	now := time.Now()
 
 	for _, instance := range instances {
 		var cloudWatchNameSpace string
@@ -292,4 +290,15 @@ func (el *ELBV2Manager) DescribeLoadbalancers(marker *string, loadbalancers []*e
 	}
 
 	return loadbalancers, nil
+}
+
+// updateErrorServiceStatus reports when elbv2 can't collect data
+func (el *ELBV2Manager) updateErrorServiceStatus(err error) {
+	el.collector.UpdateServiceStatus(collector.EventCollector{
+		ResourceName: el.Name,
+		Data: collector.EventStatusData{
+			Status:       collector.EventError,
+			ErrorMessage: err.Error(),
+		},
+	})
 }

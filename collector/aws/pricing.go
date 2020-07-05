@@ -19,6 +19,9 @@ const (
 	defaultRateCode = "6YS6EN2CT7"
 )
 
+// ErrRegionNotFound when a region is not found
+var ErrRegionNotFound = errors.New("region was not found as part of the regionsInfo map")
+
 // regionInfo will hold data about a region pricing options
 type regionInfo struct {
 	fullName string
@@ -120,7 +123,7 @@ func (p *PricingManager) GetPrice(input *pricing.GetProductsInput, rateCode stri
 
 	regionInfo, found := regionsInfo[region]
 	if !found {
-		return 0, errors.New("Given region was not found")
+		return 0, ErrRegionNotFound
 	}
 
 	input.Filters = append(input.Filters, &pricing.Filter{
@@ -205,7 +208,7 @@ func (p *PricingManager) GetRegionPrefix(region string) (string, error) {
 	var prefix string
 	regionInfo, found := regionsInfo[region]
 	if !found {
-		return "", errors.New("region was not found as part of the regionsInfo map")
+		return "", ErrRegionNotFound
 	}
 
 	switch regionInfo.prefix {

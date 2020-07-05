@@ -73,28 +73,22 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 
 	detectedELB := []DetectedELB{}
 
-	instances, err := el.DescribeLoadbalancers(nil, nil)
-	if err != nil {
-
-		el.collector.UpdateServiceStatus(collector.EventCollector{
-			ResourceName: el.Name,
-			Data: collector.EventStatusData{
-				Status:       collector.EventError,
-				ErrorMessage: err.Error(),
-			},
-		})
-		return detectedELB, err
-	}
-
-	now := time.Now()
-
 	pricingRegionPrefix, err := el.pricingClient.GetRegionPrefix(el.region)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
 			"region": el.region,
 		}).Error("Could not get pricing region prefix")
+		el.updateErrorServiceStatus(err)
 		return detectedELB, err
 	}
+
+	instances, err := el.DescribeLoadbalancers(nil, nil)
+	if err != nil {
+		el.updateErrorServiceStatus(err)
+		return detectedELB, err
+	}
+
+	now := time.Now()
 
 	for _, instance := range instances {
 		log.WithField("name", *instance.LoadBalancerName).Debug("checking elb")
@@ -257,4 +251,15 @@ func (el *ELBManager) DescribeLoadbalancers(marker *string, loadbalancers []*elb
 	}
 
 	return loadbalancers, nil
+}
+
+// updateErrorServiceStatus reports when elb can't collect data
+func (el *ELBManager) updateErrorServiceStatus(err error) {
+	el.collector.UpdateServiceStatus(collector.EventCollector{
+		ResourceName: el.Name,
+		Data: collector.EventStatusData{
+			Status:       collector.EventError,
+			ErrorMessage: err.Error(),
+		},
+	})
 }

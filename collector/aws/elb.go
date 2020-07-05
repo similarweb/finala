@@ -210,7 +210,6 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 
 // GetPricingFilterInput prepare document elb pricing filter
 func (el *ELBManager) GetPricingFilterInput(extraFilters []*pricing.Filter) *pricing.GetProductsInput {
-
 	filters := []*pricing.Filter{
 		{
 			Type:  awsClient.String("TERM_MATCH"),
@@ -231,6 +230,7 @@ func (el *ELBManager) GetPricingFilterInput(extraFilters []*pricing.Filter) *pri
 	return &pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
 		Filters:     filters,
+
 	}
 }
 
@@ -251,12 +251,10 @@ func (el *ELBManager) DescribeLoadbalancers(marker *string, loadbalancers []*elb
 		loadbalancers = []*elb.LoadBalancerDescription{}
 	}
 
-	for _, lb := range resp.LoadBalancerDescriptions {
-		loadbalancers = append(loadbalancers, lb)
-	}
+	loadbalancers = append(loadbalancers, resp.LoadBalancerDescriptions...)
 
 	if resp.NextMarker != nil {
-		el.DescribeLoadbalancers(resp.NextMarker, loadbalancers)
+		return el.DescribeLoadbalancers(resp.NextMarker, loadbalancers)
 	}
 
 	return loadbalancers, nil

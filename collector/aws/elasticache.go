@@ -113,7 +113,7 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 				StartTime:  &metricEndTime,
 				EndTime:    &now,
 				Dimensions: []*cloudwatch.Dimension{
-					&cloudwatch.Dimension{
+					{
 						Name:  awsClient.String("CacheClusterId"),
 						Value: instance.CacheClusterId,
 					},
@@ -201,13 +201,12 @@ func (ec *ElasticacheManager) GetPricingFilterInput(instance *elasticache.CacheC
 	return &pricing.GetProductsInput{
 		ServiceCode: &ec.servicePricingCode,
 		Filters: []*pricing.Filter{
-
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("cacheEngine"),
 				Value: instance.Engine,
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("instanceType"),
 				Value: instance.CacheNodeType,
@@ -234,12 +233,10 @@ func (ec *ElasticacheManager) DescribeInstances(Marker *string, elasticaches []*
 		elasticaches = []*elasticache.CacheCluster{}
 	}
 
-	for _, elasticache := range resp.CacheClusters {
-		elasticaches = append(elasticaches, elasticache)
-	}
+	elasticaches = append(elasticaches, resp.CacheClusters...)
 
 	if resp.Marker != nil {
-		ec.DescribeInstances(resp.Marker, elasticaches)
+		return ec.DescribeInstances(resp.Marker, elasticaches)
 	}
 
 	return elasticaches, nil

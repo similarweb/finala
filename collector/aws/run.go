@@ -87,10 +87,11 @@ func (app *Analyze) All() {
 }
 
 // AnalyzeEC2Instances will analyzes ec2 resources
-func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["ec2"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "ec2").Info("resource was not configured")
+		return
 	}
 
 	ec2 := NewEC2Manager(app.cl, ec2.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
@@ -102,19 +103,19 @@ func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient 
 
 	}
 
-	return err
 }
 
 // IAMUsers will analyzes iam users
-func (app *Analyze) IAMUsers(sess *session.Session) error {
+func (app *Analyze) IAMUsers(sess *session.Session) {
 	resource, found := app.resources["iamLastActivity"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "iamLastActivity").Info("resource was not configured")
+		return
 	}
 
 	if _, ok := app.global["iamLastActivity"]; ok {
 		log.Debug(fmt.Sprintf("skip %s detection", resource.Description))
-		return nil
+		return
 	}
 
 	app.global["iamLastActivity"] = struct{}{}
@@ -127,14 +128,14 @@ func (app *Analyze) IAMUsers(sess *session.Session) error {
 		log.WithField("count", len(response)).Info("Total iam users detected")
 	}
 
-	return nil
 }
 
 // AnalyzeELB will analyzes elastic load balancer resources
-func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["elb"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "elb").Info("resource was not configured")
+		return
 	}
 
 	elb := NewELBManager(app.cl, elb.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
@@ -145,14 +146,14 @@ func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *Cloudwat
 		log.WithField("count", len(response)).Info("Total ELB detected")
 	}
 
-	return err
 }
 
 // AnalyzeELBV2 will analyzes elastic load balancer resources
-func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["elbv2"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "elbv2").Info("resource was not configured")
+		return
 	}
 
 	elbv2 := NewELBV2Manager(app.cl, elbv2.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
@@ -163,14 +164,14 @@ func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *Cloudw
 		log.WithField("count", len(response)).Info("Total elbV2 detected")
 	}
 
-	return err
 }
 
 // AnalyzeElasticache will analyzes elasticache resources
-func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["elasticache"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "elasticache").Info("resource was not configured")
+		return
 	}
 
 	elasticacheCLient := NewElasticacheManager(app.cl, elasticache.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
@@ -181,14 +182,14 @@ func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *
 		log.WithField("count", len(response)).Info("Total elasticsearch detected")
 	}
 
-	return err
 }
 
 // AnalyzeRDS will analyzes rds resources
-func (app *Analyze) AnalyzeRDS(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeRDS(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["rds"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "rds").Info("resource was not configured")
+		return
 	}
 
 	rds := NewRDSManager(app.cl, rds.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
@@ -199,15 +200,14 @@ func (app *Analyze) AnalyzeRDS(sess *session.Session, cloudWatchCLient *Cloudwat
 		log.WithField("count", len(response)).Info("Total RDS detected")
 	}
 
-	return err
-
 }
 
 // AnalyzeDynamoDB will  analyzes dynamoDB resources
-func (app *Analyze) AnalyzeDynamoDB(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeDynamoDB(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["dynamodb"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "dynamodb").Info("resource was not configured")
+		return
 	}
 
 	dynamoDB := NewDynamoDBManager(app.cl, dynamodb.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
@@ -218,15 +218,14 @@ func (app *Analyze) AnalyzeDynamoDB(sess *session.Session, cloudWatchCLient *Clo
 		log.WithField("count", len(response)).Info("Total dynamoDB detected")
 	}
 
-	return err
-
 }
 
 // AnalyzeDocdb will analyzes documentDB resources
-func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["docDB"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "docDB").Info("resource was not configured")
+		return
 	}
 
 	docDB := NewDocDBManager(app.cl, docdb.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
@@ -237,14 +236,14 @@ func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *Cloudw
 		log.WithField("count", len(response)).Info("Total documentDB detected")
 	}
 
-	return err
 }
 
 // AnalyzeLambda will analyzes lambda resources
-func (app *Analyze) AnalyzeLambda(sess *session.Session, cloudWatchCLient *CloudwatchManager) error {
+func (app *Analyze) AnalyzeLambda(sess *session.Session, cloudWatchCLient *CloudwatchManager) {
 	metrics, found := app.metrics["lambda"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "lambda").Info("resource was not configured")
+		return
 	}
 
 	lambdaManager := NewLambdaManager(app.cl, lambda.New(sess), cloudWatchCLient, metrics, *sess.Config.Region)
@@ -255,11 +254,10 @@ func (app *Analyze) AnalyzeLambda(sess *session.Session, cloudWatchCLient *Cloud
 		log.WithField("count", len(response)).Info("Total lambda detected")
 	}
 
-	return err
 }
 
 // AnalyzeVolumes will analyzes EC22 volumes resources
-func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManager) {
 
 	volumeManager := NewVolumesManager(app.cl, ec2.New(sess), pricing, *sess.Config.Region)
 
@@ -268,14 +266,14 @@ func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManage
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total ec2 volumes detected")
 	}
-	return err
 }
 
 // AnalyzeNeptune will analyzes Neptune resources
-func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["neptune"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "neptune").Info("resource was not configured")
+		return
 	}
 
 	neptune := NewNeptuneManager(app.cl, neptune.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
@@ -285,15 +283,14 @@ func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *Clou
 		log.WithField("count", len(response)).Info("Total Neptune Databases detected")
 	}
 
-	return err
-
 }
 
 // AnalyzeKinesis will analyzes Kinesis resources
-func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["kinesis"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "kinesis").Info("resource was not configured")
+		return
 	}
 
 	kinesis := NewKinesisManager(app.cl, kinesis.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
@@ -303,14 +300,14 @@ func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *Clou
 		log.WithField("count", len(response)).Info("Total Kinesis data streams detected")
 	}
 
-	return err
 }
 
 // AnalyzeRedShift will analyzes Redshift resources
-func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) error {
+func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["redshift"]
 	if !found {
-		return nil
+		log.WithField("resource_name", "redshift").Info("resource was not configured")
+		return
 	}
 
 	redshift := NewRedShiftManager(app.cl, redshift.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
@@ -320,5 +317,4 @@ func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *Clo
 		log.WithField("count", len(response)).Info("Total redshift resources detected")
 	}
 
-	return err
 }

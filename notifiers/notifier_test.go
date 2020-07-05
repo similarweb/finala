@@ -51,7 +51,6 @@ const (
 )
 
 type dataFetcherMockClient struct {
-	http  *http.Client
 	Error error
 }
 

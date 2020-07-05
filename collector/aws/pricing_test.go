@@ -15,9 +15,9 @@ var defaultPricingMock = MockAWSPricingClient{
 		},
 		"Terms": aws.PricingTerms{
 			OnDemand: map[string]*aws.PricingOfferTerm{
-				"R6PXMNYCEDGZ2EYN.JRTCKXETXF": &aws.PricingOfferTerm{
+				"R6PXMNYCEDGZ2EYN.JRTCKXETXF": {
 					PriceDimensions: map[string]*aws.PriceRateCode{
-						"R6PXMNYCEDGZ2EYN.JRTCKXETXF.6YS6EN2CT7": &aws.PriceRateCode{
+						"R6PXMNYCEDGZ2EYN.JRTCKXETXF.6YS6EN2CT7": {
 							Unit: "USD",
 							PricePerUnit: aws.PriceCurrencyCode{
 								USD: "1.2",
@@ -70,9 +70,9 @@ func TestGetPrice(t *testing.T) {
 				},
 				"Terms": aws.PricingTerms{
 					OnDemand: map[string]*aws.PricingOfferTerm{
-						"R6PXMNYCEDGZ2EYN.JRTCKXETXF": &aws.PricingOfferTerm{
+						"R6PXMNYCEDGZ2EYN.JRTCKXETXF": {
 							PriceDimensions: map[string]*aws.PriceRateCode{
-								"R6PXMNYCEDGZ2EYN.JRTCKXETXF.1234": &aws.PriceRateCode{
+								"R6PXMNYCEDGZ2EYN.JRTCKXETXF.1234": {
 									Unit: "USD",
 									PricePerUnit: aws.PriceCurrencyCode{
 										USD: "2.2",

@@ -105,7 +105,7 @@ func NewPricingManager(client PricingClientDescreptor, region string) *PricingMa
 	return &PricingManager{
 		client:         client,
 		region:         region,
-		priceResponses: make(map[uint64]float64, 0),
+		priceResponses: make(map[uint64]float64),
 	}
 }
 
@@ -152,7 +152,6 @@ func (p *PricingManager) GetPrice(input *pricing.GetProductsInput, rateCode stri
 			"search_query": input,
 			"products":     len(priceResponse.PriceList),
 		}).Error("Price list response should be equal to 1 product")
-
 		return 0, errors.New("Price list response should be equal only to 1 product")
 	}
 

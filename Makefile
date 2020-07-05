@@ -1,10 +1,10 @@
 # Go parameters
 GOCMD=go
 GOBUILD=$(GOCMD) build
-GOCLEAN=$(GOCMD) clean
 GOTOOL=$(GOCMD) tool
 GOTEST=$(GOCMD) test
-GOGET=$(GOCMD) get
+GOFMT=$(GOCMD)fmt
+
 GOARCH=$(shell go env GOARCH)
 
 BINARY_NAME=finala
@@ -30,6 +30,20 @@ test: ## Run tests for the project
 test-html:  ## Run tests with HTML for the project
 		$(TEST_EXEC_CMD) | true
 		$(GOTOOL) cover -html=cover.out
+
+lint:
+	golangci-lint run
+
+fmt: ## Validate go format
+	@echo checking gofmt...
+	@res=$$($(GOFMT) -d -e -s $$(find . -type d \( -path ./src/vendor \) -prune -o -name '*.go' -print)); \
+	if [ -n "$${res}" ]; then \
+		echo checking gofmt fail... ; \
+		echo "$${res}"; \
+		exit 1; \
+	else \
+		echo Your code formating is according gofmt standards; \
+	fi
 
 release: build-ui releasebin ## Build and release all platforms builds to nexus
 

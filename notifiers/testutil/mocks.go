@@ -31,8 +31,7 @@ func GetNotifierMakerMock(makerType, errorMessage string) notifiers.NotifierMake
 }
 
 type NotifierMock struct {
-	err             error
-	getNotifyByTags map[string]notifierCommon.NotifyByTag
+	err error
 }
 
 func (n *NotifierMock) LoadConfig(notifierCommon.NotifierConfig) (err error) {

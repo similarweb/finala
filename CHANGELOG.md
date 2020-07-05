@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 - Add the option to filter resources by tags in the API [[PR-73](https://github.com/similarweb/finala/pull/73)]
 - Ignore Neptune based instances for RDS instances collection
+- Implement golangci-lint and golang fmt
 
 ## [0.3.3]
 ### Added

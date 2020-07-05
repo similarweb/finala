@@ -265,6 +265,7 @@ func (el *ELBV2Manager) GetPricingFilterInput(extraFilters []*pricing.Filter) *p
 	return &pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
 		Filters:     filters,
+
 	}
 }
 
@@ -285,12 +286,10 @@ func (el *ELBV2Manager) DescribeLoadbalancers(marker *string, loadbalancers []*e
 		loadbalancers = []*elbv2.LoadBalancer{}
 	}
 
-	for _, lb := range resp.LoadBalancers {
-		loadbalancers = append(loadbalancers, lb)
-	}
+	loadbalancers = append(loadbalancers, resp.LoadBalancers...)
 
 	if resp.NextMarker != nil {
-		el.DescribeLoadbalancers(resp.NextMarker, loadbalancers)
+		return el.DescribeLoadbalancers(resp.NextMarker, loadbalancers)
 	}
 
 	return loadbalancers, nil

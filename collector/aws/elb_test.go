@@ -14,7 +14,7 @@ import (
 
 var defaultELBMock = elb.DescribeLoadBalancersOutput{
 	LoadBalancerDescriptions: []*elb.LoadBalancerDescription{
-		&elb.LoadBalancerDescription{
+		{
 			LoadBalancerName: awsClient.String("i-1"),
 			CreatedTime:      testutils.TimePointer(time.Now()),
 		},

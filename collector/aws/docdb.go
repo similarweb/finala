@@ -110,7 +110,7 @@ func (dd *DocumentDBManager) Detect() ([]DetectedDocumentDB, error) {
 				StartTime: &metricEndTime,
 				EndTime:   &now,
 				Dimensions: []*cloudwatch.Dimension{
-					&cloudwatch.Dimension{
+					{
 						Name:  awsClient.String("DBInstanceIdentifier"),
 						Value: instance.DBInstanceIdentifier,
 					},
@@ -202,13 +202,12 @@ func (dd *DocumentDBManager) GetPricingFilterInput(instance *docdb.DBInstance) *
 	return &pricing.GetProductsInput{
 		ServiceCode: &dd.servicePricingCode,
 		Filters: []*pricing.Filter{
-
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("databaseEngine"),
 				Value: awsClient.String("Amazon DocumentDB"),
 			},
-			&pricing.Filter{
+			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("instanceType"),
 				Value: instance.DBInstanceClass,
@@ -223,7 +222,7 @@ func (dd *DocumentDBManager) DescribeInstances(marker *string, instances []*docd
 	input := &docdb.DescribeDBInstancesInput{
 		Marker: marker,
 		Filters: []*docdb.Filter{
-			&docdb.Filter{
+			{
 				Name:   awsClient.String("engine"),
 				Values: []*string{awsClient.String("docdb")},
 			},
@@ -239,12 +238,10 @@ func (dd *DocumentDBManager) DescribeInstances(marker *string, instances []*docd
 		instances = []*docdb.DBInstance{}
 	}
 
-	for _, instance := range resp.DBInstances {
-		instances = append(instances, instance)
-	}
+	instances = append(instances, resp.DBInstances...)
 
 	if resp.Marker != nil {
-		dd.DescribeInstances(marker, instances)
+		return dd.DescribeInstances(marker, instances)
 	}
 
 	return instances, nil

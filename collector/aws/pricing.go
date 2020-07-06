@@ -208,7 +208,7 @@ func (p *PricingManager) GetRegionPrefix(region string) (string, error) {
 	var prefix string
 	regionInfo, found := regionsInfo[region]
 	if !found {
-		return "", ErrRegionNotFound
+		return prefix, ErrRegionNotFound
 	}
 
 	switch regionInfo.prefix {

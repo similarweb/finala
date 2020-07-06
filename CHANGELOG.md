@@ -6,8 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 - Add the option to filter resources by tags in the API [[PR-73](https://github.com/similarweb/finala/pull/73)]
-- Ignore Neptune based instances for RDS instances collection
-- Implement golangci-lint and golang fmt
+- Fix the pricing for ELB/ELBV2 [[PR-76](https://github.com/similarweb/finala/pull/76)]
+- Ignore Neptune based instances for RDS instances collection [[PR-71](https://github.com/similarweb/finala/pull/71)]
+- Implement golangci-lint and golang fmt [[PR-78](https://github.com/similarweb/finala/pull/78)]
 
 ## [0.3.3]
 ### Added

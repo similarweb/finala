@@ -51,7 +51,7 @@ func NewELBManager(collector collector.CollectorDescriber, client ELBClientDescr
 		pricingClient:      pricing,
 		region:             region,
 		namespace:          "AWS/ELB",
-		servicePricingCode: "AmazonEC2",
+		servicePricingCode: "AWSELB",
 		Name:               fmt.Sprintf("%s_elb", ResourcePrefix),
 	}
 }
@@ -73,16 +73,18 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 
 	detectedELB := []DetectedELB{}
 
+	pricingRegionPrefix, err := el.pricingClient.GetRegionPrefix(el.region)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"region": el.region,
+		}).Error("Could not get pricing region prefix")
+		el.updateErrorServiceStatus(err)
+		return detectedELB, err
+	}
+
 	instances, err := el.DescribeLoadbalancers(nil, nil)
 	if err != nil {
-
-		el.collector.UpdateServiceStatus(collector.EventCollector{
-			ResourceName: el.Name,
-			Data: collector.EventStatusData{
-				Status:       collector.EventError,
-				ErrorMessage: err.Error(),
-			},
-		})
+		el.updateErrorServiceStatus(err)
 		return detectedELB, err
 	}
 
@@ -90,8 +92,13 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 
 	for _, instance := range instances {
 		log.WithField("name", *instance.LoadBalancerName).Debug("checking elb")
-
-		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput(), "", el.region)
+		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput([]*pricing.Filter{
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("usagetype"),
+				Value: awsClient.String(fmt.Sprintf("%sLoadBalancerUsage", pricingRegionPrefix)),
+			},
+		}), "", el.region)
 
 		for _, metric := range el.metrics {
 
@@ -196,33 +203,27 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 }
 
 // GetPricingFilterInput prepare document elb pricing filter
-func (el *ELBManager) GetPricingFilterInput() *pricing.GetProductsInput {
+func (el *ELBManager) GetPricingFilterInput(extraFilters []*pricing.Filter) *pricing.GetProductsInput {
+	filters := []*pricing.Filter{
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("termType"),
+			Value: awsClient.String("OnDemand"),
+		},
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("productFamily"),
+			Value: awsClient.String("Load Balancer"),
+		},
+	}
+
+	if extraFilters != nil {
+		filters = append(filters, extraFilters...)
+	}
 
 	return &pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
-		Filters: []*pricing.Filter{
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("usagetype"),
-				Value: awsClient.String("LoadBalancerUsage"),
-			},
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("productFamily"),
-				Value: awsClient.String("Load Balancer-Application"),
-			},
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("TermType"),
-				Value: awsClient.String("OnDemand"),
-			},
-
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("group"),
-				Value: awsClient.String("ELB:Balancer"),
-			},
-		},
+		Filters:     filters,
 	}
 }
 
@@ -250,4 +251,15 @@ func (el *ELBManager) DescribeLoadbalancers(marker *string, loadbalancers []*elb
 	}
 
 	return loadbalancers, nil
+}
+
+// updateErrorServiceStatus reports when elb can't collect data
+func (el *ELBManager) updateErrorServiceStatus(err error) {
+	el.collector.UpdateServiceStatus(collector.EventCollector{
+		ResourceName: el.Name,
+		Data: collector.EventStatusData{
+			Status:       collector.EventError,
+			ErrorMessage: err.Error(),
+		},
+	})
 }

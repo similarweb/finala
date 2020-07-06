@@ -29,16 +29,47 @@ type ELBV2Manager struct {
 	pricingClient      *PricingManager
 	metrics            []config.MetricConfig
 	region             string
-	namespace          string
 	servicePricingCode string
 	Name               string
 }
 
-// DetectedELBV2 define the detected AWS ELB instances
+// DetectedELBV2 defines the detected AWS ELB instances
 type DetectedELBV2 struct {
 	Metric string
 	Region string
+	Type   string
 	collector.PriceDetectedFields
+}
+
+// loadBalancerConfig defines loadbalancer's configuration of metrics and pricing
+type loadBalancerConfig struct {
+	cloudWatchNamespace string
+	pricingfilters      []*pricing.Filter
+}
+
+// loadBalancersConfig defines loadbalancers configuration of metrics and pricing for
+// Multiple types of LoadBalancers.
+var loadBalancersConfig = map[string]loadBalancerConfig{
+	"application": {
+		cloudWatchNamespace: "AWS/ApplicationELB",
+		pricingfilters: []*pricing.Filter{
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("productFamily"),
+				Value: awsClient.String("Load Balancer-Application"),
+			},
+		},
+	},
+	"network": {
+		cloudWatchNamespace: "AWS/NetworkELB",
+		pricingfilters: []*pricing.Filter{
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("productFamily"),
+				Value: awsClient.String("Load Balancer-Network"),
+			},
+		},
+	},
 }
 
 // NewELBV2Manager implements AWS GO SDK
@@ -51,8 +82,7 @@ func NewELBV2Manager(collector collector.CollectorDescriber, client ELBV2ClientD
 		metrics:            metrics,
 		pricingClient:      pricing,
 		region:             region,
-		namespace:          "AWS/ApplicationELB",
-		servicePricingCode: "AmazonEC2",
+		servicePricingCode: "AWSELB",
 		Name:               fmt.Sprintf("%s_elbv2", ResourcePrefix),
 	}
 }
@@ -74,26 +104,39 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 
 	detectedELBV2 := []DetectedELBV2{}
 
+	pricingRegionPrefix, err := el.pricingClient.GetRegionPrefix(el.region)
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"region": el.region,
+		}).Error("Could not get pricing region prefix")
+		el.updateErrorServiceStatus(err)
+		return detectedELBV2, err
+	}
+
 	instances, err := el.DescribeLoadbalancers(nil, nil)
 	if err != nil {
-		el.collector.UpdateServiceStatus(collector.EventCollector{
-			ResourceName: el.Name,
-			Data: collector.EventStatusData{
-				Status:       collector.EventError,
-				ErrorMessage: err.Error(),
-			},
-		})
+		el.updateErrorServiceStatus(err)
 		return detectedELBV2, err
 	}
 
 	now := time.Now()
 
 	for _, instance := range instances {
+		var cloudWatchNameSpace string
+		var price float64
+		if loadBalancerConfig, found := loadBalancersConfig[*instance.Type]; found {
+			cloudWatchNameSpace = loadBalancerConfig.cloudWatchNamespace
 
-		log.WithField("name", *instance.LoadBalancerName).Debug("cheking elbV2")
+			log.WithField("name", *instance.LoadBalancerName).Debug("checking elbV2")
 
-		price, _ := el.pricingClient.GetPrice(el.GetPricingFilterInput(), "", el.region)
-
+			loadBalancerConfig.pricingfilters = append(
+				loadBalancerConfig.pricingfilters, &pricing.Filter{
+					Type:  awsClient.String("TERM_MATCH"),
+					Field: awsClient.String("usagetype"),
+					Value: awsClient.String(fmt.Sprintf("%sLoadBalancerUsage", pricingRegionPrefix)),
+				})
+			price, _ = el.pricingClient.GetPrice(el.GetPricingFilterInput(loadBalancerConfig.pricingfilters), "", el.region)
+		}
 		for _, metric := range el.metrics {
 
 			log.WithFields(log.Fields{
@@ -110,7 +153,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 			elbv2Name := regx.ReplaceAllString(*instance.LoadBalancerArn, "")
 
 			metricInput := cloudwatch.GetMetricStatisticsInput{
-				Namespace:  &el.namespace,
+				Namespace:  &cloudWatchNameSpace,
 				MetricName: &metric.Description,
 				Period:     &period,
 				StartTime:  &metricEndTime,
@@ -169,6 +212,7 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 				elbv2 := DetectedELBV2{
 					Region: el.region,
 					Metric: metric.Description,
+					Type:   *instance.Type,
 					PriceDetectedFields: collector.PriceDetectedFields{
 						ResourceID:      *instance.LoadBalancerName,
 						LaunchTime:      *instance.CreatedTime,
@@ -203,33 +247,22 @@ func (el *ELBV2Manager) Detect() ([]DetectedELBV2, error) {
 }
 
 // GetPricingFilterInput prepare document elb pricing filter
-func (el *ELBV2Manager) GetPricingFilterInput() *pricing.GetProductsInput {
+func (el *ELBV2Manager) GetPricingFilterInput(extraFilters []*pricing.Filter) *pricing.GetProductsInput {
+	filters := []*pricing.Filter{
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("termType"),
+			Value: awsClient.String("OnDemand"),
+		},
+	}
+
+	if extraFilters != nil {
+		filters = append(filters, extraFilters...)
+	}
 
 	return &pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
-		Filters: []*pricing.Filter{
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("usagetype"),
-				Value: awsClient.String("LoadBalancerUsage"),
-			},
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("productFamily"),
-				Value: awsClient.String("Load Balancer-Application"),
-			},
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("TermType"),
-				Value: awsClient.String("OnDemand"),
-			},
-
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("group"),
-				Value: awsClient.String("ELB:Balancer"),
-			},
-		},
+		Filters:     filters,
 	}
 }
 
@@ -257,4 +290,15 @@ func (el *ELBV2Manager) DescribeLoadbalancers(marker *string, loadbalancers []*e
 	}
 
 	return loadbalancers, nil
+}
+
+// updateErrorServiceStatus reports when elbv2 can't collect data
+func (el *ELBV2Manager) updateErrorServiceStatus(err error) {
+	el.collector.UpdateServiceStatus(collector.EventCollector{
+		ResourceName: el.Name,
+		Data: collector.EventStatusData{
+			Status:       collector.EventError,
+			ErrorMessage: err.Error(),
+		},
+	})
 }

@@ -9,15 +9,13 @@ COPY . .
 RUN make build-ui
 
 FROM alpine:3.9 
-RUN apk add ca-certificates curl wget
+RUN apk add ca-certificates curl wget jq
 
-RUN curl -s https://api.github.com/repos/similarweb/finala/releases/latest \
-  | grep browser_download_url \
-  | grep linux_386 \
-  | cut -d '"' -f 4 \
-  | wget -qi - && \
-  tar -zxvf ./linux_386.tar.gz && \
-  mv linux_386/finala /bin/finala
+RUN DOWNLOAD_URL=$(curl -s https://api.github.com/repos/similarweb/finala/releases/latest \
+  | jq -r '.assets[] | select(.browser_download_url | contains("Linux_i386")) | .browser_download_url') \
+  && wget -qO- ${DOWNLOAD_URL} \
+  | tar xz \
+  && mv finala /bin/finala
 
 COPY --from=build_ui /app/ui/build /ui/build
 

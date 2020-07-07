@@ -9,7 +9,9 @@
         "react"
     ],
     "rules":{
-     
+      "no-unused-vars": 1,
+      "no-console": 1,
+      "react/display-name": 0
     },
     "globals": {
         "Promise":true,

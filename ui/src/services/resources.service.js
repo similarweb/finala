@@ -6,6 +6,22 @@ export const ResourcesService = {
     GetContent,
 };
 
+
+
+const getTransformedFilters = (filters) => {
+
+    const params = {};
+    filters.forEach(filter => {
+        if (filter.id.substr(0,8) === 'resource') {
+            return; //skip
+        }
+        const [key, value] = filter.id.split(' : ');
+        params[`filter_Data.Tag.${key.toLowerCase()}`] = value.toLowerCase();
+    });
+    return params;
+}
+
+
 /**
  * Get executions data
  */
@@ -18,8 +34,14 @@ function GetExecutions() {
 /**
  * Get resources metadata
  */
-function Summary(executionID) {
-    return http.send(`api/v1/summary/${executionID}`, `get`).then(this.handleResponse).then(response => {
+function Summary(executionID, filters = []) {
+    const params = {
+        ...{ executionID } , 
+        ...getTransformedFilters(filters) 
+    };
+    const searchParams = new window.URLSearchParams(params).toString();
+
+    return http.send(`api/v1/summary/${executionID}?${searchParams}`, `get`).then(this.handleResponse).then(response => {
         return response;
     })
 }
@@ -28,9 +50,15 @@ function Summary(executionID) {
  * Get resource data
  * @param {string} name
  */
-function GetContent(name, executionID) {
+function GetContent(name, executionID, filters = []) {
 
-    return http.send(`api/v1/resources/${name}?executionID=${executionID}`, `get`).then(this.handleResponse).then(response => {
+    const params = {
+        ...{ executionID } , 
+        ...getTransformedFilters(filters) 
+    };
+    const searchParams = new window.URLSearchParams(params).toString();
+
+    return http.send(`api/v1/resources/${name}?${searchParams}`, `get`).then(this.handleResponse).then(response => {
         return response;
     })
 

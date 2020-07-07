@@ -44,13 +44,6 @@ fmt: ## Validate go format
 	else \
 		echo Your code formating is according gofmt standards; \
 	fi
-
-release: build-ui releasebin ## Build and release all platforms builds to nexus
-
-releasebin: ## Create release with platforms
-	@go get github.com/mitchellh/gox
-	@sh -c "$(CURDIR)/build-support/build.sh ${APPLICATION_NAME}"
-	cd pkg && ls | xargs -I {} tar zcvf {}.tar.gz {}
 		
 build-linux: ## Build Cross Platform Binary
 		CGO_ENABLED=0 GOOS=linux GOARCH=$(GOARCH) $(GOBUILD) -o $(BINARY_NAME)_linux -v

@@ -2,16 +2,6 @@ name: Go
 on: [push]
 jobs:
 
-  spectralops:
-    name: Spectral
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install
-        run: curl -L spectralops.io/next | sudo sh
-      - name: Scan
-        run: spectral run
-
   test:
     name: Code Test
     runs-on: ubuntu-latest

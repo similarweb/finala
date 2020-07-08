@@ -61,6 +61,7 @@ func Execute() {
 // init cobra global commands
 func init() {
 	cobra.OnInitialize(initCmd)
+	rootCmd.SetVersionTemplate(`{{printf "Finala %s" .Version}}`)
 	rootCmd.PersistentFlags().StringVarP(&cfgFile, "config", "c", "/etc/finala/config.yaml", "path to the config file")
 }
 
@@ -83,5 +84,5 @@ func initCmd() {
 
 // getVersion returns the current build version
 func getVersion() string {
-	return fmt.Sprintf("Finala %s (%s)", version, commit)
+	return fmt.Sprintf("%s (%s)", version, commit)
 }

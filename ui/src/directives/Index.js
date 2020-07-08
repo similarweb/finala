@@ -1,5 +1,2 @@
-
-import {titleDirective } from './Title';
-import { MoneyDirective } from './Money';
-
-export { titleDirective, MoneyDirective }
+export { titleDirective } from "./Title";
+export { MoneyDirective } from "./Money";

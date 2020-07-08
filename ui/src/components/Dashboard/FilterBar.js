@@ -1,112 +1,144 @@
 import React, { Fragment, useState, useEffect } from "react";
 import { connect } from "react-redux";
-import PropTypes from 'prop-types';
-import {history} from 'configureStore'
-
+import PropTypes from "prop-types";
+import { history } from "configureStore";
 import { TagsService } from "services/tags.service";
+import { makeStyles } from "@material-ui/core/styles";
+import { Box, Chip, TextField } from "@material-ui/core";
+import Autocomplete from "@material-ui/lab/Autocomplete";
+import { titleDirective } from "../../directives";
+import CancelIcon from "@material-ui/icons/Cancel";
 
-import { makeStyles } from '@material-ui/core/styles';
-import {Box, Chip, TextField} from '@material-ui/core';
-import Autocomplete from '@material-ui/lab/Autocomplete';
-
-
-
-const useStyles = makeStyles((theme) => ({
-   
+const useStyles = makeStyles(() => ({
   Autocomplete: {
-    width: '100%',
+    width: "100%",
   },
   filterInput: {
-    borderColor:'#c1c1c1',
+    borderColor: "#c1c1c1",
     backgroundColor: "white",
-    '&:hover': {
-      borderColor: 'red',
-      borderWidth: 2
+    "&:hover": {
+      borderColor: "red",
+      borderWidth: 2,
     },
   },
   chips: {
-    fontWeight: 'bold',
-    fontFamily:'Arial !important',
-    margin: '5px',
-    borderRadius: '3px',
-    backgroundColor: '#d5dee6',
-    fontSize: '14px'
-  }
-
-
+    fontWeight: "bold",
+    fontFamily: "Arial !important",
+    margin: "5px",
+    borderRadius: "3px",
+    backgroundColor: "#d5dee6",
+    fontSize: "14px",
+  },
 }));
 
-
-const titleDirective = (title) => {
-  let titleWords  = title.split('_').slice(1);
-  titleWords = titleWords.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-  return titleWords.join(' ');
-} 
-
-const FilterBar = ({ filters,currentExecution, setFilters, setResource }) => {
-
-  const classes  = useStyles();
+/**
+ * @param  {array} {filters  Filters List
+ * @param  {string} currentExecution Global Execution Id
+ * @param  {func} setFilters Update filters list
+ * @param  {func} setResource Update Selected Resource}
+ */
+const FilterBar = ({ filters, currentExecution, setFilters, setResource }) => {
+  const classes = useStyles();
   const [tags, setTags] = useState({});
   const [options, setOptions] = useState([]);
   const [tagValues, setTagValues] = useState([]);
   let inputRef;
 
-
+  /**
+   * Fetching server tagslist for autocomplete
+   */
   const fetchTags = () => {
-    TagsService.list(currentExecution).then(responseData => {
-     
-
-      const tagOptions = Object.keys(responseData).map(tagKey => {
-        return { title: tagKey, id:tagKey}
-      })
+    TagsService.list(currentExecution).then((responseData) => {
+      const tagOptions = Object.keys(responseData).map((tagKey) => {
+        return { title: tagKey, id: tagKey };
+      });
       setTags(responseData);
-      setOptions(tagOptions)
-      console.log('tags', tagOptions);
-      
-    })
-  }
-
- 
+      setOptions(tagOptions);
+    });
+  };
+  /**
+   * Update filters list & history from auto complete
+   * @param  {array} filters
+   */
   const updateFilters = (filters) => {
-    setFilters(filters);
-    const searchParams = new window.URLSearchParams({filters: filters.map(f => f.id)})
+    // verify uniqueness & has value
+    const filtersList = filters.filter(
+      (v, i, a) => a.findIndex((t) => t.id === v.id) === i
+    );
+    setFilters(filtersList);
+    const searchParams = new window.URLSearchParams({
+      filters: filters.map((f) => f.id),
+    });
     history.push({
-      pathname: '/',
+      pathname: "/",
       search: `?${searchParams.toString()}`,
     });
-  }
+  };
 
+  /**
+   * Delete filter when X clicked
+   * @param {object} filter Filter property from filter list
+   */
+  const deleteFilter = (filter) => {
+    const updatedFilters = filters.filter((row) => row.id !== filter.id);
+    updateFilters(updatedFilters);
+    if (filter.type === "resource") {
+      setResource(null);
+    }
+  };
+
+  /**
+   * Loading base state from url (tags and resource)
+   */
   const loadSearchState = () => {
-    const searchParams = new window.URLSearchParams(window.location.search)
-    const searchQuery = searchParams.get('filters');
+    const searchParams = new window.URLSearchParams(window.location.search);
+    const searchQuery = searchParams.get("filters");
     if (!searchQuery) {
       return;
     }
-    const QFilters = searchQuery.split(',')
+    const QFilters = searchQuery.split(",");
     if (QFilters[0] === "") {
       return;
     }
     let resource = false;
     const filters = [];
-    QFilters.forEach(filter => {
-        if (filter.substr(0,8) === 'resource') {
-          let [filterKey, filterValue] = filter.split(':');
+    QFilters.forEach((filter) => {
+      if (filter.substr(0, 8) === "resource") {
+        let [, filterValue] = filter.split(":");
+        if (filterValue) {
           const filterTitle = titleDirective(filterValue);
-          filters.push({title: `Resource : ${filterTitle}`, id:filter, value: filterValue, type:'resource'})
+          filters.push({
+            title: `Resource : ${filterTitle}`,
+            id: filter,
+            value: filterValue,
+            type: "resource",
+          });
           resource = filterValue;
-        } else {
-          const [filterKey, filterValue] = filter.split(' : ');
-          filters.push({title: filter, id:filter, value: filterValue, type:'tag'})
         }
-      
+      } else {
+        const [, filterValue] = filter.split(" : ");
+        if (filterValue) {
+          filters.push({
+            title: filter,
+            id: filter,
+            value: filterValue,
+            type: "tag",
+          });
+        }
+      }
     });
 
     updateFilters(filters);
     if (resource) {
-      setResource(resource)
+      setResource(resource);
     }
-  }
+  };
 
+  /**
+   * Callback for Options select, read tag values and set options for 2nd autocomplete
+   * @param {event} event Javascript onChange Event
+   * @param {object} opt  Selected option from autocomplete
+   */
   const optionChanged = (event, opt) => {
     if (!opt.length) {
       updateFilters([]);
@@ -114,97 +146,158 @@ const FilterBar = ({ filters,currentExecution, setFilters, setResource }) => {
       return;
     }
     if (opt.length < filters.length) {
-      const filtersClone =  filters.slice(0, opt.length);
+      const filtersClone = filters.slice(0, opt.length);
       updateFilters(filtersClone);
-
-      const hasResourceFilter = filtersClone.findIndex(f => f.type === 'resource')
+      const hasResourceFilter = filtersClone.findIndex(
+        (f) => f.type === "resource"
+      );
       if (hasResourceFilter === -1) {
         setResource(null);
       }
       return;
     }
-    const id = opt[opt.length -1].id;
-    filters.push({title: `${id} : `, id, type:'tag', value:null })
+    // verify option is in options list
+    if (!opt[opt.length - 1].id) {
+      return false;
+    }
+
+    const id = opt[opt.length - 1].id;
+    filters.push({ title: `${id} : `, id, type: "tag", value: null });
 
     updateFilters(filters);
-    const tagValuesList =  tags[id].map(opt => {
-      return  { title:`${id} : ${opt}`, id: `${id} : ${opt}`, value:opt, type:'tag'}
-    })
-    setTagValues(tagValuesList)
+    const tagValuesList = tags[id].map((opt) => {
+      return {
+        title: `${id} : ${opt}`,
+        id: `${id} : ${opt}`,
+        value: opt,
+        type: "tag",
+      };
+    });
+    setTagValues(tagValuesList);
     inputRef.focus();
-  }
-  
+  };
+
+  /**
+   * Callback for Tag Values autocomplete, adds the filter to the filters list
+   * @param {event} event Javascript onChange Event
+   * @param {object} opt  Selected option from autocomplete
+   */
   const onValueSelected = (event, opt) => {
-    
-    const filtersClone =  filters.slice(0, filters.length-1);
-    const inFilters = filters.findIndex(row => row.id === opt.id)
+    const filtersClone = filters.slice(0, filters.length - 1);
+    const inFilters = filters.findIndex((row) => row.id === opt.id);
     // prevent Duplicate
     if (inFilters === -1) {
-      filtersClone.push({title: opt.title, id:opt.id, value: opt.value, type:'tag'})
+      filtersClone.push({
+        title: opt.title,
+        id: opt.id,
+        value: opt.value,
+        type: "tag",
+      });
     }
     updateFilters(filtersClone);
     setTagValues([]);
-  }
-  
+  };
+
+  /**
+   * Detect Autocomplete close reason, if its not because value selected, last selection will be removed
+   * @param {event} event Javascript onChange Event
+   * @param {string} opt  close type from autocomplete
+   */
+  const onValueClosed = (event, opt) => {
+    if (opt !== "select-option") {
+      const filtersClone = filters.slice(0, filters.length - 1);
+      updateFilters(filtersClone);
+      setTagValues([]);
+    }
+  };
 
   useEffect(() => {
     if (filters.length === 0) {
       loadSearchState();
     }
-  },[filters]);
+  }, [filters]);
 
   useEffect(() => {
     if (currentExecution) {
       fetchTags();
     }
-  },[currentExecution]);
+  }, [currentExecution]);
 
   return (
     <Fragment>
       <Box mb={2}>
-      <Autocomplete
-    multiple
-    value={filters}
-    openOnFocus={true}
-    className={classes.Autocomplete}
-    id="fixed-tags-demo"
-    onChange={optionChanged}
-    getOptionSelected={(option, value) => false} 
-
-    options={options}
-    getOptionLabel={(option) => option.title}
-    renderTags={(value, getTagProps) =>
-      value.map((option) => (
-        <Chip className={classes.chips} ma={2} label={option.title} key={option.title} />
-      ))
-    }
-    renderInput={(params) => (
-      <TextField {...params} className={classes.filterInput} variant="outlined" label="Add Filter" placeholder="Add Filter" />
-    )}
-  />
-      <Autocomplete
-    options={tagValues}
-    onChange={onValueSelected}
-    openOnFocus={true}
-    getOptionLabel={(option) => option.title}
-    getOptionSelected={(option, value) => false} 
-
-    renderTags={(value, getTagProps) =>
-      value.map((option) => (
-        <Chip className={classes.chips}   ma={2} label={option.title} key={option.title} />
-      ))
-    }
-    renderInput={(params) => (
-      <TextField {...params}  inputRef={input => {
-        inputRef = input;
-      }} style={{visibility:'visible', marginTop:'-60px', zIndex:'-1'}} className={classes.filterInput} variant="outlined" label="" placeholder="" />
-    )}
-  />
+        <Autocomplete
+          multiple
+          value={filters}
+          openOnFocus={true}
+          className={classes.Autocomplete}
+          id="fixed-tags-demo"
+          onChange={optionChanged}
+          freeSolo
+          options={options}
+          getOptionLabel={(option) => option.title}
+          getOptionSelected={() => false}
+          renderTags={(value) =>
+            value.map((option) => (
+              <Chip
+                className={classes.chips}
+                ma={2}
+                label={option.title}
+                key={option.title}
+                onDelete={() => deleteFilter(option)}
+                deleteIcon={<CancelIcon />}
+              />
+            ))
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              className={classes.filterInput}
+              variant="outlined"
+              label="Add Filter"
+              placeholder="Add Filter"
+            />
+          )}
+        />
+        <Autocomplete
+          options={tagValues}
+          onChange={onValueSelected}
+          onClose={onValueClosed}
+          openOnFocus={true}
+          getOptionLabel={(option) => option.title}
+          getOptionSelected={() => false}
+          renderTags={(value) =>
+            value.map((option) => (
+              <Chip
+                className={classes.chips}
+                ma={2}
+                label={option.title}
+                key={option.title}
+              />
+            ))
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              inputRef={(input) => {
+                inputRef = input;
+              }}
+              style={{
+                visibility: "visible",
+                marginTop: "-60px",
+                zIndex: "-1",
+              }}
+              className={classes.filterInput}
+              variant="outlined"
+              label=""
+              placeholder=""
+            />
+          )}
+        />
       </Box>
     </Fragment>
-    
   );
-}
+};
 
 FilterBar.defaultProps = {};
 FilterBar.propTypes = {
@@ -214,18 +307,13 @@ FilterBar.propTypes = {
   currentExecution: PropTypes.string,
 };
 
-
-
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   filters: state.filters.filters,
-  currentExecution: state.executions.current
+  currentExecution: state.executions.current,
 });
-const mapDispatchToProps = dispatch => ({
-    setFilters: (data) =>  dispatch({ type: 'SET_FILTERS' , data}),
-    setResource: (data) =>  dispatch({ type: 'SET_RESOURCE' , data})
-
+const mapDispatchToProps = (dispatch) => ({
+  setFilters: (data) => dispatch({ type: "SET_FILTERS", data }),
+  setResource: (data) => dispatch({ type: "SET_RESOURCE", data }),
 });
 
-
-// export default FilterBar;
 export default connect(mapStateToProps, mapDispatchToProps)(FilterBar);

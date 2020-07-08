@@ -1,145 +1,133 @@
-import React, { Fragment, useEffect } from "react";
+import React, { Fragment } from "react";
 import { connect } from "react-redux";
-import PropTypes from 'prop-types';
-import colors from './colors.json'
+import PropTypes from "prop-types";
+import colors from "./colors.json";
 import Chart from "react-apexcharts";
+import { titleDirective, MoneyDirective } from "../../directives";
+import { history } from "configureStore";
+import { Box, Card, CardContent } from "@material-ui/core";
 
-import { history } from 'configureStore'
-import {
-  Box,
-  Card,
-  CardContent
-} from '@material-ui/core';
- 
-
-const titleDirective = (title) => {
-  let titleWords = title.split('_').slice(1);
-  titleWords = titleWords.map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-  return titleWords.join(' ');
-}
-const MoneyDirective = (amount, decimalCount = 2, decimal = ".", thousands = ",") => {
-  try {
-    decimalCount = Math.abs(decimalCount);
-    decimalCount = isNaN(decimalCount) ? 2 : decimalCount;
-
-    const negativeSign = amount < 0 ? "-" : "";
-
-    let i = parseInt(amount = Math.abs(Number(amount) || 0).toFixed(decimalCount)).toString();
-    let j = (i.length > 3) ? i.length % 3 : 0;
-
-    return negativeSign + (j ? i.substr(0, j) + thousands : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousands) + (decimalCount ? decimal + Math.abs(amount - i).toFixed(decimalCount).slice(2) : "");
-  } catch (e) {
-    console.log(e)
-  }
-}
-
-const ResourcesChart = ({
-  resources,
-  filters,
-  addFilter,
-  setResource
-}) => {
-
-  const colorList = colors.map(color => color.hex);
+/**
+ * @param  {array} {resources  Resources List
+ * @param  {array} filters  Filters List
+ * @param  {func} addFilter Add filter to  filters list
+ * @param  {func} setResource Update Selected Resource}
+ */
+const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
+  const colorList = colors.map((color) => color.hex);
+  const sortedResources = Object.values(resources).sort((a, b) =>
+    a.TotalSpent >= b.TotalSpent ? -1 : 1
+  );
   const chartOptions = {
     options: {
       chart: {
-        type: 'bar',
-        width: '100%',
-        height: '1500',
+        type: "bar",
+        width: "100%",
+        height: "1500",
         events: {
           dataPointSelection: function (event, chartContext, config) {
-            const seriesIndex = config.dataPointIndex;
-            const res = Object.values(resources);
-            const selectedResource = res[seriesIndex];
-            setSelectedResource(selectedResource)
+            const dataPointIndex = config.dataPointIndex;
+            const res = sortedResources;
+            const selectedResource = res[dataPointIndex];
+            setSelectedResource(selectedResource);
           },
         },
       },
       colors: colorList,
       tooltip: {
-        theme: 'light',
+        theme: "light",
         x: {
-          show: true
+          show: true,
         },
         y: {
           title: {
             formatter: function (val, opt) {
               return opt.w.globals.labels[opt.dataPointIndex];
             },
-          }
-        }
+          },
+        },
       },
       dataLabels: {
         enabled: true,
         formatter: function (val, opt) {
           return opt.w.globals.labels[opt.dataPointIndex];
         },
-
       },
 
       plotOptions: {
         bar: {
           horizontal: true,
           distributed: true,
-          startingShape: 'flat',
-          endingShape: 'flat',
-          columnWidth: '70%',
-          barHeight: '70%',
-        }
+          startingShape: "flat",
+          endingShape: "flat",
+          columnWidth: "70%",
+          barHeight: "70%",
+        },
       },
       xaxis: {
-        categories: []
-      }
+        categories: [],
+      },
     },
-    series: [{
-      name: "",
-      data: []
-    }]
+    series: [
+      {
+        name: "",
+        data: [],
+      },
+    ],
   };
 
+  /**
+   *
+   * @param {object} resource Set selected resource
+   */
   const setSelectedResource = (resource) => {
     const filter = {
       title: `Resource : ${resource.title}`,
       id: `resource:${resource.ResourceName}`,
-      type: 'resource'
-    }
+      type: "resource",
+    };
     setResource(resource.ResourceName);
     addFilter(filter);
-    
-    const searchParams = new window.URLSearchParams({filters: filters.map(f => f.id)})
+
+    const searchParams = new window.URLSearchParams({
+      filters: filters.map((f) => f.id),
+    });
     history.push({
-      pathname: '/',
+      pathname: "/",
       search: `?${searchParams.toString()}`,
     });
-  }
+  };
 
-  const resourcesList = Object.values(resources)
-                        .sort((a, b) => (a.TotalSpent >= b.TotalSpent) ? -1 : 1)
-                        .map(resource => {
-                          const title = titleDirective(resource.ResourceName);
-                          const amount = MoneyDirective(resource.TotalSpent);
-                          resource.title = `${title} ($${amount})`;
+  /**
+   * push resources into chart
+   */
+  sortedResources.forEach((resource) => {
+    const title = titleDirective(resource.ResourceName);
+    const amount = MoneyDirective(resource.TotalSpent);
+    resource.title = `${title} (${amount})`;
 
-                          chartOptions.options.xaxis.categories.push(resource.title);
-                          chartOptions.series[0].data.push(resource.TotalSpent);
-                          return resource;
-                        });
+    chartOptions.options.xaxis.categories.push(resource.title);
+    chartOptions.series[0].data.push(resource.TotalSpent);
+    return resource;
+  });
 
-  return ( <Fragment >
-    <Box mb={3} >
-    <Card>
-    <CardContent >
-      <Chart options={chartOptions.options}
-            series={chartOptions.series}
-            type = "bar"
+  return (
+    <Fragment>
+      <Box mb={3}>
+        <Card>
+          <CardContent>
+            <Chart
+              id="MainChart"
+              options={chartOptions.options}
+              series={chartOptions.series}
+              type="bar"
             />
-    </CardContent> 
-    </Card>
-    </Box>
+          </CardContent>
+        </Card>
+      </Box>
     </Fragment>
   );
-}
+};
 
 ResourcesChart.defaultProps = {};
 ResourcesChart.propTypes = {
@@ -149,16 +137,14 @@ ResourcesChart.propTypes = {
   setResource: PropTypes.func,
 };
 
-
-const mapStateToProps = state => ({
+const mapStateToProps = (state) => ({
   resources: state.resources.resources,
   filters: state.filters.filters,
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  addFilter: (data) =>  dispatch({ type: 'ADD_FILTER' , data}),
-  setResource: (data) =>  dispatch({ type: 'SET_RESOURCE' , data})
+  addFilter: (data) => dispatch({ type: "ADD_FILTER", data }),
+  setResource: (data) => dispatch({ type: "SET_RESOURCE", data }),
 });
-
 
 export default connect(mapStateToProps, mapDispatchToProps)(ResourcesChart);

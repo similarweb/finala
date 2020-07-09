@@ -3,6 +3,10 @@
 ![Fmt](https://github.com/similarweb/finala/workflows/Fmt/badge.svg)
 
 
+<img src="https://github.com/similarweb/finala/raw/update-readme-md/docs/images/finala.png" width="400">
+
+---
+
 # Finala
 
 A resource cloud scanner that analyzes and reports about wasteful and unused resources to cut unwanted expenses.
@@ -30,12 +34,12 @@ More to come...
 ### Dashboard
 ![alt Summary](https://raw.githubusercontent.com/similarweb/finala/master/docs/dashboard.png)
 
-
 ### Unused RDS report
 ![alt Resources](https://raw.githubusercontent.com/similarweb/finala/master/docs/resource.jpg)
 
+
 ### Notifications
-![alt Slack](docs/slack.png)
+![alt Slack](https://raw.githubusercontent.com/similarweb/finala/update-readme-md/docs/images/slack.png)
 
 ## Getting Started
 

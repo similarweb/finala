@@ -40,7 +40,7 @@ More to come...
 
 
 ### Notifications
-![alt Slack](https://raw.githubusercontent.com/similarweb/finala/update-readme-md/docs/images/slack.png)
+![alt Slack](https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/slack.png)
 
 ## Getting Started
 

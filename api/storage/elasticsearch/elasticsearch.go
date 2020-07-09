@@ -371,7 +371,7 @@ func (sm *StorageManager) GetExecutionTags(executionID string) (map[string][]str
 		}
 
 		for key, value := range availableTags.Data.Tag {
-			tags[strings.Title(key)] = append(tags[strings.Title(key)], strings.ToLower(value))
+			tags[key] = append(tags[key], value)
 		}
 	}
 

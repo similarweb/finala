@@ -2,8 +2,9 @@
 ![Lint](https://github.com/similarweb/finala/workflows/Lint/badge.svg)
 ![Fmt](https://github.com/similarweb/finala/workflows/Fmt/badge.svg)
 
-
-<img src="https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/logo.png" width="400">
+<p align="center">
+    <img src="https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/logo.png" width="400">
+</p>
 
 ---
 

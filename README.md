@@ -1,9 +1,10 @@
 [![codecov](https://codecov.io/gh/similarweb/finala/branch/master/graph/badge.svg)](https://codecov.io/gh/similarweb/finala)
 ![Lint](https://github.com/similarweb/finala/workflows/Lint/badge.svg)
 ![Fmt](https://github.com/similarweb/finala/workflows/Fmt/badge.svg)
+[![Go Report Card](https://goreportcard.com/badge/github.com/similarweb/finala)](https://goreportcard.com/report/github.com/similarweb/finala)
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/logo.png" width="400">
+    <img src="https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/logo.png" width="800">
 </p>
 
 ---
@@ -12,23 +13,23 @@
 
 A resource cloud scanner that analyzes and reports about wasteful and unused resources to cut unwanted expenses.
 The tool is based on yaml definitions (no code), by default configuration OR given yaml file and the report output will be saved in a given storage.
-Currently we're not taking into account reservations, private pricing, etc. (WIP)
+Currently we're not taking into account reservations, private pricing, etc.
 
 ## Supported Services
-
 AWS:
-* RDS
-* EC2 (ELB, ALB, EBS)
-* DynamoDB
-* ElasticCache
-* DocumentDB
-* IAM user last activity
-* Lambda
-* Neptune
-* Kinesis
-* RedShift
+Resource            | Sub Resources|
+--------------------| -------------|
+DocumentDB          | -            |
+DynamoDB            | -            |
+EC2                 | Instances`|`ELB`|` NLB`|` ALB`|` EBS
+ElasticCache        | -            |
+IAM User            | -            |
+Kinesis             | -            |
+Lambda              | -            |
+Neptune             | -            |
+RDS                 | -            |
+RedShift            | -            |
 
-More to come...
 
 ## Screenshots
 
@@ -232,14 +233,6 @@ dynamodb:
 $ make test
 
 $ make test-html
-```
-
-### Release New Version
-
-To release a new version run the command: 
-
-```shell
-$ make release
 ```
 
 ## Built With

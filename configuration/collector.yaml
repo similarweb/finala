@@ -148,6 +148,19 @@ providers:
           start_time: 168h # 24h * 7d
           constraint:
             operator: "=="
+            value: 0
+      elasticsearch:
+        - description: "IndexRate + SearchRate"
+          metrics:
+            - name: IndexingRate
+              statistic: Sum
+            - name: SearchRate
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            formula: IndexingRate + SearchRate
+            operator: "=="
             value: 0            
     resources:
       iamLastActivity:

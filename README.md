@@ -1,10 +1,10 @@
-[![codecov](https://codecov.io/gh/similarweb/finala/branch/master/graph/badge.svg)](https://codecov.io/gh/similarweb/finala)
+4[![codecov](https://codecov.io/gh/similarweb/finala/branch/master/graph/badge.svg)](https://codecov.io/gh/similarweb/finala)
 ![Lint](https://github.com/similarweb/finala/workflows/Lint/badge.svg)
 ![Fmt](https://github.com/similarweb/finala/workflows/Fmt/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/similarweb/finala)](https://goreportcard.com/report/github.com/similarweb/finala)
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/logo.png" width="500">
+    <img src="https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/logo.png" width="400">
 </p>
 
 ---

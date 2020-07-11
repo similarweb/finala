@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -81,12 +82,13 @@ func (app *Analyze) All() {
 			app.AnalyzeNeptune(sess, cloudWatchCLient, pricing)
 			app.AnalyzeKinesis(sess, cloudWatchCLient, pricing)
 			app.AnalyzeRedShift(sess, cloudWatchCLient, pricing)
+			app.AnalyzeElasticSearch(sess, cloudWatchCLient, pricing)
 		}
 	}
 
 }
 
-// AnalyzeEC2Instances will analyzes ec2 resources
+// AnalyzeEC2Instances analyzes ec2 resources
 func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["ec2"]
 	if !found {
@@ -105,7 +107,7 @@ func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient 
 
 }
 
-// IAMUsers will analyzes iam users
+// IAMUsers analyzes iam users
 func (app *Analyze) IAMUsers(sess *session.Session) {
 	resource, found := app.resources["iamLastActivity"]
 	if !found {
@@ -130,7 +132,7 @@ func (app *Analyze) IAMUsers(sess *session.Session) {
 
 }
 
-// AnalyzeELB will analyzes elastic load balancer resources
+// AnalyzeELB analyzes elastic load balancer resources
 func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["elb"]
 	if !found {
@@ -148,7 +150,7 @@ func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *Cloudwat
 
 }
 
-// AnalyzeELBV2 will analyzes elastic load balancer resources
+// AnalyzeELBV2 analyzes elastic load balancer resources
 func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["elbv2"]
 	if !found {
@@ -166,7 +168,7 @@ func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *Cloudw
 
 }
 
-// AnalyzeElasticache will analyzes elasticache resources
+// AnalyzeElasticache analyzes elasticache resources
 func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["elasticache"]
 	if !found {
@@ -184,7 +186,7 @@ func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *
 
 }
 
-// AnalyzeRDS will analyzes rds resources
+// AnalyzeRDS analyzes rds resources
 func (app *Analyze) AnalyzeRDS(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["rds"]
 	if !found {
@@ -220,7 +222,7 @@ func (app *Analyze) AnalyzeDynamoDB(sess *session.Session, cloudWatchCLient *Clo
 
 }
 
-// AnalyzeDocdb will analyzes documentDB resources
+// AnalyzeDocdb analyzes documentDB resources
 func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["docDB"]
 	if !found {
@@ -238,7 +240,7 @@ func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *Cloudw
 
 }
 
-// AnalyzeLambda will analyzes lambda resources
+// AnalyzeLambda analyzes lambda resources
 func (app *Analyze) AnalyzeLambda(sess *session.Session, cloudWatchCLient *CloudwatchManager) {
 	metrics, found := app.metrics["lambda"]
 	if !found {
@@ -256,7 +258,7 @@ func (app *Analyze) AnalyzeLambda(sess *session.Session, cloudWatchCLient *Cloud
 
 }
 
-// AnalyzeVolumes will analyzes EC22 volumes resources
+// AnalyzeVolumes analyzes EC22 volumes resources
 func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManager) {
 
 	volumeManager := NewVolumesManager(app.cl, ec2.New(sess), pricing, *sess.Config.Region)
@@ -268,7 +270,7 @@ func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManage
 	}
 }
 
-// AnalyzeNeptune will analyzes Neptune resources
+// AnalyzeNeptune analyzes Neptune resources
 func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["neptune"]
 	if !found {
@@ -285,7 +287,7 @@ func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *Clou
 
 }
 
-// AnalyzeKinesis will analyzes Kinesis resources
+// AnalyzeKinesis analyzes Kinesis resources
 func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["kinesis"]
 	if !found {
@@ -302,7 +304,7 @@ func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *Clou
 
 }
 
-// AnalyzeRedShift will analyzes Redshift resources
+// AnalyzeRedShift analyzes Redshift resources
 func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 	metrics, found := app.metrics["redshift"]
 	if !found {
@@ -315,6 +317,23 @@ func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *Clo
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total redshift resources detected")
+	}
+
+}
+
+// AnalyzeElasticSearch analyzes ElasticSearch resources
+func (app *Analyze) AnalyzeElasticSearch(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
+	metrics, found := app.metrics["elasticsearch"]
+	if !found {
+		log.WithField("resource_name", "elasticsearch").Info("resource was not configured")
+		return
+	}
+
+	elasticsearch := NewElasticSearchManager(app.cl, elasticsearch.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	response, err := elasticsearch.Detect()
+
+	if err == nil {
+		log.WithField("count", len(response)).Info("Total elasticsearch resources detected")
 	}
 
 }

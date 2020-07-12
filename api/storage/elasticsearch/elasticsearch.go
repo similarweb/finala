@@ -239,7 +239,7 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 	// Third Order the ExecutionID by EventTime Desc
 	searchResult, err := sm.client.Search().Aggregation("orderedExecutionID", elastic.NewFiltersAggregation().
 		Filters(elastic.NewBoolQuery().Filter(elastic.NewBoolQuery().Should(elastic.NewMatchQuery("EventType", "service_status")))).
-		SubAggregation("ExecutionIDDesc", elastic.NewTermsAggregation().Field("ExecutionID.keyword").Size(queryLimit).Order("MaxEventTime", false).
+		SubAggregation("ExecutionIDDesc", elastic.NewTermsAggregation().Field("ExecutionID").Size(queryLimit).Order("MaxEventTime", false).
 			SubAggregation("MaxEventTime", elastic.NewMaxAggregation().Field("EventTime")))).
 		Do(context.Background())
 

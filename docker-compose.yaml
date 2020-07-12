@@ -13,6 +13,7 @@ services:
   ui:
       build:
         context: .
+        dockerfile: Dockerfile.dev
       command: 
         - ui 
         - -c 
@@ -28,6 +29,7 @@ services:
   api:
       build:
         context: .
+        dockerfile: Dockerfile.dev
       command: 
         - api 
         - -c 
@@ -49,6 +51,7 @@ services:
   collector:
       build:
         context: .
+        dockerfile: Dockerfile.dev
       command: 
         - collector 
         - -c 
@@ -67,6 +70,7 @@ services:
   # notifier:
   #     build:
   #       context: .
+  #       dockerfile: Dockerfile.dev
   #     command: 
   #       - notifier 
   #       - -c 

@@ -14,7 +14,9 @@ Finala has 2 main objectives:
 ## Features
 * **YAML Definitions**: Resources definitions are described using a high-level YAML configuration syntax. This allows Finala consumers easily tweak the configuration to help it understand their infrastructure, spending habits and normal usage.
 * **1 Click Deployment**: Finala can be deployed via Docker compose or a [Helm chart](https://github.com/similarweb/finala-helm).
-* **Graphical user interface**: Users can easily explore and investigate
+* **Graphical user interface**: Users can easily explore and investigate unused or unutilized resources in your cloud provider.
+* **Resource Filtering by Cloud Provider Tags**: Users can filter unused resources by just providing the tags you are using in your cloud provider.
+* **Schedule Pro Active Notifications**: Finala has the ability to configure scheduled based notifications to a user or a group. 
 
 ## Supported Services
 AWS:

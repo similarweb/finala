@@ -3,7 +3,7 @@
 Welcome to Finala! If you are interested in contributing to the 
 Finala's code repo then checkout this Contributor's Guide. 
 
-For help on how to get started visit our [developer guide](https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/developers).
+For help on how to get started visit our [developer guide](./docs/developers/README.md).
 
 ### Versioning
 

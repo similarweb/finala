@@ -177,5 +177,5 @@ You can reach the Finala community and developers via the following channels:
 
 
 ## Contributing to Finala
-Thank you for your interest in contributing! Please refer to [Contribution guidelines](https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/CONTRIBUTING.md) for guidance.
+Thank you for your interest in contributing! Please refer to [Contribution guidelines](/CONTRIBUTING.md) for guidance.
 

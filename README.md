@@ -38,7 +38,7 @@ RedShift            | -            |
 ## **Screenshots**
 
 ### Dashboard
-![alt Summary](https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/dashboard.png)
+![alt Summary](https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/main-dashboard.png)
 
 ### Unused RDS report
 ![alt Resources](https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/resource.png)

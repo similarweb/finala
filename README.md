@@ -24,8 +24,8 @@ AWS:
 Resource            | Potential Cost Optimization| Unused resource         |Config File                                          |
 --------------------| ---------------------------|-------------------------|-----------------------------------------------------|
 DocumentDB          | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L28), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L130)
-DynamoDB            | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L69), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L180)
-EC2 Instances       | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L78), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L170)
+DynamoDB            | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L78), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L180)
+EC2 Instances       | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L68), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L170)
 EC2 ELB             | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L48), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L150)
 EC2 ALB,NLB         | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L58), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L160)
 EC2 EBS             | :heavy_minus_sign:         | :ballot_box_with_check: |
@@ -33,7 +33,7 @@ ElasticCache        | :ballot_box_with_check:    | :heavy_minus_sign:      | [Co
 IAM User            | :heavy_minus_sign:         | :ballot_box_with_check: | [Collector Config](./configuration/collector.yaml#L153), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L249)
 Kinesis             | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L126), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L228)
 Lambda              | :heavy_minus_sign:         | :ballot_box_with_check: | [Collector Config](./configuration/collector.yaml#L103), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L205)
-Neptune             | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L113), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L216)
+Neptune             | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L113), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L215)
 RDS                 | :ballot_box_with_check:    | :heavy_minus_sign:      |[Collector Config](./configuration/collector.yaml#L18), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L120)
 RedShift            | :heavy_minus_sign:         | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L142), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L244)
 

@@ -21,22 +21,22 @@ Finala has 2 main objectives:
 
 ## Supported Services
 AWS:
-Resource            | Cost Optimization     | Unsued resource|
---------------------| --------------------- | ---------------|
-DocumentDB          |:ballot_box_with_check: | -
-DynamoDB            | √                      | -
-EC2 Instances       | √                      | -
-EC2 ELB             | √                      | -
-EC2 NLB             | √                      | -
-EC2 ALB             | √                | -
-EC2 EBS             | √                | √
-ElasticCache        | √                | -
-IAM User            | -                | √
-Kinesis             | -                |
-Lambda              | -                | √
-Neptune             | √                | -
-RDS                 | √                |
-RedShift            | -                |
+Resource            | Cost Optimization       | Unused resource|
+--------------------| ---------------------   | ---------------|
+DocumentDB          | :ballot_box_with_check: | :heavy_minus_sign:
+DynamoDB            | :ballot_box_with_check: | :heavy_minus_sign:
+EC2 Instances       | :ballot_box_with_check: | :heavy_minus_sign:
+EC2 ELB             | :ballot_box_with_check: | :heavy_minus_sign:
+EC2 NLB             | :ballot_box_with_check: | :heavy_minus_sign:
+EC2 ALB             | :ballot_box_with_check: | :heavy_minus_sign:
+EC2 EBS             | :ballot_box_with_check: | :ballot_box_with_check:
+ElasticCache        | :ballot_box_with_check: | :heavy_minus_sign:
+IAM User            | :heavy_minus_sign:      | :ballot_box_with_check:
+Kinesis             | :heavy_minus_sign:      | :heavy_minus_sign:
+Lambda              | :heavy_minus_sign:      | :ballot_box_with_check:
+Neptune             | :ballot_box_with_check: | :heavy_minus_sign:
+RDS                 | :ballot_box_with_check: | :heavy_minus_sign:
+RedShift            | :heavy_minus_sign:      | :heavy_minus_sign:
 
 ## **Screenshots**
 

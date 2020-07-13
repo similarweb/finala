@@ -1,4 +1,4 @@
-[![codecov](https://codecov.io/gh/similarweb/finala/branch/master/graph/badge.svg)](https://codecov.io/gh/similarweb/finala)
+# Finala [![codecov](https://codecov.io/gh/similarweb/finala/branch/master/graph/badge.svg)](https://codecov.io/gh/similarweb/finala)
 ![Lint](https://github.com/similarweb/finala/workflows/Lint/badge.svg)
 ![Fmt](https://github.com/similarweb/finala/workflows/Fmt/badge.svg)
 [![Go Report Card](https://goreportcard.com/badge/github.com/similarweb/finala)](https://goreportcard.com/report/github.com/similarweb/finala)
@@ -8,12 +8,17 @@
 </p>
 
 ---
+Finala is an open-source resource cloud scanner that analyzes, discloses, and notifies about wasteful and unused resources in your company's infrastructure.
 
-# Finala
+Finala has 2 main objectives:
 
-A resource cloud scanner that analyzes and reports about wasteful and unused resources to cut unwanted expenses.
-The tool is based on yaml definitions (no code), by default configuration OR given yaml file and the report output will be saved in a given storage.
-Currently we're not taking into account reservations, private pricing, etc.
+* Help your organization being cost-effective
+* Find unused resources
+
+## Features
+* **YAML Definitions**: Resources definitions are described using a high-level YAML configuration syntax. This allows Finala consumers easily tweak the configuration to help it understand their infrastructure, spending habits and normal usage.
+* **1 Click Deployment**: Finala can be deployed via Docker compose or a [Helm chart](https://github.com/similarweb/finala-helm).
+* **Graphical user interface**: Users can easily explore and investigate
 
 ## Supported Services
 AWS:
@@ -33,10 +38,10 @@ RedShift            | -            |
 ## Screenshots
 
 ### Dashboard
-![alt Summary](https://raw.githubusercontent.com/similarweb/finala/master/docs/dashboard.png)
+![alt Summary](https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/dashboard.png)
 
 ### Unused RDS report
-![alt Resources](https://raw.githubusercontent.com/similarweb/finala/master/docs/resource.jpg)
+![alt Resources](https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/resource.png)
 
 
 ### Notifications

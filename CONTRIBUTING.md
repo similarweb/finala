@@ -13,7 +13,7 @@ We use standard [semver](https://semver.org/) to mark versions.
 
 The publish of a new release is done with [Github Releases](https://github.com/similarweb/finala/releases) for new versions and patches. 
 
-The Docker image version is updated automatically in Dockerhub on every release (see [finala](https://hub.docker.com/r/similarweb/finala)
+The Docker image version is updated automatically in DockerHub on every release (see [finala](https://hub.docker.com/r/similarweb/finala) on DockerHub)
 
 ## Branches
 

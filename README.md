@@ -21,22 +21,22 @@ Finala has 2 main objectives:
 
 ## Supported Services
 AWS:
-Resource            | Cost Optimization| Unsued resource|
---------------------| -----------------| ---------------|
-DocumentDB          | ✅               | -
-DynamoDB            | ✅ :white_check_mark:	                | -
-EC2 Instances       | ✅ :white_check_mark:	                | -
-EC2 ELB             | ✅ :white_check_mark:	                | -
-EC2 NLB             | ✅ :white_check_mark:	                | -
-EC2 ALB             | ✅ :white_check_mark:	                | -
-EC2 EBS             | ✅ :white_check_mark:	                | ✅ :white_check_mark:	
-ElasticCache        | ✅ :white_check_mark:	                | -
-IAM User            | -                | ✅ :white_check_mark:	
+Resource            | Cost Optimization     | Unsued resource|
+--------------------| --------------------- | ---------------|
+DocumentDB          |:ballot_box_with_check: | -
+DynamoDB            | √                      | -
+EC2 Instances       | √                      | -
+EC2 ELB             | √                      | -
+EC2 NLB             | √                      | -
+EC2 ALB             | √                | -
+EC2 EBS             | √                | √
+ElasticCache        | √                | -
+IAM User            | -                | √
 Kinesis             | -                |
-Lambda              | -                | ✅ :white_check_mark:	
-Neptune             | ✅ :white_check_mark:	                | -
-RDS                 | ✅ :white_check_mark:	                |
-RedShift            | ✅ :white_check_mark:	                |
+Lambda              | -                | √
+Neptune             | √                | -
+RDS                 | √                |
+RedShift            | -                |
 
 ## **Screenshots**
 

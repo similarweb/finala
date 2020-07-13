@@ -4,6 +4,7 @@
 </p>
 
 ---
+## What is Finala?
 Finala is an open-source resource cloud scanner that analyzes, discloses, and notifies about wasteful and unused resources in your company's infrastructure.
 
 Finala has 2 main objectives:

@@ -1,7 +1,7 @@
-const path = require('path')
-const webpack = require('webpack')
+const path = require("path");
+const webpack = require("webpack");
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
-const FaviconsWebpackPlugin = require('favicons-webpack-plugin')
+const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
 
 module.exports = (options) => ({
   mode: options.mode,
@@ -9,54 +9,59 @@ module.exports = (options) => ({
   devtool: options.devtool,
   output: Object.assign(
     {
-      path: path.resolve(process.cwd(), 'build' ,"static"),
-      publicPath: '/static'
+      path: path.resolve(process.cwd(), "build", "static"),
+      publicPath: "/static",
     },
     options.output
-  ), 
+  ),
   module: {
     rules: options.module.rules.concat([
       {
-        test: /\.js$/, 
+        test: /\.js$/,
         exclude: /node_modules/,
         use: {
-          loader: 'babel-loader',
-        }
+          loader: "babel-loader",
+        },
       },
       {
         test: /\.js$/,
         exclude: /node_modules/,
-        use: ['babel-loader', 'eslint-loader']
+        use: ["babel-loader", "eslint-loader"],
       },
       {
         test: /\.(css|sass|scss)$/,
-        use: ExtractTextPlugin.extract({ fallback: 'style-loader', use: 'css-loader!sass-loader' })
+        use: ExtractTextPlugin.extract({
+          fallback: "style-loader",
+          use: "css-loader!sass-loader",
+        }),
       },
       {
-        test: /\.(png|jp(e*)g)$/,  
-        use: [{
-            loader: 'url-loader',
-            options: { 
-                limit: 8000, 
-                name: 'images/[hash]-[name].[ext]'
-            } 
-        }]
+        test: /\.(png|jp(e*)g)$/,
+        use: [
+          {
+            loader: "url-loader",
+            options: {
+              limit: 8000,
+              name: "images/[hash]-[name].[ext]",
+            },
+          },
+        ],
       },
       {
         test: /\.svg$/,
-        loader: 'svg-inline-loader'
-      }
+        loader: "svg-inline-loader",
+      },
+      {
+        test: /\.inline.svg$/,
+        loader: "svg-react-loader",
+      },
     ]),
   },
-  plugins: options.plugins.concat([    
+  plugins: options.plugins.concat([
     new ExtractTextPlugin("app.[hash].css"),
-    new FaviconsWebpackPlugin('./src/styles/icons/logo.png')
-
-
+    new FaviconsWebpackPlugin("./src/styles/icons/logo.png"),
   ]),
   resolveLoader: {
-    modules: [
-      'node_modules',
-    ],
+    modules: ["node_modules"],
   },
 });

@@ -19,7 +19,7 @@ const getTransformedFilters = (filters) => {
     }
     const [key, value] = filter.id.split(" : ");
     if (value) {
-      params[`filter_Data.Tag.${key.toLowerCase()}`] = value.toLowerCase();
+      params[`filter_Data.Tag.${key}`] = value;
     }
   });
   return params;

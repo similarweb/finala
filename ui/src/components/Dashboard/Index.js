@@ -8,6 +8,7 @@ import ResourcesChart from "./ResourcesChart";
 import ResourcesList from "./ResourcesList";
 import ResourceTable from "./ResourceTable";
 import ExecutionIndex from "../Executions/Index";
+import Logo from "../Logo";
 import { Grid, Box } from "@material-ui/core";
 
 const useStyles = makeStyles(() => ({
@@ -29,7 +30,10 @@ const DashboardIndex = ({ currentResource }) => {
       <Box mb={2}>
         <Grid container className={classes.root} spacing={0}>
           <Grid item sm={9} xs={12} style={{ textAlign: "left" }}>
-            <h1 className={classes.title}>Finala</h1>
+            {/* <h1 className={classes.title}>
+              Logo<
+            </h1> */}
+            <Logo />
           </Grid>
           <Grid item sm={3} xs={12} style={{ textAlign: "right" }}>
             <ExecutionIndex />

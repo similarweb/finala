@@ -36,6 +36,8 @@ const ResourcesList = ({ resources, filters, addFilter, setResource }) => {
       const title = titleDirective(resource.ResourceName);
       const amount = MoneyDirective(resource.TotalSpent);
       resource.title = `${title} (${amount})`;
+      resource.display_title = `${title}`;
+
       return resource;
     });
 
@@ -45,7 +47,7 @@ const ResourcesList = ({ resources, filters, addFilter, setResource }) => {
    */
   const setSelectedResource = (resource) => {
     const filter = {
-      title: `Resource : ${resource.title}`,
+      title: `Resource : ${resource.display_title}`,
       id: `resource:${resource.ResourceName}`,
       type: "resource",
     };

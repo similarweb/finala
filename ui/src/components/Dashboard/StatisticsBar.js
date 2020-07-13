@@ -65,12 +65,9 @@ const StatisticsBar = ({
       TotalSpent = 0;
     }
 
-    if (!currentResource && TotalSpent > HighestResourceValue) {
+    if (resource.TotalSpent > HighestResourceValue) {
       HighestResourceValue = resource.TotalSpent;
       HighestResourceName = resource.ResourceName;
-    }
-    if (currentResource) {
-      HighestResourceName = currentResource;
     }
 
     return acc + TotalSpent;

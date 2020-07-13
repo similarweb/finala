@@ -82,7 +82,7 @@ const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
    */
   const setSelectedResource = (resource) => {
     const filter = {
-      title: `Resource : ${resource.title}`,
+      title: `Resource : ${resource.display_title}`,
       id: `resource:${resource.ResourceName}`,
       type: "resource",
     };
@@ -105,6 +105,7 @@ const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
     const title = titleDirective(resource.ResourceName);
     const amount = MoneyDirective(resource.TotalSpent);
     resource.title = `${title} (${amount})`;
+    resource.display_title = `${title}`;
 
     chartOptions.options.xaxis.categories.push(resource.title);
     chartOptions.series[0].data.push(resource.TotalSpent);

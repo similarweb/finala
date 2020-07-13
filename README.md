@@ -21,18 +21,22 @@ Finala has 2 main objectives:
 
 ## Supported Services
 AWS:
-Resource            | Sub Resources|Sub Resources|
---------------------| -------------|-------------|
-DocumentDB          | -            |
-DynamoDB            | -            |
-EC2                 |              | Instances`|`ELB`|` NLB`|` ALB`|` EBS
-ElasticCache        | -            |
-IAM User            | -            |
-Kinesis             | -            |
-Lambda              | -            |
-Neptune             | -            |
-RDS                 | -            |
-RedShift            | -            |
+Resource            | Cost Optimization| Unsued resource|
+--------------------| -----------------| ---------------|
+DocumentDB          | ✅               | -
+DynamoDB            | ✅ :white_check_mark:	                | -
+EC2 Instances       | ✅ :white_check_mark:	                | -
+EC2 ELB             | ✅ :white_check_mark:	                | -
+EC2 NLB             | ✅ :white_check_mark:	                | -
+EC2 ALB             | ✅ :white_check_mark:	                | -
+EC2 EBS             | ✅ :white_check_mark:	                | ✅ :white_check_mark:	
+ElasticCache        | ✅ :white_check_mark:	                | -
+IAM User            | -                | ✅ :white_check_mark:	
+Kinesis             | -                |
+Lambda              | -                | ✅ :white_check_mark:	
+Neptune             | ✅ :white_check_mark:	                | -
+RDS                 | ✅ :white_check_mark:	                |
+RedShift            | ✅ :white_check_mark:	                |
 
 ## **Screenshots**
 
@@ -50,7 +54,7 @@ RedShift            | -            |
 
 
 ### Documentation & Guides
-* [How to use](./docs/how-to-use.md):
+* [How to use](./docs/how-to-use.md): 
 * [Developer Guide](./docs/developers/README.md):
 * [Configuration Examples](./docs/configuration_examples/README.md):
 

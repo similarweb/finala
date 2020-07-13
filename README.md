@@ -35,7 +35,7 @@ Neptune             | -            |
 RDS                 | -            |
 RedShift            | -            |
 
-## Screenshots
+## **Screenshots**
 
 ### Notifications
 ![alt Slack](https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/slack.png)

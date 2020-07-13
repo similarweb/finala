@@ -21,22 +21,22 @@ Finala has 2 main objectives:
 
 ## Supported Services
 AWS:
-Resource            | Cost Optimization       | Unused resource|
---------------------| ---------------------   | ---------------|
-DocumentDB          | :ballot_box_with_check: | :heavy_minus_sign:
-DynamoDB            | :ballot_box_with_check: | :heavy_minus_sign:
-EC2 Instances       | :ballot_box_with_check: | :heavy_minus_sign:
-EC2 ELB             | :ballot_box_with_check: | :heavy_minus_sign:
-EC2 NLB             | :ballot_box_with_check: | :heavy_minus_sign:
-EC2 ALB             | :ballot_box_with_check: | :heavy_minus_sign:
-EC2 EBS             | :ballot_box_with_check: | :ballot_box_with_check:
-ElasticCache        | :ballot_box_with_check: | :heavy_minus_sign:
-IAM User            | :heavy_minus_sign:      | :ballot_box_with_check:
-Kinesis             | :heavy_minus_sign:      | :heavy_minus_sign:
-Lambda              | :heavy_minus_sign:      | :ballot_box_with_check:
-Neptune             | :ballot_box_with_check: | :heavy_minus_sign:
-RDS                 | :ballot_box_with_check: | :heavy_minus_sign:
-RedShift            | :heavy_minus_sign:      | :heavy_minus_sign:
+Resource            | Potential Cost Optimization| Unused resource         |Config File                                          |
+--------------------| ---------------------------|-------------------------|-----------------------------------------------------|
+DocumentDB          | :ballot_box_with_check:    | :heavy_minus_sign:      |
+DynamoDB            | :ballot_box_with_check:    | :heavy_minus_sign:      |
+EC2 Instances       | :ballot_box_with_check:    | :heavy_minus_sign:      |
+EC2 ELB             | :ballot_box_with_check:    | :heavy_minus_sign:      |
+EC2 NLB             | :ballot_box_with_check:    | :heavy_minus_sign:      |
+EC2 ALB             | :ballot_box_with_check:    | :heavy_minus_sign:      |
+EC2 EBS             | :heavy_minus_sign:         | :ballot_box_with_check: |
+ElasticCache        | :ballot_box_with_check:    | :heavy_minus_sign:      |
+IAM User            | :heavy_minus_sign:         | :ballot_box_with_check: |
+Kinesis             | :ballot_box_with_check:    | :heavy_minus_sign:      |
+Lambda              | :heavy_minus_sign:         | :ballot_box_with_check: |
+Neptune             | :ballot_box_with_check:    | :heavy_minus_sign:      |
+RDS                 | :ballot_box_with_check:    | :heavy_minus_sign:      |[Repo Config](./configuration/collector.yaml#L18) [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L120)
+RedShift            | :heavy_minus_sign:         | :heavy_minus_sign:      |
 
 ## **Screenshots**
 

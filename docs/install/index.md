@@ -6,7 +6,7 @@ Please refer [Local Installation](./local-install.md)
 
 
 ## Deploy Finala on Kubernetes
-You can use Helm to install Finala on a Kubernetes cluster see [Deploying Finala on Kubernetes]((https://github.com/similarweb/finala-helm)).
+You can use Helm to install Finala on a Kubernetes cluster see [Deploying Finala on Kubernetes](https://github.com/similarweb/finala-helm).
 
 ## Finala Components
 

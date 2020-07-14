@@ -2,7 +2,7 @@
 
 This section describes how developers can build Finala from the source code, customize their configuration, and contribute to the project.
 
-* [Running Components locally](/docs/developers/running-components.md)
+* [Getting Started](/docs/developers/getting-started.md)
 * [Add New Notifier](/docs/developers/add-new-notifier.md)
 * [Unittests](/docs/developers/unittests.md)
 

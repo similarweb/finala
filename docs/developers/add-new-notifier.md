@@ -1,7 +1,7 @@
-## How To A new Notifier?
+# How To A new Notifier
 
+## Adding a new Notifier
 
-### Adding a new Notifier
 This section describes how to add a new Notifier to Finala.
 
 ```go
@@ -12,7 +12,7 @@ func RegisterNotifiers() {
 }
 ```
 
-### Pay Attention
+## Pay Attention
 
 * Don't forget to add a new notifier to [RegisterNotifiers](../../../finala/notifiers/load/load.go#L10) function.
 * Each new Notifier will have to implement the interface of [Notifier](../../../finala/notifiers/common/common.go#L7)

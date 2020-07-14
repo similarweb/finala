@@ -35,7 +35,7 @@ Kinesis             | :ballot_box_with_check:    | :heavy_minus_sign:      | [Co
 Lambda              | :heavy_minus_sign:         | :ballot_box_with_check: | [Collector Config](./configuration/collector.yaml#L103), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L205)
 Neptune             | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L113), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L215)
 RDS                 | :ballot_box_with_check:    | :heavy_minus_sign:      |[Collector Config](./configuration/collector.yaml#L18), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L120)
-RedShift            | :heavy_minus_sign:         | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L142), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L244)
+RedShift            | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L142), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L244)
 
 ## **Screenshots**
 

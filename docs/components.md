@@ -1,4 +1,4 @@
-### How To Use
+### Components
 
 Finala is built from 4 components:
 

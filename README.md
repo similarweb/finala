@@ -28,7 +28,7 @@ DynamoDB            | :ballot_box_with_check:    | :heavy_minus_sign:      | [Co
 EC2 Instances       | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L68), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L170)
 EC2 ELB             | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L48), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L150)
 EC2 ALB,NLB         | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L58), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L160)
-EC2 EBS             | :heavy_minus_sign:         | :ballot_box_with_check: |
+EC2 EBS             | :ballot_box_with_check:    | :heavy_minus_sign: |
 ElasticCache        | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L38), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L140)
 IAM User            | :heavy_minus_sign:         | :ballot_box_with_check: | [Collector Config](./configuration/collector.yaml#L153), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L249)
 Kinesis             | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L126), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L228)
@@ -48,21 +48,14 @@ RedShift            | :heavy_minus_sign:         | :heavy_minus_sign:      | [Co
 ### Notifications
 ![alt Slack](https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/slack.png)
 
-## Getting Started
-* The quickest way to get started with Finala is by using K8S. Get started with [Finala Helm chart](https://github.com/similarweb/finala-helm).
-
+### Installation
+* Please refer to [Installation instructions](docs/install/index.md).
 
 ### Documentation & Guides
-* [How to use](./docs/how-to-use.md): 
-* [Developer Guide](./docs/developers/README.md):
-* [Configuration Examples](./docs/configuration_examples/README.md):
+* [Components](./docs/components.md): List of Finala components.
 
-
-### Deploy
-You may use either approach in order to deploy Finala.
-
-* Deploy on Kubernetes, see [Helm chart](https://github.com/similarweb/finala-helm) for more information.
-* Run it locally with `docker-compose up`.
+* [Configuration Examples](./docs/configuration_examples/README.md): See configuration examples and explanations.
+* [Developer Guide](./docs/developers/index.md):  If you are interested in contributing, read the developer guide.
 
 ## Community, discussion, contribution, and support
 
@@ -74,4 +67,3 @@ You can reach the Finala community and developers via the following channels:
 
 ## Contributing to Finala
 Thank you for your interest in contributing! Please refer to [Contribution guidelines](./CONTRIBUTING.md) for guidance.
-

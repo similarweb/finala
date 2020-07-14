@@ -14,6 +14,6 @@ func RegisterNotifiers() {
 
 ### Pay Attention
 
-* Don't forget to add a new notifier to [RegisterNotifiers](../../notifiers/load/load.go#L10) function.
-* Each new Notifier will have to implement the interface of [Notifier](../../notifiers/common/common.go#L7)
-* Update the [Notifier Configuration](../../configuration/notifier.yaml) with the new Notifier configuration section.
+* Don't forget to add a new notifier to [RegisterNotifiers](../../../finala/notifiers/load/load.go#L10) function.
+* Each new Notifier will have to implement the interface of [Notifier](../../../finala/notifiers/common/common.go#L7)
+* Update the [Notifier Configuration](../../../finala/configuration/notifier.yaml) with the new Notifier configuration section.

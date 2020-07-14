@@ -60,6 +60,12 @@ func NewElasticSearchManager(collector collector.CollectorDescriber, client Elas
 	}
 }
 
+var elasticSearchVolumeType = map[string]string{
+	"gp2":      "GP2",
+	"standard": "Magnetic",
+	"io1":      "PIOPS",
+}
+
 // Detect checks with elasticache instance is under utilization
 func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 
@@ -103,12 +109,28 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 				Value: awsClient.String(*cluster.ElasticsearchClusterConfig.InstanceType),
 			},
 		}), "", esm.region)
-
 		if err != nil {
 			log.WithError(err).Error("Could not get instance price")
 			return detectedElasticSearchClusters, err
 		}
 
+		var EBSPrice float64
+		var hourlyEBSVolumePrice float64
+		if *cluster.EBSOptions.EBSEnabled {
+			EBSPrice, err = esm.pricingClient.GetPrice(esm.GetPricingFilterInput([]*pricing.Filter{
+				{
+					Type:  awsClient.String("TERM_MATCH"),
+					Field: awsClient.String("storageMedia"),
+					Value: awsClient.String(elasticSearchVolumeType[*cluster.EBSOptions.VolumeType]),
+				},
+			}), "", esm.region)
+			if err != nil {
+				log.WithError(err).Error("Could not get ebs price")
+				return detectedElasticSearchClusters, err
+			}
+			hourlyEBSVolumePrice = (EBSPrice * float64(*cluster.EBSOptions.VolumeSize)) / collector.TotalMonthHours
+
+		}
 		log.WithFields(log.Fields{
 			"instance_hour_price": instancePrice,
 			"region":              esm.region}).Info("Found the following price list")
@@ -129,7 +151,7 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 				EndTime:    &now,
 				Dimensions: []*cloudwatch.Dimension{
 					{
-						Name:  awsClient.String("DomainNamessss"),
+						Name:  awsClient.String("DomainName"),
 						Value: cluster.DomainName,
 					},
 				},
@@ -151,7 +173,7 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 			}
 
 			if expression {
-				clusterPrice := instancePrice * float64(*cluster.ElasticsearchClusterConfig.InstanceCount)
+				hourlyClusterPrice := instancePrice*float64(*cluster.ElasticsearchClusterConfig.InstanceCount) + hourlyEBSVolumePrice
 				log.WithFields(log.Fields{
 					"metric_name":         metric.Description,
 					"Constraint_operator": metric.Constraint.Operator,
@@ -180,8 +202,8 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 					InstanceCount: *cluster.ElasticsearchClusterConfig.InstanceCount,
 					PriceDetectedFields: collector.PriceDetectedFields{
 						ResourceID:    *cluster.ARN,
-						PricePerHour:  clusterPrice,
-						PricePerMonth: clusterPrice * collector.TotalMonthHours,
+						PricePerHour:  hourlyClusterPrice,
+						PricePerMonth: hourlyClusterPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
 					},
 				}
@@ -242,7 +264,7 @@ func (esm *ElasticSearchManager) DescribeClusters() ([]*elasticsearch.Elasticsea
 		esDomain, err := esm.client.DescribeElasticsearchDomains(
 			&elasticsearch.DescribeElasticsearchDomainsInput{DomainNames: []*string{domainInfo.DomainName}})
 		if err != nil {
-			log.WithField("error", err).Error("could not describe any elasticsearch clusters")
+			log.WithField("error", err).Error("could not describe any elasticsearch domain")
 			return nil, err
 		}
 		esDomains = append(esDomains, esDomain.DomainStatusList...)

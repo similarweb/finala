@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ErrResourceNotConfigure defines the error when the resource not configure
+// ErrResourceNotConfigure defines the error when the resource is not configured
 var ErrResourceNotConfigure = errors.New("resource was not found in collector config file")
 
 // MetricDescriptor is an interface metric
@@ -42,7 +42,7 @@ func (mm *MetricManager) IsResourceMetricsEnable(resourceType string) ([]config.
 		return metricsResponse, ErrResourceNotConfigure
 	}
 
-	// loop on resource metrics and extract only the enable metrics
+	// loop on resource metrics and extract only the enabled metrics
 	for _, metric := range metrics {
 		if metric.Enable {
 			metricsResponse = append(metricsResponse, metric)
@@ -59,7 +59,7 @@ func (mm *MetricManager) IsResourceMetricsEnable(resourceType string) ([]config.
 	return metricsResponse, nil
 }
 
-// IsResourceEnable checks if the resource configure and enabled
+// IsResourceEnable checks if the resource is configured and enabled
 func (mm *MetricManager) IsResourceEnable(resourceType string) (config.ResourceConfig, error) {
 
 	logger := log.WithField("resource_type", resourceType)
@@ -71,7 +71,7 @@ func (mm *MetricManager) IsResourceEnable(resourceType string) (config.ResourceC
 	}
 
 	if !resource.Enable {
-		logger.Info("resource has not enable metrics")
+		logger.Info("resource has not enabled metrics")
 		return resource, ErrResourceNotConfigure
 	}
 

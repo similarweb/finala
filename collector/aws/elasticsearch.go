@@ -46,6 +46,13 @@ type DetectedElasticSearch struct {
 	collector.PriceDetectedFields
 }
 
+// elasticSearchVolumeType will hold the available volume types for ESCluster EBS
+var elasticSearchVolumeType = map[string]string{
+	"gp2":      "GP2",
+	"standard": "Magnetic",
+	"io1":      "PIOPS",
+}
+
 // NewElasticSearchManager implements AWS GO SDK
 func NewElasticSearchManager(collector collector.CollectorDescriber, client ElasticSearchClientDescriptor, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, sts *STSManager, metrics []config.MetricConfig, region string) *ElasticSearchManager {
 
@@ -63,13 +70,7 @@ func NewElasticSearchManager(collector collector.CollectorDescriber, client Elas
 	}
 }
 
-var elasticSearchVolumeType = map[string]string{
-	"gp2":      "GP2",
-	"standard": "Magnetic",
-	"io1":      "PIOPS",
-}
-
-// Detect checks with elasticache instance is under utilization
+// Detect checks with elasticsearch cluster is underutilized
 func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 
 	log.WithFields(log.Fields{
@@ -244,7 +245,7 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 	return detectedElasticSearchClusters, nil
 }
 
-//GetPricingFilterInput prepares kinesis pricing filter
+//GetPricingFilterInput prepares Elasticsearch pricing filter
 func (esm *ElasticSearchManager) GetPricingFilterInput(extraFilters []*pricing.Filter) *pricing.GetProductsInput {
 	filters := []*pricing.Filter{
 		{

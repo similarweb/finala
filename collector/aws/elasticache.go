@@ -135,13 +135,11 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 			}
 
 			if expression {
-				durationRunningTime := now.Sub(*instance.CacheClusterCreateTime)
-				totalPrice := price * durationRunningTime.Hours()
 
 				log.WithFields(log.Fields{
 					"metric_name":         metric.Description,
-					"Constraint_operator": metric.Constraint.Operator,
-					"Constraint_Value":    metric.Constraint.Value,
+					"constraint_operator": metric.Constraint.Operator,
+					"constraint_Value":    metric.Constraint.Value,
 					"formula_value":       formulaValue,
 					"cluster_id":          *instance.CacheClusterId,
 					"node_type":           *instance.CacheNodeType,
@@ -166,12 +164,11 @@ func (ec *ElasticacheManager) Detect() ([]DetectedElasticache, error) {
 					CacheNodeType: *instance.CacheNodeType,
 					CacheNodes:    len(instance.CacheNodes),
 					PriceDetectedFields: collector.PriceDetectedFields{
-						LaunchTime:      *instance.CacheClusterCreateTime,
-						ResourceID:      *instance.CacheClusterId,
-						PricePerHour:    price,
-						PricePerMonth:   price * collector.TotalMonthHours,
-						TotalSpendPrice: totalPrice,
-						Tag:             tagsData,
+						LaunchTime:    *instance.CacheClusterCreateTime,
+						ResourceID:    *instance.CacheClusterId,
+						PricePerHour:  price,
+						PricePerMonth: price * collector.TotalMonthHours,
+						Tag:           tagsData,
 					},
 				}
 

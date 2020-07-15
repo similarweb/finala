@@ -129,8 +129,8 @@ func (lm *LambdaManager) Detect() ([]DetectedAWSLambda, error) {
 
 				log.WithFields(log.Fields{
 					"metric_name":         metric.Description,
-					"Constraint_operator": metric.Constraint.Operator,
-					"Constraint_Value":    metric.Constraint.Value,
+					"constraint_operator": metric.Constraint.Operator,
+					"constraint_Value":    metric.Constraint.Value,
 					"formula_value":       formulaValue,
 					"name":                *fun.FunctionName,
 					"region":              lm.region,

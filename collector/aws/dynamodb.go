@@ -155,29 +155,22 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 
 				log.WithFields(log.Fields{
 					"metric_name":         metric.Description,
-					"Constraint_operator": metric.Constraint.Operator,
-					"Constraint_Value":    metric.Constraint.Value,
+					"constraint_operator": metric.Constraint.Operator,
+					"constraint_Value":    metric.Constraint.Value,
 					"formula_value":       formulaValue,
 					"name":                *table.TableName,
 					"region":              dd.region,
 				}).Info("DynamoDB table detected as unutilized resource")
 
-				instanceCreateTime := *table.CreationDateTime
-				durationRunningTime := now.Sub(instanceCreateTime)
-
 				var pricePerHour float64
-				var totalPrice float64
 				var pricePerMonth float64
 				if strings.Contains(metric.Description, "write capacity") {
 					provisionedWriteCapacityUnits := metricsResponseValues["ProvisionedWriteCapacityUnits"].(float64)
 					pricePerHour = writePricePerHour
-					totalPrice = pricePerHour * provisionedWriteCapacityUnits * durationRunningTime.Hours()
 					pricePerMonth = provisionedWriteCapacityUnits * pricePerHour * collector.TotalMonthHours
-
 				} else if strings.Contains(metric.Description, "read capacity") {
 					provisionedReadCapacityUnits := metricsResponseValues["ProvisionedReadCapacityUnits"].(float64)
 					pricePerHour = readPricePerHour
-					totalPrice = pricePerHour * provisionedReadCapacityUnits * durationRunningTime.Hours()
 					pricePerMonth = provisionedReadCapacityUnits * pricePerHour * collector.TotalMonthHours
 				} else {
 					log.Warn("metric name not supported")
@@ -200,12 +193,11 @@ func (dd *DynamoDBManager) Detect() ([]DetectedAWSDynamoDB, error) {
 					Metric: metric.Description,
 					Name:   *table.TableName,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID:      *table.TableArn,
-						LaunchTime:      *table.CreationDateTime,
-						PricePerHour:    pricePerHour,
-						PricePerMonth:   pricePerMonth,
-						TotalSpendPrice: totalPrice,
-						Tag:             tagsData,
+						ResourceID:    *table.TableArn,
+						LaunchTime:    *table.CreationDateTime,
+						PricePerHour:  pricePerHour,
+						PricePerMonth: pricePerMonth,
+						Tag:           tagsData,
 					},
 				}
 

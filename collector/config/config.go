@@ -43,6 +43,7 @@ type MetricConfig struct {
 
 // ResourceConfig describe resource configuration
 type ResourceConfig struct {
+	Enable      bool                   `yaml:"enable"`
 	Description string                 `yaml:"description"`
 	Global      bool                   `yaml:"global"`
 	Constraint  MetricConstraintConfig `yaml:"constraint"`

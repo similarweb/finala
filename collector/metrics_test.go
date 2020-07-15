@@ -8,11 +8,11 @@ import (
 
 var metricsList = config.ProviderConfig{
 	Metrics: map[string][]config.MetricConfig{
-		"foo": []config.MetricConfig{
+		"foo": {
 			{Enable: true, Description: "metric-1"},
 			{Enable: false, Description: "metric-2"},
 		},
-		"bar": []config.MetricConfig{
+		"bar": {
 			{Enable: false, Description: "metric-1"},
 		},
 	},

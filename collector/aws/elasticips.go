@@ -11,15 +11,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// ElasticIPClientDescreptor is an interface defining the aws ec2 client
-type ElasticIPClientDescreptor interface {
+// ElasticIPClientDescriptor is an interface defining the aws ec2 client
+type ElasticIPClientDescriptor interface {
 	DescribeAddresses(input *ec2.DescribeAddressesInput) (*ec2.DescribeAddressesOutput, error)
 }
 
 // ElasticIPManager will hold the elastic ip manger strcut
 type ElasticIPManager struct {
 	collector          collector.CollectorDescriber
-	client             ElasticIPClientDescreptor
+	client             ElasticIPClientDescriptor
 	pricingClient      *PricingManager
 	metric             config.ResourceConfig
 	region             string
@@ -28,7 +28,7 @@ type ElasticIPManager struct {
 	Name               string
 }
 
-// DetectedElasticIP define the detected AWS elastic ip
+// DetectedElasticIP defines the detected AWS elastic ip
 type DetectedElasticIP struct {
 	Region        string
 	Metric        string
@@ -39,7 +39,7 @@ type DetectedElasticIP struct {
 }
 
 // NewElasticIPManager implements AWS GO SDK
-func NewElasticIPManager(collector collector.CollectorDescriber, client ElasticIPClientDescreptor, pricing *PricingManager, metric config.ResourceConfig, region string) *ElasticIPManager {
+func NewElasticIPManager(collector collector.CollectorDescriber, client ElasticIPClientDescriptor, pricing *PricingManager, metric config.ResourceConfig, region string) *ElasticIPManager {
 
 	return &ElasticIPManager{
 		collector:          collector,
@@ -53,7 +53,7 @@ func NewElasticIPManager(collector collector.CollectorDescriber, client ElasticI
 	}
 }
 
-// Detect checks if elastic ips is under utilize
+// Detect checks if elastic ips is under utilized
 func (ei *ElasticIPManager) Detect() ([]DetectedElasticIP, error) {
 
 	log.WithFields(log.Fields{
@@ -71,7 +71,7 @@ func (ei *ElasticIPManager) Detect() ([]DetectedElasticIP, error) {
 	elasticIPs := []DetectedElasticIP{}
 
 	priceFIlters := ei.GetPricingFilterInput()
-	// Getting elastic ip pricing
+	// Get elastic ip pricing
 	price, err := ei.pricingClient.GetPrice(priceFIlters, ei.rateCode, ei.region)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
@@ -92,7 +92,6 @@ func (ei *ElasticIPManager) Detect() ([]DetectedElasticIP, error) {
 
 	for _, ip := range ips {
 
-		// Checks id the ip that are not associated with a running Amazon Elastic Compute Cloud (Amazon EC2) instance
 		if ip.PrivateIpAddress == nil && ip.AssociationId == nil && ip.InstanceId == nil && ip.NetworkInterfaceId == nil {
 
 			tagsData := map[string]string{}
@@ -132,10 +131,10 @@ func (ei *ElasticIPManager) Detect() ([]DetectedElasticIP, error) {
 
 }
 
-// GetPricingFilterInput return the elastic ip price filters.
+// GetPricingFilterInput returns the elastic ip price filters.
 func (ei *ElasticIPManager) GetPricingFilterInput() *pricing.GetProductsInput {
 
-	input := &pricing.GetProductsInput{
+	return &pricing.GetProductsInput{
 		ServiceCode: &ei.servicePricingCode,
 		Filters: []*pricing.Filter{
 			{
@@ -156,11 +155,9 @@ func (ei *ElasticIPManager) GetPricingFilterInput() *pricing.GetProductsInput {
 		},
 	}
 
-	return input
-
 }
 
-// DescribeAddressess return list of elastic ips addresses
+// DescribeAddressess returns list of elastic ips addresses
 func (ei *ElasticIPManager) DescribeAddressess() ([]*ec2.Address, error) {
 
 	input := &ec2.DescribeAddressesInput{}

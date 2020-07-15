@@ -20,7 +20,7 @@ type EC2ClientDescreptor interface {
 	DescribeInstances(*ec2.DescribeInstancesInput) (*ec2.DescribeInstancesOutput, error)
 }
 
-// EC2Manager describe EC2 struct
+// EC2Manager describes EC2 struct
 type EC2Manager struct {
 	collector          collector.CollectorDescriber
 	client             EC2ClientDescreptor
@@ -58,7 +58,7 @@ func NewEC2Manager(collector collector.CollectorDescriber, client EC2ClientDescr
 	}
 }
 
-// Detect EC2 instance is under utilization
+// Detect EC2 instance is under utilized
 func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 
 	log.WithFields(log.Fields{

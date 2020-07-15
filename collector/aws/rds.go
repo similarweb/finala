@@ -135,13 +135,10 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 
 			if expression {
 
-				durationRunningTime := now.Sub(*instance.InstanceCreateTime)
-				totalPrice := price * durationRunningTime.Hours()
-
 				log.WithFields(log.Fields{
 					"metric_name":         metric.Description,
-					"Constraint_operator": metric.Constraint.Operator,
-					"Constraint_Value":    metric.Constraint.Value,
+					"constraint_operator": metric.Constraint.Operator,
+					"constraint_Value":    metric.Constraint.Value,
 					"formula_value":       formulaValue,
 					"name":                *instance.DBInstanceIdentifier,
 					"instance_type":       *instance.DBInstanceClass,
@@ -166,12 +163,11 @@ func (r *RDSManager) Detect() ([]DetectedAWSRDS, error) {
 					MultiAZ:      *instance.MultiAZ,
 					Engine:       *instance.Engine,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID:      *instance.DBInstanceArn,
-						LaunchTime:      *instance.InstanceCreateTime,
-						PricePerHour:    price,
-						PricePerMonth:   price * collector.TotalMonthHours,
-						TotalSpendPrice: totalPrice,
-						Tag:             tagsData,
+						ResourceID:    *instance.DBInstanceArn,
+						LaunchTime:    *instance.InstanceCreateTime,
+						PricePerHour:  price,
+						PricePerMonth: price * collector.TotalMonthHours,
+						Tag:           tagsData,
 					},
 				}
 

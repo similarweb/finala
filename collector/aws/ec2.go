@@ -141,16 +141,13 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 
 				log.WithFields(log.Fields{
 					"metric_name":         metric.Description,
-					"Constraint_operator": metric.Constraint.Operator,
-					"Constraint_Value":    metric.Constraint.Value,
+					"constraint_operator": metric.Constraint.Operator,
+					"constraint_Value":    metric.Constraint.Value,
 					"formula_value":       formulaValue,
 					"instance_id":         *instance.InstanceId,
 					"instance_type":       *instance.InstanceType,
 					"region":              ec.region,
 				}).Info("EC2 instance detected as unutilized resource")
-
-				durationRunningTime := now.Sub(*instance.LaunchTime)
-				totalPrice := price * durationRunningTime.Hours()
 
 				tagsData := map[string]string{}
 				if err == nil {
@@ -165,12 +162,11 @@ func (ec *EC2Manager) Detect() ([]DetectedEC2, error) {
 					Name:         name,
 					InstanceType: *instance.InstanceType,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID:      *instance.InstanceId,
-						LaunchTime:      *instance.LaunchTime,
-						PricePerHour:    price,
-						PricePerMonth:   price * collector.TotalMonthHours,
-						TotalSpendPrice: totalPrice,
-						Tag:             tagsData,
+						ResourceID:    *instance.InstanceId,
+						LaunchTime:    *instance.LaunchTime,
+						PricePerHour:  price,
+						PricePerMonth: price * collector.TotalMonthHours,
+						Tag:           tagsData,
 					},
 				}
 

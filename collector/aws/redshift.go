@@ -136,13 +136,11 @@ func (rdm *RedShiftManager) Detect() ([]DetectedRedShift, error) {
 
 			if expression {
 				clusterPrice := price * float64(*cluster.NumberOfNodes)
-				durationRunningTime := now.Sub(*cluster.ClusterCreateTime)
-				totalPrice := price * clusterPrice * durationRunningTime.Hours()
 
 				log.WithFields(log.Fields{
 					"metric_name":         metric.Description,
-					"Constraint_operator": metric.Constraint.Operator,
-					"Constraint_Value":    metric.Constraint.Value,
+					"constraint_operator": metric.Constraint.Operator,
+					"constraint_Value":    metric.Constraint.Value,
 					"formula_value":       formulaValue,
 					"cluster_id":          *cluster.ClusterIdentifier,
 					"node_type":           *cluster.NodeType,
@@ -162,12 +160,11 @@ func (rdm *RedShiftManager) Detect() ([]DetectedRedShift, error) {
 					NodeType:      *cluster.NodeType,
 					NumberOfNodes: *cluster.NumberOfNodes,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						LaunchTime:      *cluster.ClusterCreateTime,
-						ResourceID:      *cluster.ClusterIdentifier,
-						PricePerHour:    clusterPrice,
-						PricePerMonth:   clusterPrice * collector.TotalMonthHours,
-						TotalSpendPrice: totalPrice,
-						Tag:             tagsData,
+						LaunchTime:    *cluster.ClusterCreateTime,
+						ResourceID:    *cluster.ClusterIdentifier,
+						PricePerHour:  clusterPrice,
+						PricePerMonth: clusterPrice * collector.TotalMonthHours,
+						Tag:           tagsData,
 					},
 				}
 

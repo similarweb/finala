@@ -133,10 +133,6 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 				continue
 			}
 
-			instanceCreateTime := *instance.CreatedTime
-			durationRunningTime := now.Sub(instanceCreateTime)
-			totalPrice := price * durationRunningTime.Hours()
-
 			expression, err := expression.BoolExpression(formulaValue, metric.Constraint.Value, metric.Constraint.Operator)
 			if err != nil {
 				continue
@@ -146,8 +142,8 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 
 				log.WithFields(log.Fields{
 					"metric_name":         metric.Description,
-					"Constraint_operator": metric.Constraint.Operator,
-					"Constraint_Value":    metric.Constraint.Value,
+					"constraint_operator": metric.Constraint.Operator,
+					"constraint_Value":    metric.Constraint.Value,
 					"formula_value":       formulaValue,
 					"name":                *instance.LoadBalancerName,
 					"region":              el.region,
@@ -171,12 +167,11 @@ func (el *ELBManager) Detect() ([]DetectedELB, error) {
 					Region: el.region,
 					Metric: metric.Description,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID:      *instance.LoadBalancerName,
-						LaunchTime:      *instance.CreatedTime,
-						PricePerHour:    price,
-						PricePerMonth:   price * collector.TotalMonthHours,
-						TotalSpendPrice: totalPrice,
-						Tag:             tagsData,
+						ResourceID:    *instance.LoadBalancerName,
+						LaunchTime:    *instance.CreatedTime,
+						PricePerHour:  price,
+						PricePerMonth: price * collector.TotalMonthHours,
+						Tag:           tagsData,
 					},
 				}
 

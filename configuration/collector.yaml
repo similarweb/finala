@@ -148,11 +148,15 @@ providers:
           start_time: 168h # 24h * 7d
           constraint:
             operator: "=="
-            value: 0            
+            value: 0           
     resources:
       iamLastActivity:
+        enable: true
         description: Last user activity
         global: true
         constraint:
           operator: ">="
           value: 90 # 90 Days
+      elasticip:
+        enable: true
+        description: Not associated

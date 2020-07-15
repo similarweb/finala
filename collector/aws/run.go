@@ -81,6 +81,7 @@ func (app *Analyze) All() {
 			app.AnalyzeNeptune(sess, cloudWatchCLient, pricing)
 			app.AnalyzeKinesis(sess, cloudWatchCLient, pricing)
 			app.AnalyzeRedShift(sess, cloudWatchCLient, pricing)
+			app.ElasticIps(sess, pricing)
 		}
 	}
 
@@ -317,4 +318,26 @@ func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *Clo
 		log.WithField("count", len(response)).Info("Total redshift resources detected")
 	}
 
+}
+
+// ElasticIps will analyzes elastic ip resources
+func (app *Analyze) ElasticIps(sess *session.Session, pricing *PricingManager) {
+
+	logger := log.WithField("resource_name", "elasticip")
+	resourceMetric, found := app.resources["elasticip"]
+	if !found {
+		logger.Info("resource was not configured")
+		return
+	}
+	if !resourceMetric.Enable {
+		logger.Debug("resource disabled")
+		return
+	}
+
+	elasticIps := NewElasticIPManager(app.cl, ec2.New(sess), pricing, resourceMetric, *sess.Config.Region)
+	response, err := elasticIps.Detect()
+	if err == nil {
+		logger.WithField("count", len(response)).Info("Total elastic ips detected")
+
+	}
 }

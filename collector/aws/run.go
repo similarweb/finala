@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go/service/sts"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -66,7 +67,7 @@ func (app *Analyze) All() {
 
 			// Creating a aws session
 			sess := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, region)
-
+			sts := NewSTSManager(sts.New(sess))
 			cloudWatchCLient := NewCloudWatchManager(cloudwatch.New(sess))
 
 			app.AnalyzeVolumes(sess, pricing)
@@ -82,7 +83,7 @@ func (app *Analyze) All() {
 			app.AnalyzeNeptune(sess, cloudWatchCLient, pricing)
 			app.AnalyzeKinesis(sess, cloudWatchCLient, pricing)
 			app.AnalyzeRedShift(sess, cloudWatchCLient, pricing)
-			app.AnalyzeElasticSearch(sess, cloudWatchCLient, pricing)
+			app.AnalyzeElasticSearch(sess, cloudWatchCLient, pricing, sts)
 		}
 	}
 
@@ -322,14 +323,14 @@ func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *Clo
 }
 
 // AnalyzeElasticSearch analyzes ElasticSearch resources
-func (app *Analyze) AnalyzeElasticSearch(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
+func (app *Analyze) AnalyzeElasticSearch(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, sts *STSManager) {
 	metrics, found := app.metrics["elasticsearch"]
 	if !found {
 		log.WithField("resource_name", "elasticsearch").Info("resource was not configured")
 		return
 	}
 
-	elasticsearch := NewElasticSearchManager(app.cl, elasticsearch.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region)
+	elasticsearch := NewElasticSearchManager(app.cl, elasticsearch.New(sess), cloudWatchCLient, pricing, sts, metrics, *sess.Config.Region)
 	response, err := elasticsearch.Detect()
 
 	if err == nil {

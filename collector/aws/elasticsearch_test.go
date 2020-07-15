@@ -64,7 +64,7 @@ func TestDescribeElasticSearchClusters(t *testing.T) {
 			responseDescribeClusters: &defaultElasticSearchMock,
 		}
 
-		esManager := aws.NewElasticSearchManager(collector, &mockClient, nil, nil, metrics, "us-east-1")
+		esManager := aws.NewElasticSearchManager(collector, &mockClient, nil, nil, nil, metrics, "us-east-1")
 
 		result, _ := esManager.DescribeClusters()
 
@@ -80,7 +80,7 @@ func TestDescribeElasticSearchClusters(t *testing.T) {
 			err:                      errors.New("error"),
 		}
 
-		esManager := aws.NewElasticSearchManager(collector, &mockClient, nil, nil, metrics, "us-east-1")
+		esManager := aws.NewElasticSearchManager(collector, &mockClient, nil, nil, nil, metrics, "us-east-1")
 
 		_, err := esManager.DescribeClusters()
 
@@ -97,6 +97,11 @@ func TestDetectElasticSearch(t *testing.T) {
 	mockCloudwatchClient := MockAWSCloudwatchClient{
 		responseMetricStatistics: defaultResponseMetricStatistics,
 	}
+
+	mockSTSClient := MockAWSSTSClient{
+		responseGetCallerIdentity: &defaultSTSGetCallerIdentity,
+	}
+	stsManager := aws.NewSTSManager(&mockSTSClient)
 	cloutwatchManager := aws.NewCloudWatchManager(&mockCloudwatchClient)
 	pricingManager := aws.NewPricingManager(&defaultPricingMock, "us-east-1")
 
@@ -104,7 +109,7 @@ func TestDetectElasticSearch(t *testing.T) {
 		responseDescribeClusters: &defaultElasticSearchMock,
 	}
 
-	esManager := aws.NewElasticSearchManager(collector, &mockClient, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	esManager := aws.NewElasticSearchManager(collector, &mockClient, cloutwatchManager, pricingManager, stsManager, defaultMetricConfig, "us-east-1")
 
 	response, _ := esManager.Detect()
 
@@ -135,7 +140,7 @@ func TestDetectElasticSearchError(t *testing.T) {
 		err: errors.New(""),
 	}
 
-	esManager := aws.NewElasticSearchManager(collector, &mockClient, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1")
+	esManager := aws.NewElasticSearchManager(collector, &mockClient, cloutwatchManager, pricingManager, nil, defaultMetricConfig, "us-east-1")
 
 	response, _ := esManager.Detect()
 

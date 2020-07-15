@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/pricing"
+	"github.com/aws/aws-sdk-go/service/sts"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -28,6 +29,7 @@ type ElasticSearchManager struct {
 	client             ElasticSearchClientDescriptor
 	cloudWatchCLient   *CloudwatchManager
 	pricingClient      *PricingManager
+	stsClient          *STSManager
 	metrics            []config.MetricConfig
 	region             string
 	namespace          string
@@ -45,7 +47,7 @@ type DetectedElasticSearch struct {
 }
 
 // NewElasticSearchManager implements AWS GO SDK
-func NewElasticSearchManager(collector collector.CollectorDescriber, client ElasticSearchClientDescriptor, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string) *ElasticSearchManager {
+func NewElasticSearchManager(collector collector.CollectorDescriber, client ElasticSearchClientDescriptor, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, sts *STSManager, metrics []config.MetricConfig, region string) *ElasticSearchManager {
 
 	return &ElasticSearchManager{
 		collector:          collector,
@@ -53,6 +55,7 @@ func NewElasticSearchManager(collector collector.CollectorDescriber, client Elas
 		cloudWatchCLient:   cloudWatchCLient,
 		metrics:            metrics,
 		pricingClient:      pricing,
+		stsClient:          sts,
 		region:             region,
 		namespace:          "AWS/ES",
 		servicePricingCode: "AmazonES",
@@ -111,29 +114,38 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 		}), "", esm.region)
 		if err != nil {
 			log.WithError(err).Error("Could not get instance price")
-			return detectedElasticSearchClusters, err
+			continue
 		}
 
 		var EBSPrice float64
 		var hourlyEBSVolumePrice float64
 		if *cluster.EBSOptions.EBSEnabled {
-			EBSPrice, err = esm.pricingClient.GetPrice(esm.GetPricingFilterInput([]*pricing.Filter{
-				{
-					Type:  awsClient.String("TERM_MATCH"),
-					Field: awsClient.String("storageMedia"),
-					Value: awsClient.String(elasticSearchVolumeType[*cluster.EBSOptions.VolumeType]),
-				},
-			}), "", esm.region)
-			if err != nil {
-				log.WithError(err).Error("Could not get ebs price")
-				return detectedElasticSearchClusters, err
+			if storageMedia, found := elasticSearchVolumeType[*cluster.EBSOptions.VolumeType]; found {
+				EBSPrice, err = esm.pricingClient.GetPrice(esm.GetPricingFilterInput([]*pricing.Filter{
+					{
+						Type:  awsClient.String("TERM_MATCH"),
+						Field: awsClient.String("storageMedia"),
+						Value: awsClient.String(storageMedia),
+					},
+				}), "", esm.region)
+				if err != nil {
+					log.WithError(err).Error("Could not get ebs price")
+					continue
+				}
+				hourlyEBSVolumePrice = (EBSPrice * float64(*cluster.EBSOptions.VolumeSize)) / collector.TotalMonthHours
 			}
-			hourlyEBSVolumePrice = (EBSPrice * float64(*cluster.EBSOptions.VolumeSize)) / collector.TotalMonthHours
-
 		}
+
 		log.WithFields(log.Fields{
 			"instance_hour_price": instancePrice,
-			"region":              esm.region}).Info("Found the following price list")
+			"ebs_hour_price":      hourlyEBSVolumePrice,
+			"region":              esm.region}).Debug("Found the following price list")
+
+		callerIdentityOutput, err := esm.stsClient.client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+		if err != nil {
+			log.WithError(err).Error("Could not get AWS caller identity to get account id")
+			continue
+		}
 
 		for _, metric := range esm.metrics {
 			log.WithFields(log.Fields{
@@ -153,6 +165,10 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 					{
 						Name:  awsClient.String("DomainName"),
 						Value: cluster.DomainName,
+					},
+					{
+						Name:  awsClient.String("ClientId"),
+						Value: callerIdentityOutput.Account,
 					},
 				},
 			}

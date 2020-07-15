@@ -13,6 +13,7 @@ services:
   ui:
       build:
         context: .
+        dockerfile: Dockerfile.dev
       command: 
         - ui 
         - -c 
@@ -28,6 +29,7 @@ services:
   api:
       build:
         context: .
+        dockerfile: Dockerfile.dev
       command: 
         - api 
         - -c 
@@ -49,6 +51,7 @@ services:
   collector:
       build:
         context: .
+        dockerfile: Dockerfile.dev
       command: 
         - collector 
         - -c 
@@ -63,19 +66,21 @@ services:
         - backend
       depends_on: 
         - api
-  notifier:
-      build:
-        context: .
-      command: 
-        - notifier 
-        - -c 
-        - /etc/finala/config.yaml
-      volumes:
-          - ./configuration/notifier.yaml:/etc/finala/config.yaml
-      networks:
-        - backend
-      depends_on: 
-        - api        
+  # Uncomment the notifier after a first successful run of the Collector
+  # notifier:
+  #     build:
+  #       context: .
+  #       dockerfile: Dockerfile.dev
+  #     command: 
+  #       - notifier 
+  #       - -c 
+  #       - /etc/finala/config.yaml
+  #     volumes:
+  #         - ./configuration/notifier.yaml:/etc/finala/config.yaml
+  #     networks:
+  #       - backend
+  #     depends_on: 
+  #       - api
  
 networks:
   backend:

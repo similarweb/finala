@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticache"
+	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -20,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/pricing"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go/service/sts"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -57,6 +59,13 @@ func (app *Analyze) All() {
 		priceSession := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, "us-east-1")
 		pricing := NewPricingManager(pricing.New(priceSession), "us-east-1")
 
+		// STS is an account level service
+		globalsession := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, "")
+		stsManager := NewSTSManager(sts.New(globalsession))
+
+		// GetCaller Identity returns AccountID, ARN , UserID
+		callerIdentityOutput, _ := stsManager.client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+
 		for _, region := range account.Regions {
 			log.WithFields(log.Fields{
 				"account": account,
@@ -65,7 +74,6 @@ func (app *Analyze) All() {
 
 			// Creating a aws session
 			sess := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, region)
-
 			cloudWatchCLient := NewCloudWatchManager(cloudwatch.New(sess))
 
 			app.AnalyzeVolumes(sess, pricing)
@@ -82,12 +90,13 @@ func (app *Analyze) All() {
 			app.AnalyzeKinesis(sess, cloudWatchCLient, pricing)
 			app.AnalyzeRedShift(sess, cloudWatchCLient, pricing)
 			app.ElasticIps(sess, pricing)
+			app.AnalyzeElasticSearch(sess, cloudWatchCLient, pricing, *callerIdentityOutput.Account)
 		}
 	}
 
 }
 
-// AnalyzeEC2Instances will analyzes ec2 resources
+// AnalyzeEC2Instances analyzes ec2 resources
 func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 
 	metrics, err := app.metricManager.IsResourceMetricsEnable("ec2")
@@ -105,7 +114,7 @@ func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient 
 
 }
 
-// IAMUsers will analyzes iam users
+// IAMUsers analyzes iam users
 func (app *Analyze) IAMUsers(sess *session.Session) {
 
 	resource, err := app.metricManager.IsResourceEnable("iamLastActivity")
@@ -130,7 +139,7 @@ func (app *Analyze) IAMUsers(sess *session.Session) {
 
 }
 
-// AnalyzeELB will analyzes elastic load balancer resources
+// AnalyzeELB analyzes elastic load balancer resources
 func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 
 	metrics, err := app.metricManager.IsResourceMetricsEnable("elb")
@@ -148,7 +157,7 @@ func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *Cloudwat
 
 }
 
-// AnalyzeELBV2 will analyzes elastic load balancer resources
+// AnalyzeELBV2 analyzes elastic load balancer resources
 func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 
 	metrics, err := app.metricManager.IsResourceMetricsEnable("elbv2")
@@ -166,7 +175,7 @@ func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *Cloudw
 
 }
 
-// AnalyzeElasticache will analyzes elasticache resources
+// AnalyzeElasticache analyzes elasticache resources
 func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 
 	metrics, err := app.metricManager.IsResourceMetricsEnable("elasticache")
@@ -184,7 +193,7 @@ func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *
 
 }
 
-// AnalyzeRDS will analyzes rds resources
+// AnalyzeRDS analyzes rds resources
 func (app *Analyze) AnalyzeRDS(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 
 	metrics, err := app.metricManager.IsResourceMetricsEnable("rds")
@@ -220,7 +229,7 @@ func (app *Analyze) AnalyzeDynamoDB(sess *session.Session, cloudWatchCLient *Clo
 
 }
 
-// AnalyzeDocdb will analyzes documentDB resources
+// AnalyzeDocdb analyzes documentDB resources
 func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 
 	metrics, err := app.metricManager.IsResourceMetricsEnable("docDB")
@@ -238,7 +247,7 @@ func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *Cloudw
 
 }
 
-// AnalyzeLambda will analyzes lambda resources
+// AnalyzeLambda analyzes lambda resources
 func (app *Analyze) AnalyzeLambda(sess *session.Session, cloudWatchCLient *CloudwatchManager) {
 
 	metrics, err := app.metricManager.IsResourceMetricsEnable("lambda")
@@ -256,8 +265,13 @@ func (app *Analyze) AnalyzeLambda(sess *session.Session, cloudWatchCLient *Cloud
 
 }
 
-// AnalyzeVolumes will analyzes EC22 volumes resources
+// AnalyzeVolumes analyzes EC2 volumes resources
 func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManager) {
+
+	_, err := app.metricManager.IsResourceEnable("ec2_volumes")
+	if err != nil {
+		return
+	}
 
 	volumeManager := NewVolumesManager(app.cl, ec2.New(sess), pricing, *sess.Config.Region)
 
@@ -268,7 +282,7 @@ func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManage
 	}
 }
 
-// AnalyzeNeptune will analyzes Neptune resources
+// AnalyzeNeptune analyzes Neptune resources
 func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 
 	metrics, err := app.metricManager.IsResourceMetricsEnable("neptune")
@@ -285,7 +299,7 @@ func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *Clou
 
 }
 
-// AnalyzeKinesis will analyzes Kinesis resources
+// AnalyzeKinesis analyzes Kinesis resources
 func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 
 	metrics, err := app.metricManager.IsResourceMetricsEnable("kinesis")
@@ -302,7 +316,7 @@ func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *Clou
 
 }
 
-// AnalyzeRedShift will analyzes Redshift resources
+// AnalyzeRedShift analyzes Redshift resources
 func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
 
 	metrics, err := app.metricManager.IsResourceMetricsEnable("redshift")
@@ -331,6 +345,25 @@ func (app *Analyze) ElasticIps(sess *session.Session, pricing *PricingManager) {
 	response, err := elasticIps.Detect()
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total elastic ips detected")
+	}
+}
 
+// AnalyzeElasticSearch analyzes ElasticSearch resources
+func (app *Analyze) AnalyzeElasticSearch(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, accountID string) {
+	metrics, err := app.metricManager.IsResourceMetricsEnable("elasticsearch")
+	if err != nil {
+		return
+	}
+
+	if accountID == "" {
+		log.Error("caller identity is empty can not continue analzing resource")
+		return
+	}
+
+	elasticsearch := NewElasticSearchManager(app.cl, elasticsearch.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region, accountID)
+	response, err := elasticsearch.Detect()
+
+	if err == nil {
+		log.WithField("count", len(response)).Info("Total elasticsearch resources detected")
 	}
 }

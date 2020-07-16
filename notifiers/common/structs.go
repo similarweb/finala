@@ -6,6 +6,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	//QueryParamFilterPrefix is the default prefix for Finala filters in query param
+	QueryParamFilterPrefix = "filter_Data.Tag."
+)
+
 // NotifierReport will be the report we will send to the users.
 type NotifierReport struct {
 	GroupName            string

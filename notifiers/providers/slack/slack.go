@@ -6,6 +6,7 @@ import (
 	notifierCommon "finala/notifiers/common"
 	"fmt"
 	"math"
+	"net/url"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -79,16 +80,17 @@ func (sm *Manager) GetNotifyByTags(notifierConfig common.ConfigByName) map[strin
 }
 
 // prepareAttachmentFields will prepare all the Attachment and all the fields
-func (sm *Manager) prepareAttachment(message common.NotifierReport, tags []string) []slackApi.Attachment {
+func (sm *Manager) prepareAttachment(message common.NotifierReport, elasticSearchQueryTags []string) []slackApi.Attachment {
+	costReportURL := sm.BuildSendURL(message.UIAddr, message.NotifyByTag.Tags)
 	// Finala's intro message Attachment
 	slackAttachments := []slackApi.Attachment{
 		{
 			Color:      greenMessageColor,
 			AuthorName: AuthorName,
 			Pretext: fmt.Sprintf("Here is the *Monthly* <%s|Cost report> for your notification group: %s *filtered by: %s*",
-				message.UIAddr,
+				costReportURL,
 				message.GroupName,
-				strings.Join(tags, " AND ")),
+				strings.Join(elasticSearchQueryTags, " AND ")),
 		}}
 	var totalPotentialSaving float64
 	for _, executionData := range message.ExecutionSummaryData {
@@ -197,4 +199,17 @@ func (sm *Manager) getChannelID(to string) (string, error) {
 		return to, nil
 	}
 	return sm.getUserIDByEmail(to)
+}
+
+// BuildSendURL will build the url the Notifier should send
+func (sm *Manager) BuildSendURL(baseURL string, filters []common.Tag) string {
+	urlValues := url.Values{}
+	for _, filter := range filters {
+		urlKey := fmt.Sprintf("%s%s", notifierCommon.QueryParamFilterPrefix, filter.Name)
+		urlValues.Set(urlKey, filter.Value)
+	}
+	if len(urlValues) > 0 {
+		return fmt.Sprintf("%s?%s", baseURL, urlValues.Encode())
+	}
+	return baseURL
 }

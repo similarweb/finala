@@ -49,3 +49,7 @@ func (n *NotifierMock) GetNotifyByTags(notifierConfig notifierCommon.ConfigByNam
 func (n *NotifierMock) Send(message notifierCommon.NotifierReport) {
 	panic("Implement me")
 }
+
+func (n *NotifierMock) BuildSendURL(baseURL string, filters []common.Tag) string {
+	return ""
+}

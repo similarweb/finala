@@ -14,16 +14,40 @@ import (
 var defaultElasticSearchMock = elasticsearch.DescribeElasticsearchDomainsOutput{
 	DomainStatusList: []*elasticsearch.ElasticsearchDomainStatus{
 		{
-			ARN:        awsClient.String("arn-test"),
-			DomainName: awsClient.String("testDomain"),
+			ARN:        awsClient.String("arn-test1"),
+			DomainName: awsClient.String("testDomain1"),
 			ElasticsearchClusterConfig: &elasticsearch.ElasticsearchClusterConfig{
-				InstanceType:  awsClient.String("Type"),
+				InstanceType:  awsClient.String("Type1"),
 				InstanceCount: awsClient.Int64(2),
 			},
 			EBSOptions: &elasticsearch.EBSOptions{
 				EBSEnabled: awsClient.Bool(true),
 				VolumeSize: awsClient.Int64(10),
 				VolumeType: awsClient.String("gp2"),
+			},
+		},
+		{
+			ARN:        awsClient.String("arn-test2"),
+			DomainName: awsClient.String("testDomain2"),
+			ElasticsearchClusterConfig: &elasticsearch.ElasticsearchClusterConfig{
+				InstanceType:  awsClient.String("Type2"),
+				InstanceCount: awsClient.Int64(2),
+			},
+			EBSOptions: &elasticsearch.EBSOptions{
+				EBSEnabled: awsClient.Bool(false),
+			},
+		},
+		{
+			ARN:        awsClient.String("arn-test3"),
+			DomainName: awsClient.String("testDomain3"),
+			ElasticsearchClusterConfig: &elasticsearch.ElasticsearchClusterConfig{
+				InstanceType:  awsClient.String("Type3"),
+				InstanceCount: awsClient.Int64(3),
+			},
+			EBSOptions: &elasticsearch.EBSOptions{
+				EBSEnabled: awsClient.Bool(true),
+				VolumeSize: awsClient.Int64(10),
+				VolumeType: awsClient.String("noEBSType"),
 			},
 		},
 	},
@@ -64,12 +88,15 @@ func TestDescribeElasticSearchClusters(t *testing.T) {
 			responseDescribeClusters: &defaultElasticSearchMock,
 		}
 
-		esManager := aws.NewElasticSearchManager(collector, &mockClient, nil, nil, nil, metrics, "us-east-1")
+		esManager := aws.NewElasticSearchManager(collector, &mockClient, nil, nil, metrics, "us-east-1", "21331213")
 
-		result, _ := esManager.DescribeClusters()
+		result, err := esManager.DescribeClusters()
 
 		if len(result) != len(defaultElasticSearchMock.DomainStatusList) {
 			t.Fatalf("unexpected elasticsearch clusters count, got %d expected %d", len(result), len(defaultElasticSearchMock.DomainStatusList))
+		}
+		if err != nil {
+			t.Fatalf("unexpected describe clusters error, returned empty")
 		}
 	})
 
@@ -80,9 +107,13 @@ func TestDescribeElasticSearchClusters(t *testing.T) {
 			err:                      errors.New("error"),
 		}
 
-		esManager := aws.NewElasticSearchManager(collector, &mockClient, nil, nil, nil, metrics, "us-east-1")
+		esManager := aws.NewElasticSearchManager(collector, &mockClient, nil, nil, metrics, "us-east-1", "231231321")
 
-		_, err := esManager.DescribeClusters()
+		response, err := esManager.DescribeClusters()
+
+		if len(response) != 0 {
+			t.Fatalf("unexpected describe clusters response, it should have returned empty")
+		}
 
 		if err == nil {
 			t.Fatalf("unexpected describe clusters error, returned empty")
@@ -98,27 +129,26 @@ func TestDetectElasticSearch(t *testing.T) {
 		responseMetricStatistics: defaultResponseMetricStatistics,
 	}
 
-	mockSTSClient := MockAWSSTSClient{
-		responseGetCallerIdentity: &defaultSTSGetCallerIdentity,
-	}
-	stsManager := aws.NewSTSManager(&mockSTSClient)
 	cloutwatchManager := aws.NewCloudWatchManager(&mockCloudwatchClient)
 	pricingManager := aws.NewPricingManager(&defaultPricingMock, "us-east-1")
 
 	mockClient := MockAWSElasticSearchClient{
 		responseDescribeClusters: &defaultElasticSearchMock,
 	}
+	esManager := aws.NewElasticSearchManager(collector, &mockClient, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1", "2131212312")
 
-	esManager := aws.NewElasticSearchManager(collector, &mockClient, cloutwatchManager, pricingManager, stsManager, defaultMetricConfig, "us-east-1")
+	response, err := esManager.Detect()
 
-	response, _ := esManager.Detect()
-
-	if len(response) != 1 {
-		t.Fatalf("unexpected elasticsearch detected, got %d expected %d", len(response), 1)
+	if err != nil {
+		t.Fatalf("unexpected error happened, got %v expected %v", err, nil)
 	}
 
-	if len(collector.Events) != 1 {
-		t.Fatalf("unexpected collector elasticsearch resources, got %d expected %d", len(collector.Events), 1)
+	if len(response) != 2 {
+		t.Fatalf("unexpected elasticsearch detected, got %d expected %d", len(response), 2)
+	}
+
+	if len(collector.Events) != 2 {
+		t.Fatalf("unexpected collector elasticsearch resources, got %d expected %d", len(collector.Events), 2)
 	}
 
 	if len(collector.EventsCollectionStatus) != 2 {
@@ -140,9 +170,13 @@ func TestDetectElasticSearchError(t *testing.T) {
 		err: errors.New(""),
 	}
 
-	esManager := aws.NewElasticSearchManager(collector, &mockClient, cloutwatchManager, pricingManager, nil, defaultMetricConfig, "us-east-1")
+	esManager := aws.NewElasticSearchManager(collector, &mockClient, cloutwatchManager, pricingManager, defaultMetricConfig, "us-east-1", "")
 
-	response, _ := esManager.Detect()
+	response, err := esManager.Detect()
+
+	if !errors.Is(err, mockClient.err) {
+		t.Fatalf("unexpected error response, got: %v, expected: %v", err, mockClient.err)
+	}
 
 	if len(response) != 0 {
 		t.Fatalf("unexpected elasticsearch detected, got %d expected %d", len(response), 0)

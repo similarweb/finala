@@ -4,6 +4,7 @@ import (
 	"finala/collector"
 	"finala/collector/config"
 	"finala/expression"
+	"finala/interpolation"
 	"fmt"
 	"time"
 
@@ -11,9 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/aws/aws-sdk-go/service/pricing"
-	"github.com/aws/aws-sdk-go/service/sts"
 
 	log "github.com/sirupsen/logrus"
+)
+
+const (
+	// describeElasticsearchDomainsDefaultLimit is the number AWS limits to describe number of ES Cluster
+	describeElasticsearchDomainsDefaultLimit = 5
 )
 
 // ElasticSearchClientDescriptor defines the ElasticSearch client
@@ -29,8 +34,8 @@ type ElasticSearchManager struct {
 	client             ElasticSearchClientDescriptor
 	cloudWatchCLient   *CloudwatchManager
 	pricingClient      *PricingManager
-	stsClient          *STSManager
 	metrics            []config.MetricConfig
+	accountID          string
 	region             string
 	namespace          string
 	servicePricingCode string
@@ -54,7 +59,7 @@ var elasticSearchVolumeType = map[string]string{
 }
 
 // NewElasticSearchManager implements AWS GO SDK
-func NewElasticSearchManager(collector collector.CollectorDescriber, client ElasticSearchClientDescriptor, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, sts *STSManager, metrics []config.MetricConfig, region string) *ElasticSearchManager {
+func NewElasticSearchManager(collector collector.CollectorDescriber, client ElasticSearchClientDescriptor, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string, accountID string) *ElasticSearchManager {
 
 	return &ElasticSearchManager{
 		collector:          collector,
@@ -62,7 +67,7 @@ func NewElasticSearchManager(collector collector.CollectorDescriber, client Elas
 		cloudWatchCLient:   cloudWatchCLient,
 		metrics:            metrics,
 		pricingClient:      pricing,
-		stsClient:          sts,
+		accountID:          accountID,
 		region:             region,
 		namespace:          "AWS/ES",
 		servicePricingCode: "AmazonES",
@@ -106,34 +111,38 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 	for _, cluster := range clusters {
 		log.WithField("cluster_arn", *cluster.ARN).Debug("checking elasticsearch cluster")
 
-		instancePrice, err := esm.pricingClient.GetPrice(esm.GetPricingFilterInput([]*pricing.Filter{
+		instancePricingFilters := esm.GetPricingFilterInput([]*pricing.Filter{
 			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("instanceType"),
 				Value: awsClient.String(*cluster.ElasticsearchClusterConfig.InstanceType),
 			},
-		}), "", esm.region)
+		})
+		instancePrice, err := esm.pricingClient.GetPrice(instancePricingFilters, "", esm.region)
 		if err != nil {
 			log.WithError(err).Error("Could not get instance price")
 			continue
 		}
 
-		var EBSPrice float64
 		var hourlyEBSVolumePrice float64
 		if *cluster.EBSOptions.EBSEnabled {
 			if storageMedia, found := elasticSearchVolumeType[*cluster.EBSOptions.VolumeType]; found {
-				EBSPrice, err = esm.pricingClient.GetPrice(esm.GetPricingFilterInput([]*pricing.Filter{
+				ebsPricingFilters := esm.GetPricingFilterInput([]*pricing.Filter{
 					{
 						Type:  awsClient.String("TERM_MATCH"),
 						Field: awsClient.String("storageMedia"),
 						Value: awsClient.String(storageMedia),
 					},
-				}), "", esm.region)
+				})
+				EBSPrice, err := esm.pricingClient.GetPrice(ebsPricingFilters, "", esm.region)
 				if err != nil {
 					log.WithError(err).Error("Could not get ebs price")
 					continue
 				}
 				hourlyEBSVolumePrice = (EBSPrice * float64(*cluster.EBSOptions.VolumeSize)) / collector.TotalMonthHours
+			} else {
+				log.WithField("ebs_options_type", *cluster.EBSOptions.VolumeType).Warn("Could not find elasticsearch volume type")
+				continue
 			}
 		}
 
@@ -141,12 +150,6 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 			"instance_hour_price": instancePrice,
 			"ebs_hour_price":      hourlyEBSVolumePrice,
 			"region":              esm.region}).Debug("Found the following price list")
-
-		callerIdentityOutput, err := esm.stsClient.client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
-		if err != nil {
-			log.WithError(err).Error("Could not get AWS caller identity to get account id")
-			continue
-		}
 
 		for _, metric := range esm.metrics {
 			log.WithFields(log.Fields{
@@ -169,7 +172,7 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 					},
 					{
 						Name:  awsClient.String("ClientId"),
-						Value: callerIdentityOutput.Account,
+						Value: &esm.accountID,
 					},
 				},
 			}
@@ -193,8 +196,8 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 				hourlyClusterPrice := instancePrice*float64(*cluster.ElasticsearchClusterConfig.InstanceCount) + hourlyEBSVolumePrice
 				log.WithFields(log.Fields{
 					"metric_name":         metric.Description,
-					"Constraint_operator": metric.Constraint.Operator,
-					"Constraint_Value":    metric.Constraint.Value,
+					"constraint_operator": metric.Constraint.Operator,
+					"constraint_Value":    metric.Constraint.Value,
 					"formula_value":       formulaValue,
 					"cluster_id":          *cluster.ARN,
 					"node_type":           *cluster.ElasticsearchClusterConfig.InstanceType,
@@ -204,6 +207,10 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 				tags, err := esm.client.ListTags(&elasticsearch.ListTagsInput{
 					ARN: cluster.ARN,
 				})
+				if err != nil {
+					log.WithField("error", err).Error("could not list tags")
+					continue
+				}
 
 				tagsData := map[string]string{}
 				if err == nil {
@@ -275,11 +282,18 @@ func (esm *ElasticSearchManager) DescribeClusters() ([]*elasticsearch.Elasticsea
 		return nil, err
 	}
 
-	esDomains := []*elasticsearch.ElasticsearchDomainStatus{}
-
+	domainNames := []*string{}
 	for _, domainInfo := range domainsInfo.DomainNames {
+		domainNames = append(domainNames, domainInfo.DomainName)
+	}
+
+	esDomains := []*elasticsearch.ElasticsearchDomainStatus{}
+	domainIterator := interpolation.ChunkIterator(domainNames, describeElasticsearchDomainsDefaultLimit)
+
+	for domainBatch := domainIterator(); domainBatch != nil; domainBatch = domainIterator() {
+		log.WithField("domain_batch", domainBatch).Debug("Going to describe first doamin")
 		esDomain, err := esm.client.DescribeElasticsearchDomains(
-			&elasticsearch.DescribeElasticsearchDomainsInput{DomainNames: []*string{domainInfo.DomainName}})
+			&elasticsearch.DescribeElasticsearchDomainsInput{DomainNames: domainBatch})
 		if err != nil {
 			log.WithField("error", err).Error("could not describe any elasticsearch domain")
 			return nil, err

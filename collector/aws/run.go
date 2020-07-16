@@ -59,6 +59,17 @@ func (app *Analyze) All() {
 		priceSession := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, "us-east-1")
 		pricing := NewPricingManager(pricing.New(priceSession), "us-east-1")
 
+		// STS is an account level service
+		globalsession := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, "")
+		stsManager := NewSTSManager(sts.New(globalsession))
+
+		// GetCaller Identity returns AccountID, ARN , UserID
+		callerIdentityOutput, err := stsManager.client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+		if err != nil {
+			log.WithError(err).Error("Could not get AWS caller identity to get account id")
+			continue
+		}
+
 		for _, region := range account.Regions {
 			log.WithFields(log.Fields{
 				"account": account,
@@ -67,7 +78,6 @@ func (app *Analyze) All() {
 
 			// Creating a aws session
 			sess := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, region)
-			sts := NewSTSManager(sts.New(sess))
 			cloudWatchCLient := NewCloudWatchManager(cloudwatch.New(sess))
 
 			app.AnalyzeVolumes(sess, pricing)
@@ -83,7 +93,7 @@ func (app *Analyze) All() {
 			app.AnalyzeNeptune(sess, cloudWatchCLient, pricing)
 			app.AnalyzeKinesis(sess, cloudWatchCLient, pricing)
 			app.AnalyzeRedShift(sess, cloudWatchCLient, pricing)
-			app.AnalyzeElasticSearch(sess, cloudWatchCLient, pricing, sts)
+			app.AnalyzeElasticSearch(sess, cloudWatchCLient, pricing, *callerIdentityOutput.Account)
 		}
 	}
 
@@ -323,18 +333,17 @@ func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *Clo
 }
 
 // AnalyzeElasticSearch analyzes ElasticSearch resources
-func (app *Analyze) AnalyzeElasticSearch(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, sts *STSManager) {
+func (app *Analyze) AnalyzeElasticSearch(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, accountID string) {
 	metrics, found := app.metrics["elasticsearch"]
 	if !found {
 		log.WithField("resource_name", "elasticsearch").Info("resource was not configured")
 		return
 	}
 
-	elasticsearch := NewElasticSearchManager(app.cl, elasticsearch.New(sess), cloudWatchCLient, pricing, sts, metrics, *sess.Config.Region)
+	elasticsearch := NewElasticSearchManager(app.cl, elasticsearch.New(sess), cloudWatchCLient, pricing, metrics, *sess.Config.Region, accountID)
 	response, err := elasticsearch.Detect()
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total elasticsearch resources detected")
 	}
-
 }

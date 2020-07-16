@@ -186,3 +186,5 @@ providers:
       elasticip:
         enable: true
         description: Not associated
+      ec2_volumes:
+        enable: true

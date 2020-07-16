@@ -187,4 +187,4 @@ providers:
         enable: true
         description: Not associated
       ec2_volumes:
-        enable: false
+        enable: true

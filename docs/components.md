@@ -2,18 +2,18 @@
 
 Finala is built from 4 components:
 
-* **API** - RESTful API server that receives events from the collector and serves the UI. See [example API configuration file](./configuration/api.yaml).
+* **API** - RESTful API server that receives events from the collector and serves the UI. See [example API configuration file](./../configuration/api.yaml).
 
 * **UI** - The User Interface, displays the data in a way that it'll look nice :).
 
-* **Notifier** - Notifies notification groups with the support of multiple notifiers defined in [notifier.yaml](./configuration/notifier.yaml).
+* **Notifier** - Notifies notification groups with the support of multiple notifiers defined in [notifier.yaml](./../configuration/notifier.yaml).
 All resources that marked as "under utilized" are reported to the notification groups.
-Currently we only support Slack notifier type [notifier.yaml](./configuration/notifier.yaml).
-If you wish to contribute and add a new Notifier please read [How To add a new Notifier?](docs/notifiers/add-new-notifier.md)
+Currently we only support Slack notifier type [notifier.yaml](./../configuration/notifier.yaml).
+If you wish to contribute and add a new Notifier please read [How To add a new Notifier?](./developers/add-new-notifier.md)
 
-* **Collector** - Collects and analyzes resources against their thresholds defined in [collector.yaml](./configuration/collector.yaml).
+* **Collector** - Collects and analyzes resources against their thresholds defined in [collector.yaml](./../configuration/collector.yaml).
 All resources that marked as "under utilized" are reported back to the API component.
-You can define multiple accounts and regions in the [collector.yaml](./configuration/collector.yaml) file.
+You can define multiple accounts and regions in the [collector.yaml](./../configuration/collector.yaml) file.
 
 ```yaml
 providers:
@@ -26,7 +26,7 @@ providers:
     regions:
       - <REGION>
 ```
-We've already provided list of built-in cost-optimization `metrics`, you may modify the [collector.yaml](./configuration/collector.yaml) to suit your needs.
+We've already provided list of built-in cost-optimization `metrics`, you may modify the [collector.yaml](./../configuration/collector.yaml) to suit your needs.
 ```yaml
 rds:
     - description: Database connection count

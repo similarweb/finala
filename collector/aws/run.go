@@ -90,7 +90,7 @@ func (app *Analyze) All() {
 			app.AnalyzeKinesis(sess, cloudWatchCLient, pricing)
 			app.AnalyzeRedShift(sess, cloudWatchCLient, pricing)
 			app.ElasticIps(sess, pricing)
-      app.AnalyzeElasticSearch(sess, cloudWatchCLient, pricing, *callerIdentityOutput.Account)
+			app.AnalyzeElasticSearch(sess, cloudWatchCLient, pricing, *callerIdentityOutput.Account)
 		}
 	}
 
@@ -345,9 +345,8 @@ func (app *Analyze) ElasticIps(sess *session.Session, pricing *PricingManager) {
 
 // AnalyzeElasticSearch analyzes ElasticSearch resources
 func (app *Analyze) AnalyzeElasticSearch(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, accountID string) {
-	metrics, found := app.metrics["elasticsearch"]
-	if !found {
-		log.WithField("resource_name", "elasticsearch").Info("resource was not configured")
+	metrics, err := app.metricManager.IsResourceMetricsEnable("elasticsearch")
+	if err != nil {
 		return
 	}
 
@@ -361,6 +360,5 @@ func (app *Analyze) AnalyzeElasticSearch(sess *session.Session, cloudWatchCLient
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total elasticsearch resources detected")
-  }
+	}
 }
-

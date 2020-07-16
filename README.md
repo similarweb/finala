@@ -1,7 +1,7 @@
 # Finala [![codecov](https://codecov.io/gh/similarweb/finala/branch/master/graph/badge.svg)](https://codecov.io/gh/similarweb/finala) ![Lint](https://github.com/similarweb/finala/workflows/Lint/badge.svg) ![Fmt](https://github.com/similarweb/finala/workflows/Fmt/badge.svg) [![Go Report Card](https://goreportcard.com/badge/github.com/similarweb/finala)](https://goreportcard.com/report/github.com/similarweb/finala) [![Gitter](https://badges.gitter.im/similarweb-finala/community.svg)](https://gitter.im/similarweb-finala/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 <p align="center">
-    <img src="https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/main-logo.png" width="600">
+    <img src="https://raw.githubusercontent.com/similarweb/finala/master/docs/images/main-logo.png" width="600">
 </p>
 
 ----
@@ -55,7 +55,7 @@ ElasticSearch       | :ballot_box_with_check:    | :heavy_minus_sign:      | [Co
 
 ### Notifications
 
-![alt Slack](https://raw.githubusercontent.com/similarweb/finala/docs/update-readme-md/docs/images/slack.png)
+![alt Slack](https://raw.githubusercontent.com/similarweb/finala/master/docs/images/slack.png)
 
 ### Installation
 

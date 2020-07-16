@@ -59,7 +59,7 @@ var elasticSearchVolumeType = map[string]string{
 }
 
 // NewElasticSearchManager implements AWS GO SDK
-func NewElasticSearchManager(collector collector.CollectorDescriber, client ElasticSearchClientDescriptor, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region string, accountID string) *ElasticSearchManager {
+func NewElasticSearchManager(collector collector.CollectorDescriber, client ElasticSearchClientDescriptor, cloudWatchCLient *CloudwatchManager, pricing *PricingManager, metrics []config.MetricConfig, region, accountID string) *ElasticSearchManager {
 
 	return &ElasticSearchManager{
 		collector:          collector,
@@ -213,10 +213,8 @@ func (esm *ElasticSearchManager) Detect() ([]DetectedElasticSearch, error) {
 				}
 
 				tagsData := map[string]string{}
-				if err == nil {
-					for _, tag := range tags.TagList {
-						tagsData[*tag.Key] = *tag.Value
-					}
+				for _, tag := range tags.TagList {
+					tagsData[*tag.Key] = *tag.Value
 				}
 
 				elasticsearch := DetectedElasticSearch{

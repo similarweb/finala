@@ -64,11 +64,7 @@ func (app *Analyze) All() {
 		stsManager := NewSTSManager(sts.New(globalsession))
 
 		// GetCaller Identity returns AccountID, ARN , UserID
-		callerIdentityOutput, err := stsManager.client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
-		if err != nil {
-			log.WithError(err).Error("Could not get AWS caller identity to get account id")
-			continue
-		}
+		callerIdentityOutput, _ := stsManager.client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 
 		for _, region := range account.Regions {
 			log.WithFields(log.Fields{
@@ -337,6 +333,11 @@ func (app *Analyze) AnalyzeElasticSearch(sess *session.Session, cloudWatchCLient
 	metrics, found := app.metrics["elasticsearch"]
 	if !found {
 		log.WithField("resource_name", "elasticsearch").Info("resource was not configured")
+		return
+	}
+
+	if accountID == "" {
+		log.Error("caller identity is empty can not continue analzing resource")
 		return
 	}
 

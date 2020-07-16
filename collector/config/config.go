@@ -35,6 +35,7 @@ type MetricDataConfiguration struct {
 // MetricConfig describe metrics configuration
 type MetricConfig struct {
 	Description string                    `yaml:"description"`
+	Enable      bool                      `yaml:"enable"`
 	Data        []MetricDataConfiguration `yaml:"metrics"`
 	Period      time.Duration             `yaml:"period"`
 	StartTime   time.Duration             `yaml:"start_time"`
@@ -43,6 +44,7 @@ type MetricConfig struct {
 
 // ResourceConfig describe resource configuration
 type ResourceConfig struct {
+	Enable      bool                   `yaml:"enable"`
 	Description string                 `yaml:"description"`
 	Global      bool                   `yaml:"global"`
 	Constraint  MetricConstraintConfig `yaml:"constraint"`

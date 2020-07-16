@@ -17,6 +17,7 @@ providers:
     metrics:
       rds:
         - description: Connection count
+          enable: true
           metrics:
             - name: DatabaseConnections
               statistic: Sum
@@ -27,6 +28,7 @@ providers:
             value: 0
       docDB:
         - description: Connection count
+          enable: true
           metrics:
             - name: DatabaseConnections
               statistic: Sum
@@ -37,6 +39,7 @@ providers:
             value: 0
       elasticache:
         - description: Connection count
+          enable: true
           metrics:
             - name: CurrConnections
               statistic: Sum
@@ -47,6 +50,7 @@ providers:
             value: 0      
       elb:
         - description: Request count
+          enable: true
           metrics:
             - name: RequestCount
               statistic: Sum
@@ -57,6 +61,7 @@ providers:
             value: 0  
       elbv2:
         - description: Request count
+          enable: true
           metrics:
             - name: RequestCount
               statistic: Sum
@@ -67,6 +72,7 @@ providers:
             value: 0    
       ec2:
         - description: CPU utilization 
+          enable: true
           metrics:
             - name: CPUUtilization
               statistic: Maximum
@@ -77,6 +83,7 @@ providers:
             value: 6
       dynamodb:
         - description: Provisioned read capacity units
+          enable: true
           metrics:
             - name: ConsumedReadCapacityUnits
               statistic: Sum
@@ -89,6 +96,7 @@ providers:
             operator: "<"
             value: 80
         - description: Provisioned write capacity units
+          enable: true
           metrics:
             - name: ConsumedWriteCapacityUnits
               statistic: Sum
@@ -102,6 +110,7 @@ providers:
             value: 80
       lambda:
         - description: Invocations count
+          enable: true
           metrics:
             - name: Invocations
               statistic: Sum
@@ -112,6 +121,7 @@ providers:
             value: 0
       neptune:
         - description: Requests gremlin/sparql
+          enable: true
           metrics:
             - name: GremlinRequestsPerSec
               statistic: Sum
@@ -125,6 +135,7 @@ providers:
             value: 0
       kinesis:
         - description: Total put records
+          enable: true
           metrics:
             - name: "PutRecords.Bytes"
               statistic: Sum
@@ -141,6 +152,7 @@ providers:
             value: 0
       redshift:
         - description: Connection count
+          enable: true
           metrics:
             - name: DatabaseConnections
               statistic: Sum
@@ -151,6 +163,7 @@ providers:
             value: 0
       elasticsearch:
         - description: "IndexRate + SearchRate"
+          enable: true
           metrics:
             - name: IndexingRate
               statistic: Sum
@@ -161,11 +174,15 @@ providers:
           constraint:
             formula: IndexingRate + SearchRate
             operator: "=="
-            value: 0            
+            value: 0
     resources:
       iamLastActivity:
+        enable: true
         description: Last user activity
         global: true
         constraint:
           operator: ">="
           value: 90 # 90 Days
+      elasticip:
+        enable: true
+        description: Not associated

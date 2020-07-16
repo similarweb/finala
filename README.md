@@ -19,11 +19,15 @@ Finala has 2 main objectives:
 * **1 Click Deployment**: Finala can be deployed via Docker compose or a [Helm chart](https://github.com/similarweb/finala-helm).
 * **Graphical user interface**: Users can easily explore and investigate unused or unutilized resources in your cloud provider.
 * **Resource Filtering by Cloud Provider Tags**: Users can filter unused resources by just providing the tags you are using in your cloud provider.
-* **Schedule Pro Active Notifications**: Finala has the ability to configure scheduled based notifications to a user or a group. 
+* **Schedule Pro Active Notifications**: Finala has the ability to configure scheduled based notifications to a user or a group.
+
 
 ## Supported Services
+* **Potential Cost Optimization** - is the price you can save for untilized resources in your infrastructure
+* **Unused Resource** - are resources which don't necessarily cost money and can be removed.
+
 AWS:
-Resource            | Potential Cost Optimization| Unused resource         |Config File                                          |
+Resource            | Potential Cost Optimization| Unused Resource         |Config File                                          |
 --------------------| ---------------------------|-------------------------|-----------------------------------------------------|
 DocumentDB          | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L29), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L131)
 DynamoDB            | :ballot_box_with_check:    | :heavy_minus_sign:      | [Collector Config](./configuration/collector.yaml#L84), [Helm Config](https://github.com/similarweb/finala-helm/blob/master/values.yaml#L186)

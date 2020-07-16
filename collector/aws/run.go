@@ -30,21 +30,21 @@ const (
 
 //Analyze represents the aws analyze
 type Analyze struct {
-	cl          collector.CollectorDescriber
-	awsAccounts []config.AWSAccount
-	metrics     map[string][]config.MetricConfig
-	resources   map[string]config.ResourceConfig
-	global      map[string]struct{}
+	cl            collector.CollectorDescriber
+	metricManager collector.MetricDescriptor
+	awsAccounts   []config.AWSAccount
+	resources     map[string]config.ResourceConfig
+	global        map[string]struct{}
 }
 
 // NewAnalyzeManager will charge to execute aws resources
-func NewAnalyzeManager(cl collector.CollectorDescriber, awsAccounts []config.AWSAccount, metrics map[string][]config.MetricConfig, resources map[string]config.ResourceConfig) *Analyze {
+func NewAnalyzeManager(cl collector.CollectorDescriber, metricsManager collector.MetricDescriptor, awsAccounts []config.AWSAccount, resources map[string]config.ResourceConfig) *Analyze {
 	return &Analyze{
-		cl:          cl,
-		awsAccounts: awsAccounts,
-		metrics:     metrics,
-		resources:   resources,
-		global:      make(map[string]struct{}),
+		cl:            cl,
+		metricManager: metricsManager,
+		awsAccounts:   awsAccounts,
+		resources:     resources,
+		global:        make(map[string]struct{}),
 	}
 }
 
@@ -81,6 +81,7 @@ func (app *Analyze) All() {
 			app.AnalyzeNeptune(sess, cloudWatchCLient, pricing)
 			app.AnalyzeKinesis(sess, cloudWatchCLient, pricing)
 			app.AnalyzeRedShift(sess, cloudWatchCLient, pricing)
+			app.ElasticIps(sess, pricing)
 		}
 	}
 
@@ -88,9 +89,9 @@ func (app *Analyze) All() {
 
 // AnalyzeEC2Instances will analyzes ec2 resources
 func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
-	metrics, found := app.metrics["ec2"]
-	if !found {
-		log.WithField("resource_name", "ec2").Info("resource was not configured")
+
+	metrics, err := app.metricManager.IsResourceMetricsEnable("ec2")
+	if err != nil {
 		return
 	}
 
@@ -100,16 +101,15 @@ func (app *Analyze) AnalyzeEC2Instances(sess *session.Session, cloudWatchCLient 
 
 	if err == nil {
 		log.WithField("count", len(response)).Info("Total EC2 detected")
-
 	}
 
 }
 
 // IAMUsers will analyzes iam users
 func (app *Analyze) IAMUsers(sess *session.Session) {
-	resource, found := app.resources["iamLastActivity"]
-	if !found {
-		log.WithField("resource_name", "iamLastActivity").Info("resource was not configured")
+
+	resource, err := app.metricManager.IsResourceEnable("iamLastActivity")
+	if err != nil {
 		return
 	}
 
@@ -132,9 +132,9 @@ func (app *Analyze) IAMUsers(sess *session.Session) {
 
 // AnalyzeELB will analyzes elastic load balancer resources
 func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
-	metrics, found := app.metrics["elb"]
-	if !found {
-		log.WithField("resource_name", "elb").Info("resource was not configured")
+
+	metrics, err := app.metricManager.IsResourceMetricsEnable("elb")
+	if err != nil {
 		return
 	}
 
@@ -150,9 +150,9 @@ func (app *Analyze) AnalyzeELB(sess *session.Session, cloudWatchCLient *Cloudwat
 
 // AnalyzeELBV2 will analyzes elastic load balancer resources
 func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
-	metrics, found := app.metrics["elbv2"]
-	if !found {
-		log.WithField("resource_name", "elbv2").Info("resource was not configured")
+
+	metrics, err := app.metricManager.IsResourceMetricsEnable("elbv2")
+	if err != nil {
 		return
 	}
 
@@ -168,9 +168,9 @@ func (app *Analyze) AnalyzeELBV2(sess *session.Session, cloudWatchCLient *Cloudw
 
 // AnalyzeElasticache will analyzes elasticache resources
 func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
-	metrics, found := app.metrics["elasticache"]
-	if !found {
-		log.WithField("resource_name", "elasticache").Info("resource was not configured")
+
+	metrics, err := app.metricManager.IsResourceMetricsEnable("elasticache")
+	if err != nil {
 		return
 	}
 
@@ -186,9 +186,9 @@ func (app *Analyze) AnalyzeElasticache(sess *session.Session, cloudWatchCLient *
 
 // AnalyzeRDS will analyzes rds resources
 func (app *Analyze) AnalyzeRDS(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
-	metrics, found := app.metrics["rds"]
-	if !found {
-		log.WithField("resource_name", "rds").Info("resource was not configured")
+
+	metrics, err := app.metricManager.IsResourceMetricsEnable("rds")
+	if err != nil {
 		return
 	}
 
@@ -204,9 +204,9 @@ func (app *Analyze) AnalyzeRDS(sess *session.Session, cloudWatchCLient *Cloudwat
 
 // AnalyzeDynamoDB will  analyzes dynamoDB resources
 func (app *Analyze) AnalyzeDynamoDB(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
-	metrics, found := app.metrics["dynamodb"]
-	if !found {
-		log.WithField("resource_name", "dynamodb").Info("resource was not configured")
+
+	metrics, err := app.metricManager.IsResourceMetricsEnable("dynamodb")
+	if err != nil {
 		return
 	}
 
@@ -222,9 +222,9 @@ func (app *Analyze) AnalyzeDynamoDB(sess *session.Session, cloudWatchCLient *Clo
 
 // AnalyzeDocdb will analyzes documentDB resources
 func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
-	metrics, found := app.metrics["docDB"]
-	if !found {
-		log.WithField("resource_name", "docDB").Info("resource was not configured")
+
+	metrics, err := app.metricManager.IsResourceMetricsEnable("docDB")
+	if err != nil {
 		return
 	}
 
@@ -240,9 +240,9 @@ func (app *Analyze) AnalyzeDocdb(sess *session.Session, cloudWatchCLient *Cloudw
 
 // AnalyzeLambda will analyzes lambda resources
 func (app *Analyze) AnalyzeLambda(sess *session.Session, cloudWatchCLient *CloudwatchManager) {
-	metrics, found := app.metrics["lambda"]
-	if !found {
-		log.WithField("resource_name", "lambda").Info("resource was not configured")
+
+	metrics, err := app.metricManager.IsResourceMetricsEnable("lambda")
+	if err != nil {
 		return
 	}
 
@@ -270,9 +270,9 @@ func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManage
 
 // AnalyzeNeptune will analyzes Neptune resources
 func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
-	metrics, found := app.metrics["neptune"]
-	if !found {
-		log.WithField("resource_name", "neptune").Info("resource was not configured")
+
+	metrics, err := app.metricManager.IsResourceMetricsEnable("neptune")
+	if err != nil {
 		return
 	}
 
@@ -287,9 +287,9 @@ func (app *Analyze) AnalyzeNeptune(sess *session.Session, cloudWatchCLient *Clou
 
 // AnalyzeKinesis will analyzes Kinesis resources
 func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
-	metrics, found := app.metrics["kinesis"]
-	if !found {
-		log.WithField("resource_name", "kinesis").Info("resource was not configured")
+
+	metrics, err := app.metricManager.IsResourceMetricsEnable("kinesis")
+	if err != nil {
 		return
 	}
 
@@ -304,9 +304,9 @@ func (app *Analyze) AnalyzeKinesis(sess *session.Session, cloudWatchCLient *Clou
 
 // AnalyzeRedShift will analyzes Redshift resources
 func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *CloudwatchManager, pricing *PricingManager) {
-	metrics, found := app.metrics["redshift"]
-	if !found {
-		log.WithField("resource_name", "redshift").Info("resource was not configured")
+
+	metrics, err := app.metricManager.IsResourceMetricsEnable("redshift")
+	if err != nil {
 		return
 	}
 
@@ -317,4 +317,20 @@ func (app *Analyze) AnalyzeRedShift(sess *session.Session, cloudWatchCLient *Clo
 		log.WithField("count", len(response)).Info("Total redshift resources detected")
 	}
 
+}
+
+// ElasticIps will analyzes elastic ip resources
+func (app *Analyze) ElasticIps(sess *session.Session, pricing *PricingManager) {
+
+	resourceMetric, err := app.metricManager.IsResourceEnable("elasticip")
+	if err != nil {
+		return
+	}
+
+	elasticIps := NewElasticIPManager(app.cl, ec2.New(sess), pricing, resourceMetric, *sess.Config.Region)
+	response, err := elasticIps.Detect()
+	if err == nil {
+		log.WithField("count", len(response)).Info("Total elastic ips detected")
+
+	}
 }

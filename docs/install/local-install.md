@@ -6,8 +6,8 @@ See the [Docker Compose command-line reference](https://docs.docker.com/compose/
 
 ## Create Finala
 
-* Before creating a new setup of Finala, the only thing you need to configure is your AWS keys per account in the [collector's configuration file](../../../finala/configuration/collector.yaml#L10)
-* We've already provided list of built-in cost-optimization `metrics`, you may modify the [collector.yaml](../../../finala/configuration/collector.yaml#L17) to suit your needs.
+* Before creating a new setup of Finala, the only thing you need to configure is your AWS keys per account in the [collector's configuration file](./../../configuration/collector.yaml#L10)
+* We've already provided list of built-in cost-optimization `metrics`, you may modify the [collector.yaml](./../../configuration/collector.yaml#L17) to suit your needs.
 
 To create Finala, run the following command.
 

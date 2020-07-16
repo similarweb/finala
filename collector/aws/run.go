@@ -265,7 +265,7 @@ func (app *Analyze) AnalyzeLambda(sess *session.Session, cloudWatchCLient *Cloud
 
 }
 
-// AnalyzeVolumes analyzes EC22 volumes resources
+// AnalyzeVolumes analyzes EC2 volumes resources
 func (app *Analyze) AnalyzeVolumes(sess *session.Session, pricing *PricingManager) {
 
 	_, err := app.metricManager.IsResourceEnable("ec2_volumes")

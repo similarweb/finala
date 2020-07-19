@@ -1,9 +1,12 @@
 import React, { Fragment } from "react";
 import { connect } from "react-redux";
+import { Link } from "react-router-dom";
+
 import { makeStyles } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import FilterBar from "./FilterBar";
 import StatisticsBar from "./StatisticsBar";
+import ResourceScanning from "./ResourceScanning";
 import ResourcesChart from "./ResourcesChart";
 import ResourcesList from "./ResourcesList";
 import ResourceTable from "./ResourceTable";
@@ -18,6 +21,12 @@ const useStyles = makeStyles(() => ({
   title: {
     fontFamily: "MuseoModerno",
   },
+  logoGrid: {
+    textAlign: "left",
+  },
+  selectorGrid: {
+    textAlign: "right",
+  },
 }));
 
 /**
@@ -29,13 +38,13 @@ const DashboardIndex = ({ currentResource }) => {
     <Fragment>
       <Box mb={2}>
         <Grid container className={classes.root} spacing={0}>
-          <Grid item sm={9} xs={12} style={{ textAlign: "left" }}>
-            {/* <h1 className={classes.title}>
-              Logo<
-            </h1> */}
-            <Logo />
+          <Grid item sm={9} xs={12} className={classes.logoGrid}>
+            <Link to="/">
+              <Logo />
+            </Link>
+            <ResourceScanning />
           </Grid>
-          <Grid item sm={3} xs={12} style={{ textAlign: "right" }}>
+          <Grid item sm={3} xs={12} className={classes.selectorGrid}>
             <ExecutionIndex />
           </Grid>
         </Grid>

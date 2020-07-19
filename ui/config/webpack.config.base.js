@@ -59,7 +59,7 @@ module.exports = (options) => ({
   },
   plugins: options.plugins.concat([
     new ExtractTextPlugin("app.[hash].css"),
-    new FaviconsWebpackPlugin("./src/styles/icons/logo.png"),
+    new FaviconsWebpackPlugin("./src/styles/icons/icon.png"),
   ]),
   resolveLoader: {
     modules: ["node_modules"],

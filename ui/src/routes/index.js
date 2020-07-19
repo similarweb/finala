@@ -7,6 +7,7 @@ import { SettingsService } from "services/settings.service";
 import Dashboard from "../components/Dashboard/Index";
 import PageLoader from "../components/PageLoader";
 import NotFound from "../components/NotFound";
+import NoData from "../components/NoData";
 
 import { CssBaseline, makeStyles, Box } from "@material-ui/core";
 
@@ -25,6 +26,8 @@ const useStyles = makeStyles(() => ({
     display: "none",
   },
 }));
+
+let fetchTimeoutRequest = false;
 
 /**
  * @param  {string} {currentExecution Global Execution Id
@@ -56,16 +59,24 @@ const RouterIndex = ({
   /**
    * fetch executions from server
    */
+
   const fetchExecutions = () => {
-    ResourcesService.GetExecutions().then((responseData) => {
-      const executions = responseData;
-      setExecutions(executions);
-      setIsLoading(false);
-      if (executions.length) {
-        const currentExecutionId = executions[0].ID;
-        setCurrentExecution(currentExecutionId);
-      }
-    });
+    clearTimeout(fetchTimeoutRequest);
+    ResourcesService.GetExecutions()
+      .then((responseData) => {
+        const executions = responseData;
+        setExecutions(executions);
+        setIsLoading(false);
+        if (executions.length) {
+          const currentExecutionId = executions[0].ID;
+          setCurrentExecution(currentExecutionId);
+        } else {
+          fetchTimeoutRequest = setTimeout(fetchExecutions, 5000);
+        }
+      })
+      .catch(() => {
+        fetchTimeoutRequest = setTimeout(fetchExecutions, 5000);
+      });
   };
 
   /**
@@ -85,12 +96,8 @@ const RouterIndex = ({
       <main className={classes.content}>
         <Box component="div" m={3}>
           {isLoading && <PageLoader />}
-          {!isLoading && !executions.length && (
-            <Box component="div">
-              Waiting for the first collection of data for Finala
-            </Box>
-          )}
-          {!isLoading && executions.length && (
+          {!isLoading && !executions.length && <NoData />}
+          {!isLoading && executions.length > 0 && (
             <Box component="div">
               <Switch>
                 <Route exact path="/" component={Dashboard} />

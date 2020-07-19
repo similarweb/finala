@@ -23,7 +23,6 @@ const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
       chart: {
         type: "bar",
         width: "100%",
-        height: "1500",
         events: {
           dataPointSelection: function (event, chartContext, config) {
             const dataPointIndex = config.dataPointIndex;
@@ -77,6 +76,16 @@ const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
   };
 
   /**
+   * update chart height according to number of resources
+   */
+  const getChartHeight = () => {
+    if (!sortedResources || !sortedResources.length) {
+      return 500;
+    }
+    return 120 * sortedResources.length;
+  };
+
+  /**
    *
    * @param {object} resource Set selected resource
    */
@@ -119,6 +128,7 @@ const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
           <CardContent>
             <Chart
               id="MainChart"
+              height={getChartHeight()}
               options={chartOptions.options}
               series={chartOptions.series}
               type="bar"

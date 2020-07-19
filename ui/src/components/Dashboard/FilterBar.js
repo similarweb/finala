@@ -29,6 +29,11 @@ const useStyles = makeStyles(() => ({
     backgroundColor: "#d5dee6",
     fontSize: "14px",
   },
+  valueAutoComplete: {
+    visibility: "visible",
+    marginTop: "-60px",
+    zIndex: "-1",
+  },
 }));
 
 /**
@@ -282,12 +287,7 @@ const FilterBar = ({ filters, currentExecution, setFilters, setResource }) => {
               inputRef={(input) => {
                 inputRef = input;
               }}
-              style={{
-                visibility: "visible",
-                marginTop: "-60px",
-                zIndex: "-1",
-              }}
-              className={classes.filterInput}
+              className={classes.valueAutoComplete}
               variant="outlined"
               label=""
               placeholder=""

@@ -14,8 +14,6 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var iamGlobal = false
-
 // IAMClientDescreptor is an interface of IAM client
 type IAMClientDescreptor interface {
 	ListUsers(input *iam.ListUsersInput) (*iam.ListUsersOutput, error)
@@ -45,12 +43,13 @@ func init() {
 // NewIAMUseranager implements AWS GO SDK
 func NewIAMUseranager(awsManager common.AWSManager, client interface{}) (common.ResourceDetection, error) {
 
-	if iamGlobal {
+	resourceName := awsManager.GetResourceIdentifier("iam_users")
+	if awsManager.IsGlobalSet(resourceName) {
 		log.Info("resource defined ad global resource")
 		return nil, nil
 	}
+	awsManager.SetGlobal(resourceName)
 
-	iamGlobal = true
 	if client == nil {
 		client = iam.New(awsManager.GetSession())
 	}
@@ -63,7 +62,7 @@ func NewIAMUseranager(awsManager common.AWSManager, client interface{}) (common.
 	return &IAMManager{
 		client:     iamClient,
 		awsManager: awsManager,
-		Name:       awsManager.GetResourceIdentifier("iam_users"),
+		Name:       resourceName,
 	}, nil
 }
 

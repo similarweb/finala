@@ -139,8 +139,6 @@ func (lm *LambdaManager) Detect(metrics []config.MetricConfig) (interface{}, err
 				tagsData := map[string]string{}
 				if err == nil {
 					for key, value := range tags.Tags {
-						log.Info(key)
-						log.Info(*value)
 						tagsData[key] = *value
 					}
 				}

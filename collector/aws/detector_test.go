@@ -40,7 +40,8 @@ func TestDetector(t *testing.T) {
 	}
 	mockSTS := NewMockSTS()
 	collector := collectorTestutils.NewMockCollector()
-	detector := NewDetectorManager(collector, account, mockSTS, region)
+	global := make(map[string]struct{})
+	detector := NewDetectorManager(collector, account, mockSTS, global, region)
 
 	if detector.GetRegion() != region {
 		t.Fatalf("unexpected collector region, got %s expected %s", detector.GetRegion(), region)

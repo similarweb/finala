@@ -20,6 +20,7 @@ type Analyze struct {
 	cl            collector.CollectorDescriber
 	metricManager collector.MetricDescriptor
 	awsAccounts   []config.AWSAccount
+	global        map[string]struct{}
 }
 
 // NewAnalyzeManager will charge to execute aws resources
@@ -28,6 +29,7 @@ func NewAnalyzeManager(cl collector.CollectorDescriber, metricsManager collector
 		cl:            cl,
 		metricManager: metricsManager,
 		awsAccounts:   awsAccounts,
+		global:        make(map[string]struct{}),
 	}
 }
 
@@ -40,7 +42,7 @@ func (app *Analyze) All() {
 		stsManager := NewSTSManager(sts.New(globalsession))
 
 		for _, region := range account.Regions {
-			resourcesDetection := NewDetectorManager(app.cl, account, stsManager, region)
+			resourcesDetection := NewDetectorManager(app.cl, account, stsManager, app.global, region)
 			for resourceType, resourceDetector := range register.GetResources() {
 
 				resource, err := resourceDetector(resourcesDetection, nil)

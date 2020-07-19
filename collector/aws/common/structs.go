@@ -27,4 +27,6 @@ type AWSManager interface {
 	GetRegion() string
 	GetSession() *session.Session
 	GetAccountIdentity() *sts.GetCallerIdentityOutput
+	SetGlobal(resourceName collector.ResourceIdentifier)
+	IsGlobalSet(resourceName collector.ResourceIdentifier) bool
 }

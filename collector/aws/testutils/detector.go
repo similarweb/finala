@@ -64,3 +64,15 @@ func (dm *MockAWSManager) GetSession() *session.Session {
 func (dm *MockAWSManager) GetAccountIdentity() *sts.GetCallerIdentityOutput {
 	return dm.accountIdentity
 }
+
+// SetGlobal marked resource as global
+func (dm *MockAWSManager) SetGlobal(resourceName collector.ResourceIdentifier) {
+	dm.global[string(resourceName)] = struct{}{}
+}
+
+// IsGlobalSet return true if the resource already exists in global slice
+func (dm *MockAWSManager) IsGlobalSet(resourceName collector.ResourceIdentifier) bool {
+	_, isExists := dm.global[string(resourceName)]
+	return isExists
+
+}

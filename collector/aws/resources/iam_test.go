@@ -64,10 +64,10 @@ func (im *MockIAMClient) GetAccessKeyLastUsed(input *iam.GetAccessKeyLastUsedInp
 }
 
 func TestDescribeUsers(t *testing.T) {
-	collector := collectorTestutils.NewMockCollector()
-	detector := awsTestutils.AWSManager(collector, nil, nil, "us-east-1")
 
 	t.Run("valid", func(t *testing.T) {
+		collector := collectorTestutils.NewMockCollector()
+		detector := awsTestutils.AWSManager(collector, nil, nil, "us-east-1")
 		mockClient := MockIAMClient{}
 		iamInterface, err := NewIAMUseranager(detector, &mockClient)
 		if err != nil {
@@ -87,6 +87,8 @@ func TestDescribeUsers(t *testing.T) {
 	})
 
 	t.Run("error", func(t *testing.T) {
+		collector := collectorTestutils.NewMockCollector()
+		detector := awsTestutils.AWSManager(collector, nil, nil, "us-east-1")
 
 		mockClient := MockIAMClient{
 			errListUser: errors.New("error"),

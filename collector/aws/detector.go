@@ -41,7 +41,7 @@ type DetectorManager struct {
 }
 
 // NewDetectorManager create new instance of detector manager
-func NewDetectorManager(collector collector.CollectorDescriber, account config.AWSAccount, stsManager *STSManager, region string) *DetectorManager {
+func NewDetectorManager(collector collector.CollectorDescriber, account config.AWSAccount, stsManager *STSManager, global map[string]struct{}, region string) *DetectorManager {
 
 	priceSession := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, defaultRegionPrice)
 	pricingManager := pricing.NewPricingManager(awsPricing.New(priceSession), defaultRegionPrice)
@@ -57,7 +57,7 @@ func NewDetectorManager(collector collector.CollectorDescriber, account config.A
 		region:           region,
 		session:          regionSession,
 		accountIdentity:  callerIdentityOutput,
-		global:           make(map[string]struct{}),
+		global:           global,
 	}
 }
 
@@ -94,4 +94,15 @@ func (dm *DetectorManager) GetSession() *session.Session {
 // GetAccountIdentity return the caller identity
 func (dm *DetectorManager) GetAccountIdentity() *sts.GetCallerIdentityOutput {
 	return dm.accountIdentity
+}
+
+// SetGlobal marked resource as global
+func (dm *DetectorManager) SetGlobal(resourceName collector.ResourceIdentifier) {
+	dm.global[string(resourceName)] = struct{}{}
+}
+
+// IsGlobalSet return true if the resource already exists in global slice
+func (dm *DetectorManager) IsGlobalSet(resourceName collector.ResourceIdentifier) bool {
+	_, isExists := dm.global[string(resourceName)]
+	return isExists
 }

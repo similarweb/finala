@@ -78,10 +78,7 @@ func TestAddEvent(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	coll.UpdateServiceStatus(collector.EventCollector{
-		ResourceName: "test",
-		Data:         "test data",
-	})
+	coll.CollectStart(collector.ResourceIdentifier("test"))
 	coll.AddResource(collector.EventCollector{
 		ResourceName: "test1",
 		Data:         "test data",
@@ -125,10 +122,8 @@ func TestAddEventServerUnavailable(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	coll.UpdateServiceStatus(collector.EventCollector{
-		ResourceName: "test",
-		Data:         "test data",
-	})
+	coll.CollectStart(collector.ResourceIdentifier("test"))
+
 	coll.AddResource(collector.EventCollector{
 		ResourceName: "test1",
 		Data:         "test data",

@@ -17,7 +17,9 @@ module.exports = function middleware(app, config) {
   const fs = middleware.fileSystem;
   app.get("/api/v1/settings", (req, res) => {
     fs.readFile(path.join(compiler.outputPath, "index.html"), (err, file) => {
-      res.send({ api_endpoint: "http://127.0.0.1:8081" });
+      res.send({
+        api_endpoint: "https://finala-api.us-east-1.pe.infra.int.similarweb.io",
+      });
     });
   });
   app.get("*", (req, res) => {

@@ -1,7 +1,5 @@
 import React, { Fragment } from "react";
 import { connect } from "react-redux";
-import { Link } from "react-router-dom";
-
 import { makeStyles } from "@material-ui/core/styles";
 import PropTypes from "prop-types";
 import FilterBar from "./FilterBar";
@@ -39,9 +37,9 @@ const DashboardIndex = ({ currentResource }) => {
       <Box mb={2}>
         <Grid container className={classes.root} spacing={0}>
           <Grid item sm={9} xs={12} className={classes.logoGrid}>
-            <Link to="/">
+            <a href="/">
               <Logo />
-            </Link>
+            </a>
             <ResourceScanning />
           </Grid>
           <Grid item sm={3} xs={12} className={classes.selectorGrid}>

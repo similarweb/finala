@@ -9,6 +9,7 @@ import Autocomplete from "@material-ui/lab/Autocomplete";
 import { titleDirective } from "../../directives";
 import CancelIcon from "@material-ui/icons/Cancel";
 
+let fetchTagsTimeout;
 const useStyles = makeStyles(() => ({
   Autocomplete: {
     width: "100%",
@@ -39,10 +40,17 @@ const useStyles = makeStyles(() => ({
 /**
  * @param  {array} {filters  Filters List
  * @param  {string} currentExecution Global Execution Id
+ * @param  {bool} isScanning indicate if the system is in scan mode
  * @param  {func} setFilters Update filters list
  * @param  {func} setResource Update Selected Resource}
  */
-const FilterBar = ({ filters, currentExecution, setFilters, setResource }) => {
+const FilterBar = ({
+  filters,
+  currentExecution,
+  isScanning,
+  setFilters,
+  setResource,
+}) => {
   const classes = useStyles();
   const [tags, setTags] = useState({});
   const [options, setOptions] = useState([]);
@@ -53,13 +61,22 @@ const FilterBar = ({ filters, currentExecution, setFilters, setResource }) => {
    * Fetching server tagslist for autocomplete
    */
   const fetchTags = () => {
-    TagsService.list(currentExecution).then((responseData) => {
-      const tagOptions = Object.keys(responseData).map((tagKey) => {
-        return { title: tagKey, id: tagKey };
+    clearTimeout(fetchTagsTimeout);
+    TagsService.list(currentExecution)
+      .then((responseData) => {
+        const tagOptions = Object.keys(responseData).map((tagKey) => {
+          return { title: tagKey, id: tagKey };
+        });
+        setTags(responseData);
+        setOptions(tagOptions);
+
+        if (isScanning) {
+          fetchTagsTimeout = setTimeout(fetchTags, 5000);
+        }
+      })
+      .catch(() => {
+        fetchTagsTimeout = setTimeout(fetchTags, 5000);
       });
-      setTags(responseData);
-      setOptions(tagOptions);
-    });
   };
   /**
    * Update filters list & history from auto complete
@@ -226,7 +243,7 @@ const FilterBar = ({ filters, currentExecution, setFilters, setResource }) => {
     if (currentExecution) {
       fetchTags();
     }
-  }, [currentExecution]);
+  }, [currentExecution, isScanning]);
 
   return (
     <Fragment>
@@ -305,11 +322,13 @@ FilterBar.propTypes = {
   setFilters: PropTypes.func,
   setResource: PropTypes.func,
   currentExecution: PropTypes.string,
+  isScanning: PropTypes.bool,
 };
 
 const mapStateToProps = (state) => ({
   filters: state.filters.filters,
   currentExecution: state.executions.current,
+  isScanning: state.executions.isScanning,
 });
 const mapDispatchToProps = (dispatch) => ({
   setFilters: (data) => dispatch({ type: "SET_FILTERS", data }),

@@ -1,6 +1,7 @@
 const initialState = {
   list: [],
   current: "",
+  isScanning: false,
 };
 
 /**
@@ -10,6 +11,9 @@ const initialState = {
  */
 export function executions(state = initialState, action) {
   switch (action.type) {
+    case "IS_SCANNING":
+      state.isScanning = action.isScanning;
+      return { ...state };
     case "EXECUTION_SELECTED":
       state.current = action.id;
       return { ...state };

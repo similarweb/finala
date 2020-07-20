@@ -13,6 +13,7 @@ import {
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 
+let fetchTimeout;
 const useStyles = makeStyles(() => ({
   unused: {
     fontSize: "42px",
@@ -43,13 +44,15 @@ const useStyles = makeStyles(() => ({
 /**
  * @param  {array} {resources  Resources List
  * @param  {array} filters  Filters List
+ * @param  {bool} isScanning indicate if the system is in scan mode
  * @param  {func} currentResource  Current Selected Resource
- * @param  {func} currentExecution Current Selected Execution
+ * @param  {string} currentExecution Current Selected Execution
  * @param  {func} setResources Update Resources List}
  */
 const StatisticsBar = ({
   resources,
   filters,
+  isScanning,
   currentExecution,
   currentResource,
   setResources,
@@ -79,9 +82,17 @@ const StatisticsBar = ({
    * fetch Resources Summary
    */
   const getData = () => {
-    ResourcesService.Summary(currentExecution, filters).then((responseData) => {
-      setResources(responseData);
-    });
+    clearTimeout(fetchTimeout);
+    ResourcesService.Summary(currentExecution, filters)
+      .then((responseData) => {
+        setResources(responseData);
+        if (isScanning) {
+          fetchTimeout = setTimeout(getData, 5000);
+        }
+      })
+      .catch(() => {
+        fetchTimeout = setTimeout(getData, 5000);
+      });
   };
 
   /**
@@ -92,7 +103,12 @@ const StatisticsBar = ({
       return;
     }
     getData();
-  }, [filters, currentExecution]);
+
+    // returned function will be called on component unmount
+    return () => {
+      clearTimeout(fetchTimeout);
+    };
+  }, [filters, currentExecution, isScanning]);
 
   return (
     <Fragment>
@@ -136,6 +152,7 @@ const StatisticsBar = ({
 
 StatisticsBar.defaultProps = {};
 StatisticsBar.propTypes = {
+  isScanning: PropTypes.bool,
   currentExecution: PropTypes.string,
   currentResource: PropTypes.string,
   resources: PropTypes.object,
@@ -147,6 +164,7 @@ const mapStateToProps = (state) => ({
   resources: state.resources.resources,
   filters: state.filters.filters,
   currentExecution: state.executions.current,
+  isScanning: state.executions.isScanning,
   currentResource: state.resources.currentResource,
 });
 const mapDispatchToProps = (dispatch) => ({

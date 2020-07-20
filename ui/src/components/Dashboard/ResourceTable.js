@@ -7,12 +7,20 @@ import TextUtils from "utils/Text";
 import TagsDialog from "../Dialog/Tags";
 import { ResourcesService } from "services/resources.service";
 
+let fetchTimeout = false;
+
 /**
  * @param  {array} {filters  Filters List
+ * @param  {array} resources  Resources List
  * @param  {func} currentResource  Current Selected Resource
  * @param  {func} currentExecution Current Selected Execution}
  */
-const ResourceTable = ({ filters, currentResource, currentExecution }) => {
+const ResourceTable = ({
+  filters,
+  resources,
+  currentResource,
+  currentExecution,
+}) => {
   const [headers, setHeaders] = useState([]);
   const [rows, setRows] = useState([]);
 
@@ -72,35 +80,48 @@ const ResourceTable = ({ filters, currentResource, currentExecution }) => {
    * fetch data for global selected resource
    */
   const getData = () => {
+    clearTimeout(fetchTimeout);
     if (!currentResource) {
       return currentResource;
     }
-    ResourcesService.GetContent(
-      currentResource,
-      currentExecution,
-      filters
-    ).then((responseData) => {
-      if (!responseData) {
-        setHeaders([]);
-        setRows([]);
-        return false;
-      }
-      const headers = getHeaderRow(responseData[0].Data);
-      const rows = responseData.map((row) => row.Data);
-      setHeaders(headers);
-      setRows(rows);
-    });
+
+    ResourcesService.GetContent(currentResource, currentExecution, filters)
+      .then((responseData) => {
+        if (!responseData) {
+          setHeaders([]);
+          setRows([]);
+          return false;
+        }
+        const headers = getHeaderRow(responseData[0].Data);
+        const rows = responseData.map((row) => row.Data);
+        setHeaders(headers);
+        setRows(rows);
+
+        // resource in scanning mode
+        const resourceInfo = resources[currentResource];
+        if (resourceInfo && resourceInfo.Status === 0) {
+          fetchTimeout = setTimeout(getData, 5000);
+        }
+      })
+      .catch(() => {
+        fetchTimeout = setTimeout(getData, 5000);
+      });
   };
 
   /**
    * refetch data when state changes
    */
   useEffect(() => {
-    if (!currentExecution) {
+    if (!currentExecution || !currentResource) {
       return;
     }
     getData();
-  }, [currentExecution, currentResource, filters]);
+
+    // returned function will be called on component unmount
+    return () => {
+      clearTimeout(fetchTimeout);
+    };
+  }, [currentExecution, currentResource, resources, filters]);
 
   return (
     <Fragment>
@@ -115,11 +136,13 @@ ResourceTable.defaultProps = {};
 ResourceTable.propTypes = {
   currentExecution: PropTypes.string,
   currentResource: PropTypes.string,
+  resources: PropTypes.object,
   filters: PropTypes.array,
 };
 
 const mapStateToProps = (state) => ({
   currentExecution: state.executions.current,
+  resources: state.resources.resources,
   currentResource: state.resources.currentResource,
   filters: state.filters.filters,
 });

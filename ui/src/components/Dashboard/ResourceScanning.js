@@ -21,10 +21,11 @@ const useStyles = makeStyles(() => ({
 /**
  * will show a scanning message if some of the resources are still in progress
  * @param  {array} {resources  Resources List}
+ * @param  {func} {setScanning  Update scanning status}
  */
-const ResourceScanning = ({ resources }) => {
+const ResourceScanning = ({ resources, setScanning }) => {
   const classes = useStyles();
-  const resource = Object.values(resources).find((row) => row.Status === 2);
+  const resource = Object.values(resources).find((row) => row.Status === 0);
 
   let isScanning = false;
   let title = "";
@@ -33,6 +34,8 @@ const ResourceScanning = ({ resources }) => {
     isScanning = true;
     title = titleDirective(resource.ResourceName);
   }
+
+  setScanning(isScanning);
 
   return (
     <Fragment>
@@ -49,19 +52,15 @@ const ResourceScanning = ({ resources }) => {
 ResourceScanning.defaultProps = {};
 ResourceScanning.propTypes = {
   resources: PropTypes.object,
-  filters: PropTypes.array,
-  addFilter: PropTypes.func,
-  setResource: PropTypes.func,
+  setScanning: PropTypes.func,
 };
 
 const mapStateToProps = (state) => ({
   resources: state.resources.resources,
-  filters: state.filters.filters,
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  addFilter: (data) => dispatch({ type: "ADD_FILTER", data }),
-  setResource: (data) => dispatch({ type: "SET_RESOURCE", data }),
+  setScanning: (isScanning) => dispatch({ type: "IS_SCANNING", isScanning }),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ResourceScanning);

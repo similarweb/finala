@@ -15,9 +15,10 @@ import { Box, Card, CardContent } from "@material-ui/core";
  */
 const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
   const colorList = colors.map((color) => color.hex);
-  const sortedResources = Object.values(resources).sort((a, b) =>
-    a.TotalSpent >= b.TotalSpent ? -1 : 1
-  );
+  const sortedResources = Object.values(resources)
+    .filter((row) => row.TotalSpent > 0)
+    .sort((a, b) => (a.TotalSpent >= b.TotalSpent ? -1 : 1));
+
   const chartOptions = {
     options: {
       chart: {

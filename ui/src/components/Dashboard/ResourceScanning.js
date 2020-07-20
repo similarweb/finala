@@ -1,4 +1,4 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { titleDirective } from "../../directives";
@@ -20,10 +20,11 @@ const useStyles = makeStyles(() => ({
 
 /**
  * will show a scanning message if some of the resources are still in progress
- * @param  {array} {resources  Resources List}
- * @param  {func} {setScanning  Update scanning status}
+ * @param  {array} {resources  Resources List
+ * @param  {string} currentExecution Current Selected Execution
+ * @param  {func} setScanning  Update scanning status}
  */
-const ResourceScanning = ({ resources, setScanning }) => {
+const ResourceScanning = ({ resources, currentExecution, setScanning }) => {
   const classes = useStyles();
   const resource = Object.values(resources).find((row) => row.Status === 0);
 
@@ -36,6 +37,12 @@ const ResourceScanning = ({ resources, setScanning }) => {
   }
 
   setScanning(isScanning);
+
+  useEffect(() => {
+    if (!currentExecution) {
+      return;
+    }
+  }, [currentExecution, resources]);
 
   return (
     <Fragment>
@@ -52,11 +59,13 @@ const ResourceScanning = ({ resources, setScanning }) => {
 ResourceScanning.defaultProps = {};
 ResourceScanning.propTypes = {
   resources: PropTypes.object,
+  currentExecution: PropTypes.string,
   setScanning: PropTypes.func,
 };
 
 const mapStateToProps = (state) => ({
   resources: state.resources.resources,
+  currentExecution: state.executions.current,
 });
 
 const mapDispatchToProps = (dispatch) => ({

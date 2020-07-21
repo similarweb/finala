@@ -15,13 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change GoRelease to have the correct semver tags [[PR-82](https://github.com/similarweb/finala/pull/82)]
 - Fix the Dockerfile release download [[PR-83](https://github.com/similarweb/finala/pull/83)]
 - Fix version preview [[PR-84](https://github.com/similarweb/finala/pull/84)]
+- Revamp Finala User Interface [[PR-85](https://github.com/similarweb/finala/pull/85)]
 - Don't change the Tag Key , use the original from AWS [[PR-86](https://github.com/similarweb/finala/pull/86)]
 - Update README.md [[PR-89](https://github.com/similarweb/finala/pull/89)]
 - Remove Notifier from Docker compose first run [[PR-90](https://github.com/similarweb/finala/pull/90)]
 - Add elastic ip resource detection [[PR-97](https://github.com/similarweb/finala/pull/97)]
 - Add elasticsearch resource detection [[PR-98](https://github.com/similarweb/finala/pull/98)]
-- Remove totalSpend field  [[PR-99](https://github.com/similarweb/finala/pull/99)]
-- Enable/Disalbe specific metrics detection  [[PR-100](https://github.com/similarweb/finala/pull/100)]
+- Remove totalSpend field [[PR-99](https://github.com/similarweb/finala/pull/99)]
+- Enable/Disalbe specific metrics detection [[PR-100](https://github.com/similarweb/finala/pull/100)]
+- Load dynamically all collector resources [[PR-101](https://github.com/similarweb/finala/pull/101)]
 
 
 ## v0.3.3 (June 17,2020)

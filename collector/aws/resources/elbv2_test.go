@@ -104,7 +104,7 @@ func TestDetectELBV2(t *testing.T) {
 			Description: "test description write capacity",
 			Data: []config.MetricDataConfiguration{
 				{
-					Name:      "ProvisionedWriteCapacityUnits",
+					Name:      "TestMetric",
 					Statistic: "Sum",
 				},
 			},
@@ -118,7 +118,7 @@ func TestDetectELBV2(t *testing.T) {
 	}
 
 	collector := collectorTestutils.NewMockCollector()
-	mockCloudwatch := awsTestutils.NewMockCloudwatch()
+	mockCloudwatch := awsTestutils.NewMockCloudwatch(nil)
 	mockPrice := awsTestutils.NewMockPricing(nil)
 	detector := awsTestutils.AWSManager(collector, mockCloudwatch, mockPrice, "us-east-1")
 
@@ -161,7 +161,7 @@ func TestDetectELBV2Error(t *testing.T) {
 			Description: "test description write capacity",
 			Data: []config.MetricDataConfiguration{
 				{
-					Name:      "ProvisionedWriteCapacityUnits",
+					Name:      "TestMetric",
 					Statistic: "Sum",
 				},
 			},
@@ -189,7 +189,7 @@ func TestDetectELBV2Error(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.region, func(t *testing.T) {
 			collector := collectorTestutils.NewMockCollector()
-			mockCloudwatch := awsTestutils.NewMockCloudwatch()
+			mockCloudwatch := awsTestutils.NewMockCloudwatch(nil)
 			mockPrice := awsTestutils.NewMockPricing(nil)
 			detector := awsTestutils.AWSManager(collector, mockCloudwatch, mockPrice, tc.region)
 

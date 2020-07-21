@@ -12,6 +12,7 @@ import (
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 )
 
@@ -142,8 +143,21 @@ func TestDetectDynamoDB(t *testing.T) {
 		},
 	}
 
+	cloudWatchMetrics := map[string]cloudwatch.GetMetricStatisticsOutput{
+		"ProvisionedWriteCapacityUnits": {
+			Datapoints: []*cloudwatch.Datapoint{
+				{Sum: testutils.Float64Pointer(5)},
+			},
+		},
+		"read capacity": {
+			Datapoints: []*cloudwatch.Datapoint{
+				{Maximum: testutils.Float64Pointer(5)},
+			},
+		},
+	}
+
 	collector := collectorTestutils.NewMockCollector()
-	mockCloudwatch := awsTestutils.NewMockCloudwatch()
+	mockCloudwatch := awsTestutils.NewMockCloudwatch(&cloudWatchMetrics)
 	mockPrice := awsTestutils.NewMockPricing(&mockPricing)
 	detector := awsTestutils.AWSManager(collector, mockCloudwatch, mockPrice, "us-east-1")
 

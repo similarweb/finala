@@ -84,7 +84,7 @@ func TestAddEvent(t *testing.T) {
 		Data:         "test data",
 	})
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 3)
 
 	if receivedData.receivedCount != 2 {
 		t.Fatalf("unexpected collector send data, got %d, expected %d", receivedData.receivedCount, 2)

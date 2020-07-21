@@ -12,7 +12,27 @@ import (
 
 func TestGetMetricFormula(t *testing.T) {
 
-	cloutwatchManager := awsTestutils.NewMockCloudwatch()
+	cloudWatchMetrics := map[string]cloudwatch.GetMetricStatisticsOutput{
+		"a": {
+			Datapoints: []*cloudwatch.Datapoint{
+				{Sum: testutils.Float64Pointer(3)},
+				{Sum: testutils.Float64Pointer(2)},
+			},
+		},
+		"b": {
+			Datapoints: []*cloudwatch.Datapoint{
+				{Maximum: testutils.Float64Pointer(5)},
+				{Maximum: testutils.Float64Pointer(0)},
+			},
+		},
+		"c": {
+			Datapoints: []*cloudwatch.Datapoint{
+				{Average: testutils.Float64Pointer(4)},
+				{Average: testutils.Float64Pointer(2)},
+			},
+		},
+	}
+	cloutwatchManager := awsTestutils.NewMockCloudwatch(&cloudWatchMetrics)
 
 	metricInput := cloudwatch.GetMetricStatisticsInput{}
 	metricConfig := config.MetricConfig{
@@ -48,7 +68,7 @@ func TestGetMetricFormula(t *testing.T) {
 
 func TestGetMetricErrors(t *testing.T) {
 
-	cloutwatchManager := awsTestutils.NewMockCloudwatch()
+	cloutwatchManager := awsTestutils.NewMockCloudwatch(nil)
 
 	metricInput := cloudwatch.GetMetricStatisticsInput{}
 	metricConfig := config.MetricConfig{
@@ -70,7 +90,16 @@ func TestGetMetricErrors(t *testing.T) {
 
 func TestGetMetricNoneFormula(t *testing.T) {
 
-	cloutwatchManager := awsTestutils.NewMockCloudwatch()
+	cloudWatchMetrics := map[string]cloudwatch.GetMetricStatisticsOutput{
+		"a": {
+			Datapoints: []*cloudwatch.Datapoint{
+				{Sum: testutils.Float64Pointer(3)},
+				{Sum: testutils.Float64Pointer(2)},
+			},
+		},
+	}
+
+	cloutwatchManager := awsTestutils.NewMockCloudwatch(&cloudWatchMetrics)
 
 	metricInput := cloudwatch.GetMetricStatisticsInput{}
 	metricConfig := config.MetricConfig{
@@ -96,7 +125,7 @@ func TestGetMetricNoneFormula(t *testing.T) {
 
 func TestDatapointMath(t *testing.T) {
 
-	cloutwatchManager := awsTestutils.NewMockCloudwatch()
+	cloutwatchManager := awsTestutils.NewMockCloudwatch(nil)
 
 	statistics := cloudwatch.GetMetricStatisticsOutput{
 		Datapoints: []*awsCloudwatch.Datapoint{

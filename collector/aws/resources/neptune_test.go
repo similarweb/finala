@@ -101,7 +101,7 @@ func TestDetectNeptune(t *testing.T) {
 			Description: "test description write capacity",
 			Data: []config.MetricDataConfiguration{
 				{
-					Name:      "ProvisionedWriteCapacityUnits",
+					Name:      "TestMetric",
 					Statistic: "Sum",
 				},
 			},
@@ -115,7 +115,7 @@ func TestDetectNeptune(t *testing.T) {
 	}
 
 	collector := collectorTestutils.NewMockCollector()
-	mockCloudwatch := awsTestutils.NewMockCloudwatch()
+	mockCloudwatch := awsTestutils.NewMockCloudwatch(nil)
 	mockPrice := awsTestutils.NewMockPricing(nil)
 	detector := awsTestutils.AWSManager(collector, mockCloudwatch, mockPrice, "us-east-1")
 
@@ -160,7 +160,7 @@ func TestDetectNeptuneError(t *testing.T) {
 			Description: "test description write capacity",
 			Data: []config.MetricDataConfiguration{
 				{
-					Name:      "ProvisionedWriteCapacityUnits",
+					Name:      "TestMetric",
 					Statistic: "Sum",
 				},
 			},
@@ -174,7 +174,7 @@ func TestDetectNeptuneError(t *testing.T) {
 	}
 
 	collector := collectorTestutils.NewMockCollector()
-	mockCloudwatch := awsTestutils.NewMockCloudwatch()
+	mockCloudwatch := awsTestutils.NewMockCloudwatch(nil)
 	mockPrice := awsTestutils.NewMockPricing(nil)
 	detector := awsTestutils.AWSManager(collector, mockCloudwatch, mockPrice, "us-east-1")
 

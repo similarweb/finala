@@ -131,7 +131,7 @@ func TestDescribeDocdb(t *testing.T) {
 func TestDetectDocdb(t *testing.T) {
 
 	collector := collectorTestutils.NewMockCollector()
-	mockCloudwatch := awsTestutils.NewMockCloudwatch()
+	mockCloudwatch := awsTestutils.NewMockCloudwatch(nil)
 	mockPrice := awsTestutils.NewMockPricing(nil)
 	detector := awsTestutils.AWSManager(collector, mockCloudwatch, mockPrice, "us-east-1")
 	metricConfig := []config.MetricConfig{
@@ -139,7 +139,7 @@ func TestDetectDocdb(t *testing.T) {
 			Description: "test description write capacity",
 			Data: []config.MetricDataConfiguration{
 				{
-					Name:      "ProvisionedWriteCapacityUnits",
+					Name:      "TestMetric",
 					Statistic: "Sum",
 				},
 			},

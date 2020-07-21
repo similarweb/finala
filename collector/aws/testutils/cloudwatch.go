@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"errors"
 	cloudwatchmanager "finala/collector/aws/cloudwatch"
 	"finala/collector/testutils"
 
@@ -25,17 +26,30 @@ var defaultResponseMetricStatistics = cloudwatch.GetMetricStatisticsOutput{
 }
 
 type MockAWSCloudwatchClient struct {
-	responseMetricStatistics cloudwatch.GetMetricStatisticsOutput
+	responseMetricStatistics map[string]cloudwatch.GetMetricStatisticsOutput
 }
 
-func (r *MockAWSCloudwatchClient) GetMetricStatistics(*cloudwatch.GetMetricStatisticsInput) (*cloudwatch.GetMetricStatisticsOutput, error) {
-	return &r.responseMetricStatistics, nil
+func (r *MockAWSCloudwatchClient) GetMetricStatistics(input *cloudwatch.GetMetricStatisticsInput) (*cloudwatch.GetMetricStatisticsOutput, error) {
+
+	metricResponse, found := r.responseMetricStatistics[*input.MetricName]
+	if !found {
+		return nil, errors.New("metric not found")
+	}
+	return &metricResponse, nil
 }
 
-func NewMockCloudwatch() *cloudwatchmanager.CloudwatchManager {
+func NewMockCloudwatch(mockClientResponse *map[string]cloudwatch.GetMetricStatisticsOutput) *cloudwatchmanager.CloudwatchManager {
+
+	mockMetricStatistics := map[string]cloudwatch.GetMetricStatisticsOutput{
+		"TestMetric": defaultResponseMetricStatistics,
+	}
+
+	if mockClientResponse != nil {
+		mockMetricStatistics = *mockClientResponse
+	}
 
 	mockClient := MockAWSCloudwatchClient{
-		responseMetricStatistics: defaultResponseMetricStatistics,
+		responseMetricStatistics: mockMetricStatistics,
 	}
 	cloutwatchManager := cloudwatchmanager.NewCloudWatchManager(&mockClient)
 	return cloutwatchManager

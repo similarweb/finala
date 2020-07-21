@@ -41,7 +41,7 @@ type DetectedRedShift struct {
 }
 
 func init() {
-	register.Registry("redshift", NewNeptuneManager)
+	register.Registry("redshift", NewRedShiftManager)
 }
 
 // NewRedShiftManager implements AWS GO SDK for redshift

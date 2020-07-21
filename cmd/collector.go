@@ -46,7 +46,11 @@ var collectorCMD = &cobra.Command{
 
 		// Starting collect data
 		awsProvider := configStruct.Providers["aws"]
-		awsManager := aws.NewAnalyzeManager(collectorManager, awsProvider.Accounts, awsProvider.Metrics, awsProvider.Resources)
+
+		// init metric manager
+		metricManager := collector.NewMetricManager(awsProvider)
+
+		awsManager := aws.NewAnalyzeManager(collectorManager, metricManager, awsProvider.Accounts, awsProvider.Resources)
 
 		awsManager.All()
 

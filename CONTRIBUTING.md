@@ -1,13 +1,39 @@
 # Contributing
 
-Everyone are welcome to contribute or even discuss the change you wish to make a priori via issue, email or any other method. 
+Welcome to Finala! If you are interested in contributing to the 
+Finala's code repo then checkout this Contributor's Guide. 
 
-## Pull Request Process
-All PR's are initally merged into `master`
+For help on how to get started visit our [developer guide](./docs/developers/index.md).
 
-1. Open a PR and request to merge into `master`. 
-2. Update the README.md if documentation is required. 
-3. Add tests if you changed code. 
-4. PR's are merged once the went through a review and received LGTM. 
+### Versioning
 
+We use standard [semver](https://semver.org/) to mark versions. 
+
+### Publish
+
+The publish of a new release is done with [Github Releases](https://github.com/similarweb/finala/releases) for new versions and patches. 
+
+The Docker image version is updated automatically in DockerHub on every release (see [finala](https://hub.docker.com/r/similarweb/finala) on DockerHub)
+
+## Branches
+
+We use `master` branch as the branch for the latest working **development** version. 
+For stable version please only see [releases](https://github.com/similarweb/finala/releases).
+
+For contributing to Finala please follow the next steps: 
+
+1. Create a fork on your branch from `master` branch.
+2. Checkout to your branch using our branch name conventions.
+3. Once done, create a Pull Request following our guide lines. Use the `master` branch as the target.
+4. For a merge: CI tests must succeed and 1 review from a core maintainer.
+
+### Standard branch name conventions (git-flow):
+
+```
+hotfix/your_fix_name
+bug/your_bug_name
+feature/your_feature_name
+docs/doc_theme
+maintenance/your_change_name
+```
 

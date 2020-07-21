@@ -81,6 +81,46 @@ func (server *Server) GetResourceData(resp http.ResponseWriter, req *http.Reques
 	server.JSONWrite(resp, http.StatusOK, response)
 }
 
+// GetResourceTrends return trends by resource type, id, region and metric
+func (server *Server) GetResourceTrends(resp http.ResponseWriter, req *http.Request) {
+	queryErrs := url.Values{}
+	params := mux.Vars(req)
+	resourceType := params["type"]
+	filters := map[string]string{}
+
+	resourceId := req.URL.Query().Get("resourceId")
+	if resourceId == "" {
+		queryErrs.Add("resourceId", "resourceId field is mandatory")
+	}
+
+	region := req.URL.Query().Get("region")
+	if region == "" {
+		queryErrs.Add("region", "region field is mandatory")
+	}
+
+	metric := req.URL.Query().Get("metric")
+	if metric == "" {
+		queryErrs.Add("metric", "metric field is mandatory")
+	}
+
+	if len(queryErrs) > 0 {
+		server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{ErrorQuery: queryErrs})
+		return
+	}
+
+	filters["Data.ResourceID"] = resourceId
+	filters["Data.Region"] = region
+	filters["Data.Metric"] = metric
+
+	trends, err := server.storage.GetResourceTrends(resourceType, filters)
+	if err != nil {
+		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
+		return
+
+	}
+	server.JSONWrite(resp, http.StatusOK, trends)
+}
+
 // GetExecutionTags return resuts details by resource type
 func (server *Server) GetExecutionTags(resp http.ResponseWriter, req *http.Request) {
 

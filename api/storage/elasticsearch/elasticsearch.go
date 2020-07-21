@@ -28,6 +28,9 @@ const (
 				},
 				"EventType":{
 					"type":"keyword"
+				},
+				"Timestamp":{
+					"type":"date"
 				}
 			}
 		}
@@ -110,10 +113,16 @@ func (sm *StorageManager) Save(data string) bool {
 }
 
 // getDynamicMatchQuery will iterate through a filters map and create Match Query for each of them
-func (sm *StorageManager) getDynamicMatchQuery(filters map[string]string) []elastic.Query {
+func (sm *StorageManager) getDynamicMatchQuery(filters map[string]string, operator string) []elastic.Query {
 	dynamicMatchQuery := []elastic.Query{}
+	var mq *elastic.MatchQuery
 	for name, value := range filters {
-		dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery(name, value))
+		mq = elastic.NewMatchQuery(name, value)
+		if operator == "and" {
+			mq = mq.Operator("and")
+		}
+
+		dynamicMatchQuery = append(dynamicMatchQuery, mq)
 	}
 	return dynamicMatchQuery
 }
@@ -195,7 +204,7 @@ func (sm *StorageManager) getResourceSummaryDetails(executionID string, filters 
 	var totalSpent float64
 	var resourceCount int64
 
-	dynamicMatchQuery := sm.getDynamicMatchQuery(filters)
+	dynamicMatchQuery := sm.getDynamicMatchQuery(filters, "or")
 	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery("ExecutionID", executionID))
 	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery("EventType", "resource_detected"))
 
@@ -295,7 +304,7 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 func (sm *StorageManager) GetResources(resourceType string, executionID string, filters map[string]string) ([]map[string]interface{}, error) {
 
 	var resources []map[string]interface{}
-	dynamicMatchQuery := sm.getDynamicMatchQuery(filters)
+	dynamicMatchQuery := sm.getDynamicMatchQuery(filters, "or")
 	componentQ := elastic.NewMatchQuery("EventType", "resource_detected")
 	deploymentQ := elastic.NewMatchQuery("ExecutionID", executionID)
 	ResourceNameQ := elastic.NewMatchQuery("ResourceName", resourceType)
@@ -322,6 +331,63 @@ func (sm *StorageManager) GetResources(resourceType string, executionID string, 
 		}
 
 		resources = append(resources, rowData)
+	}
+
+	return resources, nil
+}
+
+// GetResourceTrends return resource data
+func (sm *StorageManager) GetResourceTrends(resourceType string, filters map[string]string) ([]storage.ExecutionCost, error) {
+	// Per resource trends, filters should take care of granularity (per resource: Data.ResourceID, Data.Region, Data.Metric -> Data.PricePerMonth)
+	var resources []storage.ExecutionCost
+	var mustNotQuery []elastic.Query
+
+	// Must
+	mustQuery := sm.getDynamicMatchQuery(filters, "and")
+	mustQuery = append(mustQuery, elastic.NewMatchQuery("ResourceName", resourceType).Operator("and"))
+
+	// Unsupported Types - MustNot
+	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("EventType", "service_status").Operator("and"))
+	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_iam_users").Operator("and"))
+	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_elastic_ip").Operator("and"))
+	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_lambda").Operator("and"))
+	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_ec2_volume").Operator("and"))
+
+	queryBuilder := elastic.NewBoolQuery().MustNot(mustNotQuery...).Must(mustQuery...)
+	searchResult, err := sm.client.Search().
+		Query(queryBuilder).
+		Pretty(true).
+		Size(100).
+		SortBy(elastic.NewFieldSort("Timestamp").Desc()).
+		Aggregation("executions", elastic.NewTermsAggregation().Field("ExecutionID").OrderByTermAsc(). // Aggregate by ExecutionID
+														SubAggregation("monthly-cost", elastic.NewSumAggregation().Field("Data.PricePerMonth"))). // Sub aggregate and sum by Data.PricePerMonth per bucket
+		Do(context.Background())
+
+	if err != nil {
+		log.WithError(err).Error("elasticsearch query error")
+		return resources, err
+	}
+
+	executions, found := searchResult.Aggregations.Terms("executions")
+	if found {
+		for _, ppm := range executions.Buckets {
+			executionId := ppm.Key.(string)
+			monthlyAgg, _ := ppm.Aggregations.Sum("monthly-cost")
+
+			// Extract the timestamp from the ExecutionID
+			executionText := strings.Split(executionId, "_")
+			timestamp, err := strconv.Atoi(executionText[1])
+			var timestampInt int
+			if err == nil {
+				timestampInt = timestamp
+			}
+
+			resources = append(resources, storage.ExecutionCost{
+				ExecutionID:        executionId,
+				ExtractedTimestamp: timestampInt,
+				CostSum:            *monthlyAgg.Value,
+			})
+		}
 	}
 
 	return resources, nil

@@ -16,10 +16,6 @@ var metricsList = config.ProviderConfig{
 			{Enable: false, Description: "metric-1"},
 		},
 	},
-	Resources: map[string]config.ResourceConfig{
-		"foo": {Enable: true},
-		"bar": {Enable: false},
-	},
 }
 
 func TestIsResourceMetricsEnable(t *testing.T) {
@@ -42,30 +38,6 @@ func TestIsResourceMetricsEnable(t *testing.T) {
 			if len(resourceMetrics) != test.count {
 				t.Fatalf("unexpected resources summary response, got %d expected %d", len(resourceMetrics), test.count)
 			}
-
-			if err != test.err {
-				t.Fatalf("unexpected error, got %v expected %v", err, test.err)
-
-			}
-		})
-	}
-}
-func TestIsResourceEnable(t *testing.T) {
-
-	metricManager := collector.NewMetricManager(metricsList)
-
-	resourceMetricsTestCases := []struct {
-		metric string
-		count  int
-		err    error
-	}{
-		{"foo", 1, nil},
-		{"bar", 0, collector.ErrResourceNotConfigure},
-	}
-
-	for _, test := range resourceMetricsTestCases {
-		t.Run(test.metric, func(t *testing.T) {
-			_, err := metricManager.IsResourceEnable(test.metric)
 
 			if err != test.err {
 				t.Fatalf("unexpected error, got %v expected %v", err, test.err)

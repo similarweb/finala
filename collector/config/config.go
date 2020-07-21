@@ -42,19 +42,10 @@ type MetricConfig struct {
 	Constraint  MetricConstraintConfig    `yaml:"constraint"`
 }
 
-// ResourceConfig describe resource configuration
-type ResourceConfig struct {
-	Enable      bool                   `yaml:"enable"`
-	Description string                 `yaml:"description"`
-	Global      bool                   `yaml:"global"`
-	Constraint  MetricConstraintConfig `yaml:"constraint"`
-}
-
 // ProviderConfig describe the available providers
 type ProviderConfig struct {
-	Accounts  []AWSAccount              `yaml:"accounts"`
-	Metrics   map[string][]MetricConfig `yaml:"metrics"`
-	Resources map[string]ResourceConfig `yaml:"resources"`
+	Accounts []AWSAccount              `yaml:"accounts"`
+	Metrics  map[string][]MetricConfig `yaml:"metrics"`
 }
 
 // APIServerConfig descrive the api configuration

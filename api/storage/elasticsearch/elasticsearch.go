@@ -359,7 +359,7 @@ func (sm *StorageManager) GetResourceTrends(resourceType string, filters map[str
 		Pretty(true).
 		Size(100).
 		SortBy(elastic.NewFieldSort("Timestamp").Desc()).
-		Aggregation("executions", elastic.NewTermsAggregation().Field("ExecutionID").OrderByTermAsc(). // Aggregate by ExecutionID
+		Aggregation("executions", elastic.NewTermsAggregation().Field("ExecutionID").OrderByKeyAsc(). // Aggregate by ExecutionID
 														SubAggregation("monthly-cost", elastic.NewSumAggregation().Field("Data.PricePerMonth"))). // Sub aggregate and sum by Data.PricePerMonth per bucket
 		Do(context.Background())
 

@@ -1,20 +1,21 @@
-import React from "react";
-import ReactDOM from "react-dom";
-import { AppContainer } from "react-hot-loader";
-import { Provider } from "react-redux";
-import App from "./App";
-import configureStore, { history } from "./configureStore";
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { AppContainer } from 'react-hot-loader'
+import { Provider } from 'react-redux'
+import App from './App'
+import configureStore, { history } from './configureStore'
 
-const store = configureStore();
+const store = configureStore()
 const render = () => {
   ReactDOM.render(
-    <AppContainer>
+    <AppContainer>  
       <Provider store={store}>
-        <App history={history} />
+          <App history={history} />
       </Provider>
     </AppContainer>,
-    document.getElementById("react-root")
-  );
-};
+    document.getElementById('react-root')
+  )
+}
 
-render();
+render()
+

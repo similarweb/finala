@@ -177,9 +177,9 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 }
 
 // getPricingFilterInput prepares the right filter for red shift clusters
-func (rdm *RedShiftManager) getPricingFilterInput(cluster *redshift.Cluster) *pricing.GetProductsInput {
+func (rdm *RedShiftManager) getPricingFilterInput(cluster *redshift.Cluster) pricing.GetProductsInput {
 
-	return &pricing.GetProductsInput{
+	return pricing.GetProductsInput{
 		ServiceCode: &rdm.servicePricingCode,
 		Filters: []*pricing.Filter{
 			{

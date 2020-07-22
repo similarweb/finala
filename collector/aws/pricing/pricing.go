@@ -116,7 +116,7 @@ func NewPricingManager(client PricingClientDescreptor, region string) *PricingMa
 // GetPrice returns the product price filtered by product filters
 // The result (of the given product input) should be only one product as a specific product with specific usage
 // Should have only 1 price to calculate total price
-func (p *PricingManager) GetPrice(input *awsPricing.GetProductsInput, rateCode string, region string) (float64, error) {
+func (p *PricingManager) GetPrice(input awsPricing.GetProductsInput, rateCode string, region string) (float64, error) {
 
 	if rateCode == "" {
 		rateCode = defaultRateCode
@@ -142,7 +142,7 @@ func (p *PricingManager) GetPrice(input *awsPricing.GetProductsInput, rateCode s
 		return val, nil
 	}
 
-	priceResponse, err := p.client.GetProducts(input)
+	priceResponse, err := p.client.GetProducts(&input)
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
 			"search_query": input,

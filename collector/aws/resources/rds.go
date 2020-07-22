@@ -183,7 +183,7 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 }
 
 // getPricingFilterInput prepare document rds pricing filter
-func (r *RDSManager) getPricingFilterInput(instance *rds.DBInstance) *pricing.GetProductsInput {
+func (r *RDSManager) getPricingFilterInput(instance *rds.DBInstance) pricing.GetProductsInput {
 
 	deploymentOption := "Single-AZ"
 
@@ -201,7 +201,7 @@ func (r *RDSManager) getPricingFilterInput(instance *rds.DBInstance) *pricing.Ge
 		databaseEngine = *instance.Engine
 	}
 
-	return &pricing.GetProductsInput{
+	return pricing.GetProductsInput{
 		ServiceCode: &r.servicePricingCode,
 		Filters: []*pricing.Filter{
 			{

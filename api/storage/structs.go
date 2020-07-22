@@ -27,7 +27,7 @@ type Executions struct {
 
 type ExecutionCost struct {
 	ExecutionID        string
-	ExtractedTimestamp int
+	ExtractedTimestamp int64
 	CostSum            float64
 }
 

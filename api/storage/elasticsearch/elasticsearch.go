@@ -277,14 +277,14 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 
 		for _, executionIDValue := range executionsIDs.Buckets {
 			executionID := string(executionIDValue.Key)
-			data := strings.Split(executionID, "_")
 
-			// Remove the last element of Data which is the timestamp and leave all the others elements
-			// Which construct the executionName
-			executionName := strings.Join(data[:len(data)-1], "_")
+			executionName, err := interpolation.ExtractExecutionName(executionID)
+			if err != nil {
+				log.WithError(err).WithField("execution_name", executionName).Error("could not extract execution name")
+				continue
+			}
 
-			// Always take the last element which is the timestamp of the collector's run
-			collectorExecutionTime, err := strconv.ParseInt(data[len(data)-1], 10, 64)
+			collectorExecutionTime, err := interpolation.ExtractTimestamp(executionID)
 			if err != nil {
 				log.WithError(err).WithField("collector_execution_time", collectorExecutionTime).Error("could not parse to int64")
 				continue
@@ -375,16 +375,14 @@ func (sm *StorageManager) GetResourceTrends(resourceType string, filters map[str
 			monthlyAgg, _ := ppm.Aggregations.Sum("monthly-cost")
 
 			// Extract the timestamp from the ExecutionID
-			executionText := strings.Split(executionId, "_")
-			timestamp, err := strconv.Atoi(executionText[1])
-			var timestampInt int
-			if err == nil {
-				timestampInt = timestamp
+			timestamp, err := interpolation.ExtractTimestamp(executionId)
+			if err != nil {
+				timestamp = 0
 			}
 
 			resources = append(resources, storage.ExecutionCost{
 				ExecutionID:        executionId,
-				ExtractedTimestamp: timestampInt,
+				ExtractedTimestamp: timestamp,
 				CostSum:            *monthlyAgg.Value,
 			})
 		}

@@ -87,7 +87,7 @@ func (ec *EC2Manager) Detect(metrics []config.MetricConfig) (interface{}, error)
 	for _, instance := range instances {
 		log.WithField("instance_id", *instance.InstanceId).Debug("checking ec2 instance")
 
-		price, _ := ec.awsManager.GetPricingClient().GetPrice(ec.GetPricingFilterInput(instance), "", ec.awsManager.GetRegion())
+		price, _ := ec.awsManager.GetPricingClient().GetPrice(ec.getPricingFilterInput(instance), "", ec.awsManager.GetRegion())
 
 		for _, metric := range metrics {
 			log.WithFields(log.Fields{
@@ -184,8 +184,8 @@ func (ec *EC2Manager) Detect(metrics []config.MetricConfig) (interface{}, error)
 
 }
 
-// GetPricingFilterInput return the price filters for EC2 instances.
-func (ec *EC2Manager) GetPricingFilterInput(instance *ec2.Instance) *pricing.GetProductsInput {
+// getPricingFilterInput return the price filters for EC2 instances.
+func (ec *EC2Manager) getPricingFilterInput(instance *ec2.Instance) pricing.GetProductsInput {
 
 	platform := "Linux"
 
@@ -193,7 +193,7 @@ func (ec *EC2Manager) GetPricingFilterInput(instance *ec2.Instance) *pricing.Get
 		platform = *instance.Platform
 	}
 
-	input := &pricing.GetProductsInput{
+	input := pricing.GetProductsInput{
 		ServiceCode: &ec.servicePricingCode,
 		Filters: []*pricing.Filter{
 			{

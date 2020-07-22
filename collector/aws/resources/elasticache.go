@@ -89,7 +89,7 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 	for _, instance := range instances {
 		log.WithField("cluster_id", *instance.CacheClusterId).Debug("checking elasticache")
 
-		price, _ := ec.awsManager.GetPricingClient().GetPrice(ec.GetPricingFilterInput(instance), "", ec.awsManager.GetRegion())
+		price, _ := ec.awsManager.GetPricingClient().GetPrice(ec.getPricingFilterInput(instance), "", ec.awsManager.GetRegion())
 
 		for _, metric := range metrics {
 			log.WithFields(log.Fields{
@@ -180,10 +180,10 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 	return detectedelasticache, nil
 }
 
-// GetPricingFilterInput prepare document elasticache pricing filter
-func (ec *ElasticacheManager) GetPricingFilterInput(instance *elasticache.CacheCluster) *pricing.GetProductsInput {
+// getPricingFilterInput prepare document elasticache pricing filter
+func (ec *ElasticacheManager) getPricingFilterInput(instance *elasticache.CacheCluster) pricing.GetProductsInput {
 
-	return &pricing.GetProductsInput{
+	return pricing.GetProductsInput{
 		ServiceCode: &ec.servicePricingCode,
 		Filters: []*pricing.Filter{
 			{

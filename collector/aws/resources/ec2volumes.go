@@ -168,7 +168,7 @@ func (ev *EC2VolumeManager) getCalculatedPrice(vol *ec2.Volume, basePrice float6
 }
 
 // getBasePricingFilterInput set the pricing product filters
-func (ev *EC2VolumeManager) getBasePricingFilterInput(vol *ec2.Volume, extraFilters []*pricing.Filter) *pricing.GetProductsInput {
+func (ev *EC2VolumeManager) getBasePricingFilterInput(vol *ec2.Volume, extraFilters []*pricing.Filter) pricing.GetProductsInput {
 
 	filters := []*pricing.Filter{
 		{
@@ -182,7 +182,7 @@ func (ev *EC2VolumeManager) getBasePricingFilterInput(vol *ec2.Volume, extraFilt
 		filters = append(filters, extraFilters...)
 	}
 
-	return &pricing.GetProductsInput{
+	return pricing.GetProductsInput{
 		ServiceCode: &ev.servicePricingCode,
 		Filters:     filters,
 	}

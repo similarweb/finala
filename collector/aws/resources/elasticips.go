@@ -76,7 +76,7 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 
 	elasticIPs := []DetectedElasticIP{}
 
-	priceFIlters := ei.GetPricingFilterInput()
+	priceFIlters := ei.getPricingFilterInput()
 	// Get elastic ip pricing
 	price, err := ei.awsManager.GetPricingClient().GetPrice(priceFIlters, ei.rateCode, ei.awsManager.GetRegion())
 	if err != nil {
@@ -133,10 +133,10 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 
 }
 
-// GetPricingFilterInput returns the elastic ip price filters.
-func (ei *ElasticIPManager) GetPricingFilterInput() *pricing.GetProductsInput {
+// getPricingFilterInput returns the elastic ip price filters.
+func (ei *ElasticIPManager) getPricingFilterInput() pricing.GetProductsInput {
 
-	return &pricing.GetProductsInput{
+	return pricing.GetProductsInput{
 		ServiceCode: &ei.servicePricingCode,
 		Filters: []*pricing.Filter{
 			{

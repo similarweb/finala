@@ -89,7 +89,7 @@ func (dd *DocumentDBManager) Detect(metrics []config.MetricConfig) (interface{},
 
 		log.WithField("name", *instance.DBInstanceIdentifier).Debug("checking documentDB")
 
-		price, _ := dd.awsManager.GetPricingClient().GetPrice(dd.GetPricingFilterInput(instance), "", dd.awsManager.GetRegion())
+		price, _ := dd.awsManager.GetPricingClient().GetPrice(dd.getPricingFilterInput(instance), "", dd.awsManager.GetRegion())
 
 		for _, metric := range metrics {
 			log.WithFields(log.Fields{
@@ -182,10 +182,10 @@ func (dd *DocumentDBManager) Detect(metrics []config.MetricConfig) (interface{},
 
 }
 
-// GetPricingFilterInput prepare document db pricing filter
-func (dd *DocumentDBManager) GetPricingFilterInput(instance *docdb.DBInstance) *pricing.GetProductsInput {
+// getPricingFilterInput prepare document db pricing filter
+func (dd *DocumentDBManager) getPricingFilterInput(instance *docdb.DBInstance) pricing.GetProductsInput {
 
-	return &pricing.GetProductsInput{
+	return pricing.GetProductsInput{
 		ServiceCode: &dd.servicePricingCode,
 		Filters: []*pricing.Filter{
 			{

@@ -13,21 +13,18 @@ var ErrResourceNotConfigure = errors.New("resource was not found in collector co
 // MetricDescriptor is an interface metric
 type MetricDescriptor interface {
 	IsResourceMetricsEnable(resourceType string) ([]config.MetricConfig, error)
-	IsResourceEnable(resourceType string) (config.ResourceConfig, error)
 }
 
 // MetricManager will hold the metric manger strcut
 type MetricManager struct {
-	metrics   map[string][]config.MetricConfig
-	resources map[string]config.ResourceConfig
+	metrics map[string][]config.MetricConfig
 }
 
 // NewMetricManager implements metric manager logic
 func NewMetricManager(metrics config.ProviderConfig) *MetricManager {
 
 	return &MetricManager{
-		metrics:   metrics.Metrics,
-		resources: metrics.Resources,
+		metrics: metrics.Metrics,
 	}
 }
 
@@ -57,24 +54,4 @@ func (mm *MetricManager) IsResourceMetricsEnable(resourceType string) ([]config.
 	}
 
 	return metricsResponse, nil
-}
-
-// IsResourceEnable checks if the resource is configured and enabled
-func (mm *MetricManager) IsResourceEnable(resourceType string) (config.ResourceConfig, error) {
-
-	logger := log.WithField("resource_type", resourceType)
-
-	resource, found := mm.resources[resourceType]
-	if !found {
-		log.WithField("resource_name", resourceType).Info("resource was not configured")
-		return resource, ErrResourceNotConfigure
-	}
-
-	if !resource.Enable {
-		logger.Info("resource has not enabled metrics")
-		return resource, ErrResourceNotConfigure
-	}
-
-	return resource, nil
-
 }

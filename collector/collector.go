@@ -14,6 +14,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// ResourceIdentifier defining the resource name
+type ResourceIdentifier string
+
 const (
 	eventServiceStatus    = "service_status"
 	eventResourceDetected = "resource_detected"
@@ -22,7 +25,9 @@ const (
 // CollectorDescriber describe the collector functions
 type CollectorDescriber interface {
 	AddResource(data EventCollector)
-	UpdateServiceStatus(data EventCollector)
+	CollectStart(resourceName ResourceIdentifier)
+	CollectFinish(resourceName ResourceIdentifier)
+	CollectError(resourceName ResourceIdentifier, err error)
 	GetCollectorEvent() []EventCollector
 }
 
@@ -92,16 +97,47 @@ func (cm *CollectorManager) AddResource(data EventCollector) {
 	cm.collectChan <- data
 }
 
-// UpdateServiceStatus add status on resource collector
-func (cm *CollectorManager) UpdateServiceStatus(data EventCollector) {
-	data.EventType = eventServiceStatus
-	data.EventTime = time.Now().UnixNano()
-	cm.collectChan <- data
+// CollectStart add `fetch` event to collector by given resource name
+func (cm *CollectorManager) CollectStart(resourceName ResourceIdentifier) {
+	cm.updateServiceStatus(EventCollector{
+		ResourceName: resourceName,
+		Data: EventStatusData{
+			Status: EventFetch,
+		},
+	})
+}
+
+// CollectFinish add `finish` event to collector by given resource name
+func (cm *CollectorManager) CollectFinish(resourceName ResourceIdentifier) {
+	cm.updateServiceStatus(EventCollector{
+		ResourceName: resourceName,
+		Data: EventStatusData{
+			Status: EventFinish,
+		},
+	})
+}
+
+// CollectError add `error` event to collector by given resource name and error message
+func (cm *CollectorManager) CollectError(resourceName ResourceIdentifier, err error) {
+	cm.updateServiceStatus(EventCollector{
+		ResourceName: resourceName,
+		Data: EventStatusData{
+			Status:       EventError,
+			ErrorMessage: err.Error(),
+		},
+	})
 }
 
 // GetCollectorEvent returns current events list
 func (cm *CollectorManager) GetCollectorEvent() []EventCollector {
 	return cm.sendData
+}
+
+// updateServiceStatus add status on resource collector
+func (cm *CollectorManager) updateServiceStatus(data EventCollector) {
+	data.EventType = eventServiceStatus
+	data.EventTime = time.Now().UnixNano()
+	cm.collectChan <- data
 }
 
 // collect append all the given event to the one array of events

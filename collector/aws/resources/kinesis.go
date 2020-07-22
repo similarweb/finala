@@ -209,7 +209,7 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 }
 
 //getPricingFilterInput prepares kinesis pricing filter
-func (km *KinesisManager) getPricingFilterInput(extraFilters []*pricing.Filter) *pricing.GetProductsInput {
+func (km *KinesisManager) getPricingFilterInput(extraFilters []*pricing.Filter) pricing.GetProductsInput {
 	filters := []*pricing.Filter{
 		{
 			Type:  awsClient.String("TERM_MATCH"),
@@ -222,7 +222,7 @@ func (km *KinesisManager) getPricingFilterInput(extraFilters []*pricing.Filter) 
 		filters = append(filters, extraFilters...)
 	}
 
-	return &pricing.GetProductsInput{
+	return pricing.GetProductsInput{
 		ServiceCode: &km.servicePricingCode,
 		Filters:     filters,
 	}

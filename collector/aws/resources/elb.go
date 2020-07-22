@@ -197,7 +197,7 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 }
 
 // getPricingFilterInput prepare document elb pricing filter
-func (el *ELBManager) getPricingFilterInput(extraFilters []*pricing.Filter) *pricing.GetProductsInput {
+func (el *ELBManager) getPricingFilterInput(extraFilters []*pricing.Filter) pricing.GetProductsInput {
 	filters := []*pricing.Filter{
 		{
 			Type:  awsClient.String("TERM_MATCH"),
@@ -215,7 +215,7 @@ func (el *ELBManager) getPricingFilterInput(extraFilters []*pricing.Filter) *pri
 		filters = append(filters, extraFilters...)
 	}
 
-	return &pricing.GetProductsInput{
+	return pricing.GetProductsInput{
 		ServiceCode: &el.servicePricingCode,
 		Filters:     filters,
 	}

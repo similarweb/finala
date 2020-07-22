@@ -143,9 +143,15 @@ func TestDetectDocdb(t *testing.T) {
 			responseDescribeDBInstances: defaultDocdbMock,
 		}
 
-		documentDBManager, _ := NewDocDBManager(detector, &mockClient)
+		documentDBManager, err := NewDocDBManager(detector, &mockClient)
+		if err != nil {
+			t.Fatalf("unexpected document DB error happened, got %v expected %v", err, nil)
+		}
 
-		response, _ := documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
+		response, err := documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
+		if err != nil {
+			t.Fatalf("unexpected document DB error happened, got %v expected %v", err, nil)
+		}
 
 		documentDBResponse, ok := response.([]DetectedDocumentDB)
 		if !ok {
@@ -178,9 +184,12 @@ func TestDetectDocdb(t *testing.T) {
 			err:                         errors.New("error message"),
 		}
 
-		documentDBManager, _ := NewDocDBManager(detector, &mockClient)
+		documentDBManager, err := NewDocDBManager(detector, &mockClient)
+		if err != nil {
+			t.Fatalf("unexpected document DB error happened, got %v expected %v", err, nil)
+		}
 
-		_, err := documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
+		_, err = documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
 
 		if err == nil {
 			t.Fatalf("unexpected detect document DB manager error, got nil expected error message")
@@ -203,8 +212,14 @@ func TestDetectDocdb(t *testing.T) {
 			responseDescribeDBInstances: defaultDocdbMock,
 		}
 
-		documentDBManager, _ := NewDocDBManager(detector, &mockClient)
-		response, _ := documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
+		documentDBManager, err := NewDocDBManager(detector, &mockClient)
+		if err != nil {
+			t.Fatalf("unexpected document DB error happened, got %v expected %v", err, nil)
+		}
+		response, err := documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
+		if err != nil {
+			t.Fatalf("unexpected document DB error happened, got %v expected %v", err, nil)
+		}
 
 		documentDBResponse, ok := response.([]DetectedDocumentDB)
 		if !ok {
@@ -243,9 +258,15 @@ func TestDetectEventData(t *testing.T) {
 		responseTagList:             docdb.ListTagsForResourceOutput{TagList: tags},
 	}
 
-	documentDBManager, _ := NewDocDBManager(detector, &mockClient)
+	documentDBManager, err := NewDocDBManager(detector, &mockClient)
+	if err != nil {
+		t.Fatalf("unexpected document DB error happened, got %v expected %v", err, nil)
+	}
 
-	response, _ := documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
+	response, err := documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
+	if err != nil {
+		t.Fatalf("unexpected document DB error happened, got %v expected %v", err, nil)
+	}
 
 	documentDBResponse, ok := response.([]DetectedDocumentDB)
 	if !ok {

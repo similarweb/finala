@@ -168,11 +168,11 @@ func TestGetPrice(t *testing.T) {
 		pricingManager := NewPricingManager(mockPricing, "us-east-1")
 		pricingInput := pricing.GetProductsInput{}
 		// first call
-		pricingManager.GetPrice(pricingInput, "", "us-east-1")
+		_, _ = pricingManager.GetPrice(pricingInput, "", "us-east-1")
 		// the secend call should be return from memory hash and nut call `GetProducts` function again
-		pricingManager.GetPrice(pricingInput, "", "us-east-1")
+		_, _ = pricingManager.GetPrice(pricingInput, "", "us-east-1")
 		// the thered call should trigger `GetProducts` function again
-		pricingManager.GetPrice(pricingInput, "", "us-east-2")
+		_, _ = pricingManager.GetPrice(pricingInput, "", "us-east-2")
 
 		if mockPricing.GetProductCallCount != 2 {
 			t.Fatalf("unexpected GetPrice function requests, got %d expected %d", mockPricing.GetProductCallCount, 2)

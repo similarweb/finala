@@ -6,7 +6,6 @@ import (
 	notifierCommon "finala/notifiers/common"
 	"fmt"
 	"math"
-	"net/url"
 	"strings"
 
 	"github.com/dustin/go-humanize"
@@ -203,13 +202,14 @@ func (sm *Manager) getChannelID(to string) (string, error) {
 
 // BuildSendURL will build the url the Notifier should send
 func (sm *Manager) BuildSendURL(baseURL string, filters []common.Tag) string {
-	urlValues := url.Values{}
+	urlFilters := []string{}
+
 	for _, filter := range filters {
-		urlKey := fmt.Sprintf("%s%s", notifierCommon.QueryParamFilterPrefix, filter.Name)
-		urlValues.Set(urlKey, filter.Value)
+		urlFilters = append(urlFilters, fmt.Sprintf("%s+:+%s", filter.Name, filter.Value))
 	}
-	if len(urlValues) > 0 {
-		return fmt.Sprintf("%s?%s", baseURL, urlValues.Encode())
+
+	if len(filters) > 0 {
+		return fmt.Sprintf("%s?filters=%s", baseURL, strings.Join(urlFilters, ","))
 	}
 	return baseURL
 }

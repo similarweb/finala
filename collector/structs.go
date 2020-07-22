@@ -39,7 +39,7 @@ type PriceDetectedFields struct {
 // EventCollector collector event data structure
 type EventCollector struct {
 	EventType    string
-	ResourceName string
+	ResourceName ResourceIdentifier
 	EventTime    int64
 	Data         interface{}
 }

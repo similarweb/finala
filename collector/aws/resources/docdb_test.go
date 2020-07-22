@@ -3,13 +3,15 @@ package resources
 import (
 	"errors"
 	awsTestutils "finala/collector/aws/testutils"
-	"finala/collector/config"
+	"finala/collector/testutils"
 	collectorTestutils "finala/collector/testutils"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
 	awsClient "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/docdb"
 )
 
@@ -34,6 +36,7 @@ var defaultDocdbMock = docdb.DescribeDBInstancesOutput{
 
 type MockAWSDocdbClient struct {
 	responseDescribeDBInstances docdb.DescribeDBInstancesOutput
+	responseTagList             docdb.ListTagsForResourceOutput
 	err                         error
 }
 type MockEmptyClient struct {
@@ -44,7 +47,7 @@ func (r *MockAWSDocdbClient) DescribeDBInstances(*docdb.DescribeDBInstancesInput
 }
 
 func (r *MockAWSDocdbClient) ListTagsForResource(*docdb.ListTagsForResourceInput) (*docdb.ListTagsForResourceOutput, error) {
-	return &docdb.ListTagsForResourceOutput{}, r.err
+	return &r.responseTagList, r.err
 }
 
 func TestNewDocDBManager(t *testing.T) {
@@ -130,35 +133,119 @@ func TestDescribeDocdb(t *testing.T) {
 
 func TestDetectDocdb(t *testing.T) {
 
-	collector := collectorTestutils.NewMockCollector()
-	mockCloudwatch := awsTestutils.NewMockCloudwatch(nil)
-	mockPrice := awsTestutils.NewMockPricing(nil)
-	detector := awsTestutils.AWSManager(collector, mockCloudwatch, mockPrice, "us-east-1")
-	metricConfig := []config.MetricConfig{
-		{
-			Description: "test description write capacity",
-			Data: []config.MetricDataConfiguration{
-				{
-					Name:      "TestMetric",
-					Statistic: "Sum",
-				},
+	t.Run("detect documents db", func(t *testing.T) {
+		collector := collectorTestutils.NewMockCollector()
+		mockCloudwatch := awsTestutils.NewMockCloudwatch(nil)
+		mockPrice := awsTestutils.NewMockPricing(nil)
+		detector := awsTestutils.AWSManager(collector, mockCloudwatch, mockPrice, "us-east-1")
+
+		mockClient := MockAWSDocdbClient{
+			responseDescribeDBInstances: defaultDocdbMock,
+		}
+
+		documentDBManager, _ := NewDocDBManager(detector, &mockClient)
+
+		response, _ := documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
+
+		documentDBResponse, ok := response.([]DetectedDocumentDB)
+		if !ok {
+			t.Fatalf("unexpected documentDB struct, got %s expected %s", reflect.TypeOf(response), "*DocumentDBManager")
+
+		}
+
+		if len(documentDBResponse) != 2 {
+			t.Fatalf("unexpected documentDB detected, got %d expected %d", len(documentDBResponse), 2)
+		}
+
+		if len(collector.Events) != 2 {
+			t.Fatalf("unexpected collector documentDB resources, got %d expected %d", len(collector.Events), 1)
+		}
+
+		if len(collector.EventsCollectionStatus) != 2 {
+			t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+		}
+
+	})
+
+	t.Run("detection error", func(t *testing.T) {
+		collector := collectorTestutils.NewMockCollector()
+		mockCloudwatch := awsTestutils.NewMockCloudwatch(nil)
+		mockPrice := awsTestutils.NewMockPricing(nil)
+		detector := awsTestutils.AWSManager(collector, mockCloudwatch, mockPrice, "us-east-1")
+
+		mockClient := MockAWSDocdbClient{
+			responseDescribeDBInstances: defaultDocdbMock,
+			err:                         errors.New("error message"),
+		}
+
+		documentDBManager, _ := NewDocDBManager(detector, &mockClient)
+
+		_, err := documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
+
+		if err == nil {
+			t.Fatalf("unexpected detect document DB manager error, got nil expected error message")
+		}
+
+	})
+
+	t.Run("detection clodwatch error", func(t *testing.T) {
+
+		cloudWatchMetrics := map[string]cloudwatch.GetMetricStatisticsOutput{
+			"invalid_metric": {},
+		}
+
+		collector := collectorTestutils.NewMockCollector()
+		mockCloudwatch := awsTestutils.NewMockCloudwatch(&cloudWatchMetrics)
+		mockPrice := awsTestutils.NewMockPricing(nil)
+		detector := awsTestutils.AWSManager(collector, mockCloudwatch, mockPrice, "us-east-1")
+
+		mockClient := MockAWSDocdbClient{
+			responseDescribeDBInstances: defaultDocdbMock,
+		}
+
+		documentDBManager, _ := NewDocDBManager(detector, &mockClient)
+		response, _ := documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
+
+		documentDBResponse, ok := response.([]DetectedDocumentDB)
+		if !ok {
+			t.Fatalf("unexpected documentDB struct, got %s expected %s", reflect.TypeOf(response), "*DocumentDBManager")
+		}
+
+		if len(documentDBResponse) != 0 {
+			t.Fatalf("unexpected documentDB detection, got %d expected %d", len(documentDBResponse), 0)
+
+		}
+
+	})
+}
+
+func TestDetectEventData(t *testing.T) {
+
+	cloudWatchMetrics := map[string]cloudwatch.GetMetricStatisticsOutput{
+		"TestMetric": {
+			Datapoints: []*cloudwatch.Datapoint{
+				{Sum: testutils.Float64Pointer(5)},
 			},
-			Constraint: config.MetricConstraintConfig{
-				Operator: "==",
-				Value:    5,
-			},
-			Period:    1,
-			StartTime: 1,
 		},
 	}
 
+	collector := collectorTestutils.NewMockCollector()
+	mockCloudwatch := awsTestutils.NewMockCloudwatch(&cloudWatchMetrics)
+	mockPrice := awsTestutils.NewMockPricing(nil)
+	detector := awsTestutils.AWSManager(collector, mockCloudwatch, mockPrice, "us-east-1")
+
+	tags := []*docdb.Tag{
+		{Key: aws.String("foo"), Value: aws.String("foo-1")},
+		{Key: aws.String("bar"), Value: aws.String("bar-1")},
+	}
 	mockClient := MockAWSDocdbClient{
 		responseDescribeDBInstances: defaultDocdbMock,
+		responseTagList:             docdb.ListTagsForResourceOutput{TagList: tags},
 	}
 
 	documentDBManager, _ := NewDocDBManager(detector, &mockClient)
 
-	response, _ := documentDBManager.Detect(metricConfig)
+	response, _ := documentDBManager.Detect(awsTestutils.DefaultMetricConfig)
 
 	documentDBResponse, ok := response.([]DetectedDocumentDB)
 	if !ok {
@@ -166,16 +253,42 @@ func TestDetectDocdb(t *testing.T) {
 
 	}
 
-	if len(documentDBResponse) != 2 {
-		t.Fatalf("unexpected documentDB detected, got %d expected %d", len(documentDBResponse), 2)
+	if len(documentDBResponse) == 0 {
+		t.Fatalf("unexpected documentDB detection, got 0 expected > 0")
+
+	}
+	documentDB := documentDBResponse[0]
+
+	if documentDB.Region != "us-east-1" {
+		t.Fatalf("unexpected region, got %s expected %s", documentDB.Region, "us-east-1")
 	}
 
-	if len(collector.Events) != 2 {
-		t.Fatalf("unexpected collector documentDB resources, got %d expected %d", len(collector.Events), 1)
+	if documentDB.InstanceType != "DBInstanceClass" {
+		t.Fatalf("unexpected instance type, got %s expected %s", documentDB.InstanceType, "DBInstanceClass")
 	}
 
-	if len(collector.EventsCollectionStatus) != 2 {
-		t.Fatalf("unexpected resource status events count, got %d expected %d", len(collector.EventsCollectionStatus), 2)
+	if documentDB.MultiAZ {
+		t.Fatalf("unexpected multiAZ, got %t expected %t", !documentDB.MultiAZ, documentDB.MultiAZ)
+	}
+
+	if documentDB.Engine != "docdb" {
+		t.Fatalf("unexpected multiAZ, got %s expected %s", documentDB.Engine, "docdb")
+	}
+
+	if documentDB.PriceDetectedFields.ResourceID != "ARN::1" {
+		t.Fatalf("unexpected resource id, got %s expected %s", documentDB.PriceDetectedFields.ResourceID, "ARN::1")
+	}
+
+	if documentDB.PriceDetectedFields.PricePerHour != 1 {
+		t.Fatalf("unexpected price per hour, got %b expected %b", documentDB.PriceDetectedFields.PricePerHour, 1)
+	}
+
+	if documentDB.PriceDetectedFields.PricePerMonth != 730 {
+		t.Fatalf("unexpected price per month, got %b expected %b", documentDB.PriceDetectedFields.PricePerMonth, 730)
+	}
+
+	if len(documentDB.PriceDetectedFields.Tag) != len(tags) {
+		t.Fatalf("unexpected tags, got %b expected %b", len(documentDB.PriceDetectedFields.Tag), len(tags))
 	}
 
 }

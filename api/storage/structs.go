@@ -14,7 +14,7 @@ type StorageDescriber interface {
 	GetSummary(executionID string, filters map[string]string) (map[string]CollectorsSummary, error)
 	GetExecutions(querylimit int) ([]Executions, error)
 	GetResources(resourceType string, executionID string, filters map[string]string) ([]map[string]interface{}, error)
-	GetResourceTrends(resourceType string, filters map[string]string) ([]ExecutionCost, error)
+	GetResourceTrends(resourceType string, filters map[string]string, limit int) ([]ExecutionCost, error)
 	GetExecutionTags(executionID string) (map[string][]string, error)
 }
 

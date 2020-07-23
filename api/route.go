@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	queryParamFilterPrefix = "filter_"
+	queryParamFilterPrefix     = "filter_"
+	resourceTrendsLimitDefault = 60
 )
 
 // DetectEventsInfo descrive the incoming HTTP events
@@ -83,36 +84,22 @@ func (server *Server) GetResourceData(resp http.ResponseWriter, req *http.Reques
 
 // GetResourceTrends return trends by resource type, id, region and metric
 func (server *Server) GetResourceTrends(resp http.ResponseWriter, req *http.Request) {
-	queryErrs := url.Values{}
+	queryParams := req.URL.Query()
 	params := mux.Vars(req)
 	resourceType := params["type"]
-	filters := map[string]string{}
+	filters := httpparameters.GetFilterQueryParamWithOutPrefix(queryParamFilterPrefix, queryParams)
 
-	resourceId := req.URL.Query().Get("resourceId")
-	if resourceId == "" {
-		queryErrs.Add("resourceId", "resourceId field is mandatory")
+	limitString := req.URL.Query().Get("limit")
+	var limit int = resourceTrendsLimitDefault
+	var err error
+	if limitString != "" {
+		limit, err = strconv.Atoi(limitString)
+		if err != nil || limit < 1 {
+			limit = resourceTrendsLimitDefault
+		}
 	}
 
-	region := req.URL.Query().Get("region")
-	if region == "" {
-		queryErrs.Add("region", "region field is mandatory")
-	}
-
-	metric := req.URL.Query().Get("metric")
-	if metric == "" {
-		queryErrs.Add("metric", "metric field is mandatory")
-	}
-
-	if len(queryErrs) > 0 {
-		server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{ErrorQuery: queryErrs})
-		return
-	}
-
-	filters["Data.ResourceID"] = resourceId
-	filters["Data.Region"] = region
-	filters["Data.Metric"] = metric
-
-	trends, err := server.storage.GetResourceTrends(resourceType, filters)
+	trends, err := server.storage.GetResourceTrends(resourceType, filters, limit)
 	if err != nil {
 		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
 		return

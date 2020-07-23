@@ -88,7 +88,7 @@ func (ms *MockStorage) GetResources(resourceType string, executionID string, fil
 
 }
 
-func (ms *MockStorage) GetResourceTrends(resourceType string, filters map[string]string) ([]storage.ExecutionCost, error) {
+func (ms *MockStorage) GetResourceTrends(resourceType string, filters map[string]string, limit int) ([]storage.ExecutionCost, error) {
 	var response []storage.ExecutionCost
 
 	if resourceType == "err" {
@@ -105,6 +105,10 @@ func (ms *MockStorage) GetResourceTrends(resourceType string, filters map[string
 		ExtractedTimestamp: 321,
 		CostSum:            19,
 	})
+
+	if len(response) > limit {
+		response = response[0:limit]
+	}
 
 	return response, nil
 

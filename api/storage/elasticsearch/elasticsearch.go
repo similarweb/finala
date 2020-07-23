@@ -48,7 +48,7 @@ func getESClient(conf config.ElasticsearchConfig) (*elastic.Client, error) {
 
 	client, err := elastic.NewClient(elastic.SetURL(strings.Join(conf.Endpoints, ",")),
 		elastic.SetErrorLog(log.New()),
-		//elastic.SetTraceLog(log.New()), // Uncomment for debugging ElasticSearch Queries
+		// elastic.SetTraceLog(log.New()), // Uncomment for debugging ElasticSearch Queries
 		elastic.SetBasicAuth(conf.Username, conf.Password),
 		elastic.SetSniff(false),
 		elastic.SetHealthcheck(true))
@@ -337,7 +337,7 @@ func (sm *StorageManager) GetResources(resourceType string, executionID string, 
 }
 
 // GetResourceTrends return resource data
-func (sm *StorageManager) GetResourceTrends(resourceType string, filters map[string]string) ([]storage.ExecutionCost, error) {
+func (sm *StorageManager) GetResourceTrends(resourceType string, filters map[string]string, limit int) ([]storage.ExecutionCost, error) {
 	// Per resource trends, filters should take care of granularity (per resource: Data.ResourceID, Data.Region, Data.Metric -> Data.PricePerMonth)
 	var resources []storage.ExecutionCost
 	var mustNotQuery []elastic.Query
@@ -357,9 +357,21 @@ func (sm *StorageManager) GetResourceTrends(resourceType string, filters map[str
 	searchResult, err := sm.client.Search().
 		Query(queryBuilder).
 		Pretty(true).
-		Size(100).
+		Size(0).
+		Do(context.Background())
+
+	if err != nil {
+		log.WithError(err).Error("elasticsearch query size error")
+		return resources, err
+	}
+
+	searchResultQuerySize := int(searchResult.TotalHits())
+	searchResult, err = sm.client.Search().
+		Query(queryBuilder).
+		Pretty(true).
+		Size(searchResultQuerySize).
 		SortBy(elastic.NewFieldSort("Timestamp").Desc()).
-		Aggregation("executions", elastic.NewTermsAggregation().Field("ExecutionID").OrderByKeyAsc(). // Aggregate by ExecutionID
+		Aggregation("executions", elastic.NewTermsAggregation().Field("ExecutionID").OrderByKeyDesc(). // Aggregate by ExecutionID
 														SubAggregation("monthly-cost", elastic.NewSumAggregation().Field("Data.PricePerMonth"))). // Sub aggregate and sum by Data.PricePerMonth per bucket
 		Do(context.Background())
 
@@ -386,6 +398,11 @@ func (sm *StorageManager) GetResourceTrends(resourceType string, filters map[str
 				CostSum:            *monthlyAgg.Value,
 			})
 		}
+	}
+
+	// Maximum number of resources to return
+	if len(resources) > limit {
+		resources = resources[0:limit]
 	}
 
 	return resources, nil

@@ -238,7 +238,7 @@ func (esm *ElasticSearchManager) Detect(metrics []config.MetricConfig) (interfac
 }
 
 //getPricingFilterInput prepares Elasticsearch pricing filter
-func (esm *ElasticSearchManager) getPricingFilterInput(extraFilters []*pricing.Filter) *pricing.GetProductsInput {
+func (esm *ElasticSearchManager) getPricingFilterInput(extraFilters []*pricing.Filter) pricing.GetProductsInput {
 	filters := []*pricing.Filter{
 		{
 			Type:  awsClient.String("TERM_MATCH"),
@@ -251,7 +251,7 @@ func (esm *ElasticSearchManager) getPricingFilterInput(extraFilters []*pricing.F
 		filters = append(filters, extraFilters...)
 	}
 
-	return &pricing.GetProductsInput{
+	return pricing.GetProductsInput{
 		ServiceCode: &esm.servicePricingCode,
 		Filters:     filters,
 	}

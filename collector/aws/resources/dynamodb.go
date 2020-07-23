@@ -89,14 +89,14 @@ func (dd *DynamoDBManager) Detect(metrics []config.MetricConfig) (interface{}, e
 		return detectedTables, err
 	}
 
-	writePricePerHour, err := dd.awsManager.GetPricingClient().GetPrice(dd.GetPricingWriteFilterInput(), dd.rateCode, dd.awsManager.GetRegion())
+	writePricePerHour, err := dd.awsManager.GetPricingClient().GetPrice(dd.getPricingWriteFilterInput(), dd.rateCode, dd.awsManager.GetRegion())
 	if err != nil {
 		log.WithField("error", err).Error("could not get write dynamoDB price")
 		dd.awsManager.GetCollector().CollectError(dd.Name, err)
 		return detectedTables, err
 	}
 
-	readPricePerHour, err := dd.awsManager.GetPricingClient().GetPrice(dd.GetPricingReadFilterInput(), dd.rateCode, dd.awsManager.GetRegion())
+	readPricePerHour, err := dd.awsManager.GetPricingClient().GetPrice(dd.getPricingReadFilterInput(), dd.rateCode, dd.awsManager.GetRegion())
 	if err != nil {
 		log.WithField("error", err).Error("could not get read dynamoDB price")
 		dd.awsManager.GetCollector().CollectError(dd.Name, err)
@@ -218,10 +218,10 @@ func (dd *DynamoDBManager) Detect(metrics []config.MetricConfig) (interface{}, e
 
 }
 
-// GetPricingWriteFilterInput return write capacity unit price filter per hour
-func (dd *DynamoDBManager) GetPricingWriteFilterInput() *pricing.GetProductsInput {
+// getPricingWriteFilterInput return write capacity unit price filter per hour
+func (dd *DynamoDBManager) getPricingWriteFilterInput() pricing.GetProductsInput {
 
-	input := &pricing.GetProductsInput{
+	input := pricing.GetProductsInput{
 		ServiceCode: awsClient.String(dd.servicePricingCode),
 		Filters: []*pricing.Filter{
 			{
@@ -240,10 +240,10 @@ func (dd *DynamoDBManager) GetPricingWriteFilterInput() *pricing.GetProductsInpu
 	return input
 }
 
-// GetPricingReadFilterInput return read capacity unit price filter per hour
-func (dd *DynamoDBManager) GetPricingReadFilterInput() *pricing.GetProductsInput {
+// getPricingReadFilterInput return read capacity unit price filter per hour
+func (dd *DynamoDBManager) getPricingReadFilterInput() pricing.GetProductsInput {
 
-	input := &pricing.GetProductsInput{
+	input := pricing.GetProductsInput{
 		ServiceCode: &dd.servicePricingCode,
 		Filters: []*pricing.Filter{
 			{

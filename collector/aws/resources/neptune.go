@@ -179,12 +179,12 @@ func (np *NeptuneManager) Detect(metrics []config.MetricConfig) (interface{}, er
 }
 
 // getPricingFilterInput prepare Neptune pricing filter
-func (np *NeptuneManager) getPricingFilterInput(instance *neptune.DBInstance) *pricing.GetProductsInput {
+func (np *NeptuneManager) getPricingFilterInput(instance *neptune.DBInstance) pricing.GetProductsInput {
 
 	// Currently the only Attribute value allowed for deploymentOption in AWS response is "Multi-AZ"
 	deploymentOption := "Multi-AZ"
 
-	return &pricing.GetProductsInput{
+	return pricing.GetProductsInput{
 		ServiceCode: &np.servicePricingCode,
 		Filters: []*pricing.Filter{
 			{

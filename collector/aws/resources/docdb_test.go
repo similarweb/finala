@@ -280,26 +280,6 @@ func TestDetectEventData(t *testing.T) {
 	}
 	documentDB := documentDBResponse[0]
 
-	if documentDB.Region != "us-east-1" {
-		t.Fatalf("unexpected region, got %s expected %s", documentDB.Region, "us-east-1")
-	}
-
-	if documentDB.InstanceType != "DBInstanceClass" {
-		t.Fatalf("unexpected instance type, got %s expected %s", documentDB.InstanceType, "DBInstanceClass")
-	}
-
-	if documentDB.MultiAZ {
-		t.Fatalf("unexpected multiAZ, got %t expected %t", !documentDB.MultiAZ, documentDB.MultiAZ)
-	}
-
-	if documentDB.Engine != "docdb" {
-		t.Fatalf("unexpected multiAZ, got %s expected %s", documentDB.Engine, "docdb")
-	}
-
-	if documentDB.PriceDetectedFields.ResourceID != "ARN::1" {
-		t.Fatalf("unexpected resource id, got %s expected %s", documentDB.PriceDetectedFields.ResourceID, "ARN::1")
-	}
-
 	if documentDB.PriceDetectedFields.PricePerHour != 1 {
 		t.Fatalf("unexpected price per hour, got %b expected %b", documentDB.PriceDetectedFields.PricePerHour, 1)
 	}

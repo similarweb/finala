@@ -304,13 +304,19 @@ func (sm *StorageManager) GetResources(resourceType string, executionID string, 
 	searchResult, err := sm.client.Search().
 		Query(generalQ).
 		Pretty(true).
-		Size(100).
+		Size(0).
 		Do(context.Background())
 
 	if err != nil {
 		log.WithError(err).Error("elasticsearch query error")
 		return resources, err
 	}
+
+	searchResult, err = sm.client.Search().
+		Query(generalQ).
+		Pretty(true).
+		Size(int(searchResult.TotalHits())).
+		Do(context.Background())
 
 	for _, hit := range searchResult.Hits.Hits {
 

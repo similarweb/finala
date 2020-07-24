@@ -318,6 +318,11 @@ func (sm *StorageManager) GetResources(resourceType string, executionID string, 
 		Size(int(searchResult.TotalHits())).
 		Do(context.Background())
 
+	if err != nil {
+		log.WithError(err).Error("elasticsearch query error")
+		return resources, err
+	}
+
 	for _, hit := range searchResult.Hits.Hits {
 
 		rowData := make(map[string]interface{})

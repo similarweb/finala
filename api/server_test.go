@@ -2,10 +2,12 @@ package api_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"finala/api"
 	"finala/api/storage"
 	"finala/api/testutils"
+	"finala/version"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,9 +17,11 @@ import (
 )
 
 func MockServer() (*api.Server, *testutils.MockStorage) {
+	ctx := context.Background()
+	version := version.NewVersion(ctx, 1*time.Hour, false)
 
 	mockStorage := testutils.NewMockStorage()
-	server := api.NewServer(9090, mockStorage)
+	server := api.NewServer(9090, mockStorage, version)
 	return server, mockStorage
 }
 

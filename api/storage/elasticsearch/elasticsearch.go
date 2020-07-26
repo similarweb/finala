@@ -310,10 +310,21 @@ func (sm *StorageManager) GetResources(resourceType string, executionID string, 
 	ResourceNameQ := elastic.NewMatchQuery("ResourceName", resourceType)
 	generalQ := elastic.NewBoolQuery()
 	generalQ = generalQ.Must(componentQ).Must(deploymentQ).Must(ResourceNameQ).Must(dynamicMatchQuery...)
+	searchResultTotalHits, err := sm.client.Search().
+		Query(generalQ).
+		Pretty(true).
+		Size(0).
+		Do(context.Background())
+
+	if err != nil {
+		log.WithError(err).Error("elasticsearch query error")
+		return resources, err
+	}
+
 	searchResult, err := sm.client.Search().
 		Query(generalQ).
 		Pretty(true).
-		Size(100).
+		Size(int(searchResultTotalHits.TotalHits())).
 		Do(context.Background())
 
 	if err != nil {

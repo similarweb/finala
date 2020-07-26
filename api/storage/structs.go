@@ -14,6 +14,7 @@ type StorageDescriber interface {
 	GetSummary(executionID string, filters map[string]string) (map[string]CollectorsSummary, error)
 	GetExecutions(querylimit int) ([]Executions, error)
 	GetResources(resourceType string, executionID string, filters map[string]string) ([]map[string]interface{}, error)
+	GetResourceTrends(resourceType string, filters map[string]string, limit int) ([]ExecutionCost, error)
 	GetExecutionTags(executionID string) (map[string][]string, error)
 }
 
@@ -22,6 +23,12 @@ type Executions struct {
 	ID   string
 	Name string
 	Time time.Time
+}
+
+type ExecutionCost struct {
+	ExecutionID        string
+	ExtractedTimestamp int64
+	CostSum            float64
 }
 
 // CollectorsSummary defines unused resource summary

@@ -2,23 +2,22 @@ package api_test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"finala/api"
 	"finala/api/storage"
 	"finala/api/testutils"
-	"finala/version"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	notifier "github.com/similarweb/client-notifier"
 )
 
 func MockServer() (*api.Server, *testutils.MockStorage) {
-	ctx := context.Background()
-	version := version.NewVersion(ctx, 1*time.Hour, false)
+	version := testutils.NewMockVersion()
 
 	mockStorage := testutils.NewMockStorage()
 	server := api.NewServer(9090, mockStorage, version)
@@ -340,6 +339,65 @@ func TestGetExecutionTags(t *testing.T) {
 				if test.expectedStatusCode != rr.Code {
 					t.Fatalf("unexpected status code, got %d expected %d", rr.Code, test.expectedStatusCode)
 				}
+			}
+
+		})
+	}
+
+}
+
+func TestVersion(t *testing.T) {
+	ms, _ := MockServer()
+	ms.BindEndpoints()
+	ms.Serve()
+
+	testCases := []struct {
+		endpoint           string
+		expectedStatusCode int
+		expectedResponse   *notifier.Response
+	}{
+		{"/api/v1/version", http.StatusOK, &notifier.Response{
+			CurrentDownloadURL: "http://localhost",
+			CurrentVersion:     "0.0.1",
+			Outdated:           true,
+		}},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.endpoint, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", test.endpoint, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ms.Router().ServeHTTP(rr, req)
+			if rr.Code != test.expectedStatusCode {
+				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
+			}
+			if test.expectedStatusCode == http.StatusOK {
+				body, err := ioutil.ReadAll(rr.Body)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				versionData := &notifier.Response{}
+
+				err = json.Unmarshal(body, versionData)
+				if err != nil {
+					t.Fatalf("Could not parse http response")
+				}
+
+				if versionData.CurrentDownloadURL != test.expectedResponse.CurrentDownloadURL {
+					t.Fatalf("unexpected current download url response, got: %s wanted: %s", versionData.CurrentDownloadURL, test.expectedResponse.CurrentDownloadURL)
+				}
+
+				if versionData.CurrentVersion != test.expectedResponse.CurrentVersion {
+					t.Fatalf("unexpected current version response, got: %s wanted: %s", versionData.CurrentVersion, test.expectedResponse.CurrentVersion)
+				}
+				if versionData.Outdated != test.expectedResponse.Outdated {
+					t.Fatalf("unexpected outdated response, got: %t wanted: %t", versionData.Outdated, test.expectedResponse.Outdated)
+				}
+
 			}
 
 		})

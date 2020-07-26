@@ -342,3 +342,59 @@ func TestGetExecutionTags(t *testing.T) {
 	}
 
 }
+
+func TestGetResourceTrends(t *testing.T) {
+	ms, _ := MockServer()
+	ms.BindEndpoints()
+	ms.Serve()
+
+	testCases := []struct {
+		endpoint           string
+		expectedStatusCode int
+		Count              int
+	}{
+		{"/api/v1/trends/aws_elbv2", http.StatusOK, 2},
+		{"/api/v1/trends/aws_elbv2?limit=1", http.StatusOK, 1},
+		{"/api/v1/trends/err", http.StatusInternalServerError, 0},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.endpoint, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", test.endpoint, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			ms.Router().ServeHTTP(rr, req)
+			if rr.Code != test.expectedStatusCode {
+				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, http.StatusOK)
+			}
+
+			if test.expectedStatusCode == http.StatusOK {
+
+				body, err := ioutil.ReadAll(rr.Body)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				resourceData := &[]map[string]interface{}{}
+				err = json.Unmarshal(body, resourceData)
+				if err != nil {
+					t.Fatalf("Could not parse http response")
+				}
+
+				if len(*resourceData) != test.Count {
+					t.Fatalf("unexpected resources data response, got %d expected %d", len(*resourceData), test.Count)
+				}
+
+			} else {
+				if test.expectedStatusCode != rr.Code {
+					t.Fatalf("unexpected status code, got %d expected %d", rr.Code, test.expectedStatusCode)
+				}
+			}
+
+		})
+	}
+
+}

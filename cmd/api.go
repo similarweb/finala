@@ -36,7 +36,8 @@ var apiServer = &cobra.Command{
 			os.Exit(1)
 		}
 		ctx := context.Background()
-		version := version.NewVersion(ctx, 1*time.Hour, false)
+		notifierClient := version.NotifierClient{}
+		version := version.NewVersion(ctx, 1*time.Hour, false, &notifierClient)
 
 		// Set application log level
 		visibility.SetLoggingLevel(configStruct.LogLevel)

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
-
 	"github.com/spf13/cobra"
 )
 
@@ -30,7 +29,8 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 func Execute() {
 
 	ctx := context.Background()
-	version.NewVersion(ctx, 12*time.Hour, true)
+	notifierClient := version.NotifierClient{}
+	version.NewVersion(ctx, 12*time.Hour, true, &notifierClient)
 
 	if err := rootCmd.Execute(); err != nil {
 		log.WithError(err)

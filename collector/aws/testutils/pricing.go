@@ -36,7 +36,7 @@ func NewMockPricing(mockPricing *MockAWSPricingClient) *pricing.PricingManager {
 								"R6PXMNYCEDGZ2EYN.JRTCKXETXF.6YS6EN2CT7": {
 									Unit: "USD",
 									PricePerUnit: pricing.PriceCurrencyCode{
-										USD: "1.2",
+										USD: "1",
 									},
 								},
 							},

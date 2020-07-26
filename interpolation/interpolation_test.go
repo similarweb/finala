@@ -2,6 +2,7 @@ package interpolation_test
 
 import (
 	"finala/interpolation"
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -42,5 +43,31 @@ func TestChunkIterator(t *testing.T) {
 			t.Errorf("stringBatch unexpected list values retrived got: %v, wanted: %v.", stringBatch, expectedResults[counter])
 		}
 		counter++
+	}
+}
+
+func TestExtractTimestamp(t *testing.T) {
+	const index_prefix, timestamp = "general", 1595510218
+	index_name := fmt.Sprintf("%s_%d", index_prefix, timestamp)
+	extractedTimestamp, err := interpolation.ExtractTimestamp(index_name)
+	if err != nil {
+		t.Fatalf("error occured while running extractTimestamp, e: %s\n", err)
+	}
+
+	if extractedTimestamp != timestamp {
+		t.Errorf("extractedTimestamp %d is not equal to expected timestamp %d", extractedTimestamp, timestamp)
+	}
+}
+
+func TestExtractExecutionName(t *testing.T) {
+	const index_prefix, timestamp = "general", 1595510218
+	index_name := fmt.Sprintf("%s_%d", index_prefix, timestamp)
+	extractedExecutionName, err := interpolation.ExtractExecutionName(index_name)
+	if err != nil {
+		t.Fatalf("error occured while running extractExecutionName, e: %s\n", err)
+	}
+
+	if extractedExecutionName != index_prefix {
+		t.Errorf("extractedExecutionName %s is not equal to expected timestamp %s", extractedExecutionName, index_prefix)
 	}
 }

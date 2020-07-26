@@ -18,7 +18,6 @@ var defaultNotifierResponse = notifier.Response{
 type NotifierClientMock struct {
 	clientNotifierResponse *notifier.Response
 	responseError          error
-	counter                int
 }
 
 func (nc *NotifierClientMock) Get(updateParams *notifier.UpdaterParams, requestSettings notifier.RequestSetting) (*notifier.Response, error) {

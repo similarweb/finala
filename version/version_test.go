@@ -38,11 +38,13 @@ func (nc *WebServerMock) StartWebServer() error {
 		Addr:    fmt.Sprintf(":%d", nc.Port),
 		Handler: r,
 	}
+
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
 			log.Println(err)
 		}
 	}()
+
 	return nil
 }
 
@@ -62,12 +64,13 @@ func TestVersion(t *testing.T) {
 	ctx := context.Background()
 	webServer := WebServerMock{
 		Host:         "http://localhost",
-		Port:         5000,
+		Port:         9085,
 		Application:  "finala",
 		Organization: "similarweb",
 	}
 
 	webServer.StartWebServer()
+
 	version := NewVersion(ctx, 2*time.Second, notifier.RequestSetting{Host: fmt.Sprintf("%s:%d", webServer.Host, webServer.Port)})
 	response, _ := version.Get()
 	t.Run("VersionChecker", func(t *testing.T) {

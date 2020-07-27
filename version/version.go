@@ -33,7 +33,7 @@ type NotifierClientVersion interface {
 // NotifierClient Empty struct to wrap notifier package Get response
 type NotifierClient struct{}
 
-// Get Wraper of GET of notifier package
+// Get Wrapper of GET function of notifier package
 func (nc *NotifierClient) Get(updateParams *notifier.UpdaterParams, requestSettings notifier.RequestSetting) (*notifier.Response, error) {
 	return notifier.Get(updateParams, requestSettings)
 }
@@ -75,7 +75,7 @@ func (v *Version) interval(ctx context.Context) {
 	notifier.GetInterval(ctx, v.params, v.duration, v.printResults, v.requestSettings)
 }
 
-// printResults print the notifier response to the logger
+// printResults print the notifier response
 func (v *Version) printResults(notifierResponse *notifier.Response, err error) {
 
 	if err != nil {
@@ -94,7 +94,7 @@ func (v *Version) printResults(notifierResponse *notifier.Response, err error) {
 
 }
 
-// Get returns the notifier response
+// Get returns the notifier response from version struct
 func (v *Version) Get() (*notifier.Response, error) {
 
 	if v.response == nil {

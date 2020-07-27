@@ -28,7 +28,6 @@ type WebServerMock struct {
 	Host           string
 	Application    string
 	Organization   string
-	responseError  error
 }
 
 func (nc *WebServerMock) StartWebServer() (string, error) {
@@ -61,7 +60,7 @@ func (nc *WebServerMock) HandleRequestHandler(resp http.ResponseWriter, req *htt
 	resp.WriteHeader(200)
 	encoder := json.NewEncoder(resp)
 	encoder.SetIndent("", "  ")
-	encoder.Encode(nc.response)
+	_ = encoder.Encode(nc.response)
 }
 
 func TestVersion(t *testing.T) {

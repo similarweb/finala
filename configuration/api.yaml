@@ -3,7 +3,6 @@ log_level: info
 
 storage:
   elasticsearch:
-    index: general
     username: ""
     password: ""
     endpoints: 

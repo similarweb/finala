@@ -3,6 +3,7 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"finala/api/config"
 	"finala/api/storage"
 	"finala/interpolation"
@@ -93,11 +94,20 @@ func NewStorageManager(conf config.ElasticsearchConfig) (*StorageManager, error)
 		client: esclient,
 	}
 
-	storageManager.setCurrentIndexDay(time.Now().In(time.UTC))
+	if !storageManager.setCurrentIndexDay() {
+		return nil, errors.New("could not create index")
+	}
 	go func() {
 		for {
 			now := time.Now().In(time.UTC)
-			storageManager.checkCurrentIndexDay(now)
+			diff := storageManager.getDurationUntilTomorrow(now)
+			log.WithFields(log.Fields{
+				"now":      now,
+				"duration": diff,
+			}).Info("change index in")
+			// wait until duration end
+			<-time.After(diff)
+			storageManager.setCurrentIndexDay()
 		}
 	}()
 
@@ -488,18 +498,19 @@ func (sm *StorageManager) GetExecutionTags(executionID string) (map[string][]str
 }
 
 // createIndex creating create elasticsearch index if not exists
-func (sm *StorageManager) createIndex(index string) {
+func (sm *StorageManager) createIndex(index string) error {
 
 	exists, err := sm.client.IndexExists(index).Do(context.Background())
 	if err != nil {
 		log.WithFields(log.Fields{
 			"index": index,
 		}).WithError(err).Error("Error when trying to check if elasticsearch exists")
-		return
+		return err
 	}
+
 	if exists {
 		log.WithField("index", index).Info("index already exists")
-		return
+		return nil
 	}
 
 	ctx := context.Background()
@@ -508,15 +519,16 @@ func (sm *StorageManager) createIndex(index string) {
 		log.WithFields(log.Fields{
 			"index": index,
 		}).WithError(err).Error("Error when trying to create elasticsearch index")
+		return err
 	}
 
 	log.WithField("index", index).Info("index created successfully")
+	return nil
 
 }
 
-// checkCurrentIndexDay is charge of getting the duration time until date change (2020-01-01 23:00:00 -> 2020-01-02 00:00:00).
-// when the day changed, the function call to `setCurrentIndexDay` for create new index with current date
-func (sm *StorageManager) checkCurrentIndexDay(now time.Time) {
+// getDurationUntilTomorrow returns the duration time until tomorrow
+func (sm *StorageManager) getDurationUntilTomorrow(now time.Time) time.Duration {
 
 	zone, _ := now.Zone()
 	location, err := time.LoadLocation(zone)
@@ -525,28 +537,27 @@ func (sm *StorageManager) checkCurrentIndexDay(now time.Time) {
 		location = time.UTC
 	}
 
-	tomorrow := startTomorrowDate(now, location)
+	tomorrow := getDayAfterDate(now, location)
 	diff := tomorrow.Sub(now)
 
-	log.WithFields(log.Fields{
-		"now":      now,
-		"tomorrow": tomorrow,
-		"duration": diff,
-	}).Info("change index in")
-
-	// wait until duration end
-	<-time.After(diff)
-	sm.setCurrentIndexDay(now)
+	return diff
 
 }
 
-// setCurrentIndexDay create new index with the given
-func (sm *StorageManager) setCurrentIndexDay(dt time.Time) {
+// setCurrentIndexDay set the current day as index
+func (sm *StorageManager) setCurrentIndexDay() bool {
+	dt := time.Now().In(time.UTC)
 	newIndex := fmt.Sprintf(prefixIndexName, dt.Format("01-02-2006"))
 	log.WithFields(log.Fields{
 		"current_index_day":    sm.currentIndexDay,
 		"to_current_index_day": newIndex,
 	}).Info("change current index day")
-	sm.createIndex(newIndex)
+	err := sm.createIndex(newIndex)
+	if err != nil {
+		return false
+	}
+
 	sm.currentIndexDay = newIndex
+	return true
+
 }

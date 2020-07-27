@@ -5,10 +5,10 @@ import (
 	"time"
 )
 
-func TestStartTomorrowDate(t *testing.T) {
+func TestGetDayAfterDate(t *testing.T) {
 
 	dt := time.Date(2020, 01, 01, 10, 00, 0, 0, time.UTC)
-	tomorrow := startTomorrowDate(dt, time.UTC)
+	tomorrow := getDayAfterDate(dt, time.UTC)
 
 	if tomorrow.Year() != 2020 {
 		t.Fatalf("unexpected year, got %d expected %d", tomorrow.Year(), 2020)

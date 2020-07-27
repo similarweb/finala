@@ -1,16 +1,13 @@
 package cmd
 
 import (
-	"context"
 	"finala/api"
 	"finala/api/config"
 	"finala/api/storage/elasticsearch"
 	"finala/serverutil"
-	"finala/version"
 	"finala/visibility"
 	"os"
 	"os/signal"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -35,9 +32,6 @@ var apiServer = &cobra.Command{
 			log.Error(err)
 			os.Exit(1)
 		}
-		ctx := context.Background()
-		notifierClient := version.NotifierClient{}
-		version := version.NewVersion(ctx, 1*time.Hour, false, &notifierClient)
 
 		// Set application log level
 		visibility.SetLoggingLevel(configStruct.LogLevel)
@@ -48,7 +42,7 @@ var apiServer = &cobra.Command{
 			log.WithError(err).Error("could not connect to elasticsearch")
 		}
 
-		apiManager := api.NewServer(port, storage, version)
+		apiManager := api.NewServer(port, storage, versionManager)
 
 		apiStopper := serverutil.RunAll(apiManager).StopFunc
 

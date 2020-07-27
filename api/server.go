@@ -27,11 +27,11 @@ type Server struct {
 	router     *mux.Router
 	httpserver *http.Server
 	storage    storage.StorageDescriber
-	version    version.Descriptor
+	version    version.VersionManagerDescriptor
 }
 
 // NewServer returns a new Server
-func NewServer(port int, storage storage.StorageDescriber, version version.Descriptor) *Server {
+func NewServer(port int, storage storage.StorageDescriber, version version.VersionManagerDescriptor) *Server {
 
 	router := mux.NewRouter()
 	corsObj := handlers.AllowedOrigins([]string{"*"})

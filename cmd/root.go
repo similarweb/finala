@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	notifier "github.com/similarweb/client-notifier"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
@@ -14,6 +15,8 @@ import (
 var (
 	// cfgFile contine the path to the configuration file
 	cfgFile string
+	// VersionManager will hold the information for the Finala Version
+	versionManager *version.Version
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -29,8 +32,7 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 func Execute() {
 
 	ctx := context.Background()
-	notifierClient := version.NotifierClient{}
-	version.NewVersion(ctx, 12*time.Hour, true, &notifierClient)
+	versionManager = version.NewVersion(ctx, 2*time.Second, notifier.RequestSetting{})
 
 	if err := rootCmd.Execute(); err != nil {
 		log.WithError(err)

@@ -32,7 +32,7 @@ The tool is based on yaml definitions (no code), by default configuration OR giv
 func Execute() {
 
 	ctx := context.Background()
-	versionManager = version.NewVersion(ctx, 2*time.Second, notifier.RequestSetting{})
+	versionManager = version.NewVersion(ctx, 12*time.Hour, notifier.RequestSetting{})
 
 	if err := rootCmd.Execute(); err != nil {
 		log.WithError(err)

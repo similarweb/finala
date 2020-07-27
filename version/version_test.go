@@ -6,11 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/gorilla/mux"
+	// "github.com/gorilla/mux"
 	notifier "github.com/similarweb/client-notifier"
 )
 
@@ -24,28 +26,30 @@ type WebServerMock struct {
 	response       *notifier.Response
 	versionCounter int
 	Host           string
-	Port           int
 	Application    string
 	Organization   string
 	responseError  error
 }
 
-func (nc *WebServerMock) StartWebServer() error {
-	r := mux.NewRouter()
-	r.HandleFunc(fmt.Sprintf("/api/v1/latest-version/%s/%s", nc.Organization, nc.Application), nc.HandleRequestHandler)
+func (nc *WebServerMock) StartWebServer() (string, error) {
+	http.HandleFunc(fmt.Sprintf("/api/v1/latest-version/%s/%s", nc.Organization, nc.Application), nc.HandleRequestHandler)
 
-	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", nc.Port),
-		Handler: r,
+	listener, err := net.Listen("tcp", ":0")
+	if err != nil {
+		return "", err
 	}
 
+	log.Println("listening on", listener.Addr().String())
+	listenerAddr := strings.Split(listener.Addr().String(), ":")
+	port := listenerAddr[len(listenerAddr)-1]
+
 	go func() {
-		if err := srv.ListenAndServe(); err != nil {
+		if err := http.Serve(listener, nil); err != nil {
 			log.Println(err)
 		}
 	}()
 
-	return nil
+	return port, nil
 }
 
 func (nc *WebServerMock) HandleRequestHandler(resp http.ResponseWriter, req *http.Request) {
@@ -64,14 +68,13 @@ func TestVersion(t *testing.T) {
 	ctx := context.Background()
 	webServer := WebServerMock{
 		Host:         "http://localhost",
-		Port:         9085,
 		Application:  "finala",
 		Organization: "similarweb",
 	}
 
-	webServer.StartWebServer()
+	port, _ := webServer.StartWebServer()
 
-	version := NewVersion(ctx, 2*time.Second, notifier.RequestSetting{Host: fmt.Sprintf("%s:%d", webServer.Host, webServer.Port)})
+	version := NewVersion(ctx, 2*time.Second, notifier.RequestSetting{Host: fmt.Sprintf("%s:%s", webServer.Host, port)})
 	response, _ := version.Get()
 	t.Run("VersionChecker", func(t *testing.T) {
 		if response.CurrentDownloadURL != defaultNotifierResponse.CurrentDownloadURL {
@@ -88,16 +91,6 @@ func TestVersion(t *testing.T) {
 
 func TestVersionError(t *testing.T) {
 	ctx := context.Background()
-	webServer := WebServerMock{
-		Host:          "http://localhost",
-		Port:          5000,
-		Application:   "finala",
-		Organization:  "similarweb",
-		responseError: errors.New("Erorr"),
-	}
-
-	webServer.StartWebServer()
-	time.Sleep(5 * time.Second)
 	version := NewVersion(ctx, 2*time.Second, notifier.RequestSetting{Host: fmt.Sprintf("%s:%d", "blabla", 5000)})
 
 	_, err := version.Get()
@@ -112,13 +105,12 @@ func TestVersionInterval(t *testing.T) {
 	ctx := context.Background()
 	webServer := WebServerMock{
 		Host:         "http://localhost",
-		Port:         5000,
 		Application:  "finala",
 		Organization: "similarweb",
 	}
 
-	webServer.StartWebServer()
-	version := NewVersion(ctx, 2*time.Second, notifier.RequestSetting{Host: fmt.Sprintf("%s:%d", webServer.Host, webServer.Port)})
+	port, _ := webServer.StartWebServer()
+	version := NewVersion(ctx, 2*time.Second, notifier.RequestSetting{Host: fmt.Sprintf("%s:%s", webServer.Host, port)})
 
 	t.Run("VersionIntervalChecker", func(t *testing.T) {
 		if version.response.CurrentVersion != "0.0.1" {

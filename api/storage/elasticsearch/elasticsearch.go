@@ -19,7 +19,7 @@ import (
 const (
 
 	// prefixDayIndex defins the index name of the current day
-	prefixDayIndex = "finala-%s"
+	prefixIndexName = "finala-%s"
 
 	// indexMapping define the default index mapping
 	indexMapping = `{
@@ -542,7 +542,7 @@ func (sm *StorageManager) checkCurrentIndexDay(now time.Time) {
 
 // setCurrentIndexDay create new index with the given
 func (sm *StorageManager) setCurrentIndexDay(dt time.Time) {
-	newIndex := fmt.Sprintf(prefixDayIndex, dt.Format("01-02-2006"))
+	newIndex := fmt.Sprintf(prefixIndexName, dt.Format("01-02-2006"))
 	log.WithFields(log.Fields{
 		"current_index_day":    sm.currentIndexDay,
 		"to_current_index_day": newIndex,

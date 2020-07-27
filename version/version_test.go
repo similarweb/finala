@@ -107,15 +107,13 @@ func TestVersionInterval(t *testing.T) {
 		Application:  "finala",
 		Organization: "similarweb",
 	}
-
 	port, _ := webServer.StartWebServer()
 	version := NewVersion(ctx, 2*time.Second, notifier.RequestSetting{Host: fmt.Sprintf("%s:%s", webServer.Host, port)})
-
 	t.Run("VersionIntervalChecker", func(t *testing.T) {
 		if version.response.CurrentVersion != "0.0.1" {
 			t.Fatalf("unexpected version error, got: %s, wanted: %s", version.response.CurrentVersion, "0.0.1")
 		}
-		time.Sleep(3 * time.Second)
+		time.Sleep(4 * time.Second)
 		if version.response.CurrentVersion != "0.0.2" {
 			t.Fatalf("unexpected version error, got: %s, wanted: %s", version.response.CurrentVersion, "0.0.2")
 		}

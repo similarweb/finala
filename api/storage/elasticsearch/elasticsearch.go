@@ -94,7 +94,7 @@ func NewStorageManager(conf config.ElasticsearchConfig) (*StorageManager, error)
 		client: esclient,
 	}
 
-	if !storageManager.setCurrentIndexDay() {
+	if !storageManager.setCreateCurrentIndexDay() {
 		return nil, errors.New("could not create index")
 	}
 	go func() {
@@ -107,7 +107,7 @@ func NewStorageManager(conf config.ElasticsearchConfig) (*StorageManager, error)
 			}).Info("change index in")
 			// wait until duration end
 			<-time.After(diff)
-			storageManager.setCurrentIndexDay()
+			storageManager.setCreateCurrentIndexDay()
 		}
 	}()
 
@@ -544,8 +544,8 @@ func (sm *StorageManager) getDurationUntilTomorrow(now time.Time) time.Duration 
 
 }
 
-// setCurrentIndexDay set the current day as index
-func (sm *StorageManager) setCurrentIndexDay() bool {
+// setCreateCurrentIndexDay create and set the current day as index
+func (sm *StorageManager) setCreateCurrentIndexDay() bool {
 	dt := time.Now().In(time.UTC)
 	newIndex := fmt.Sprintf(prefixIndexName, dt.Format("01-02-2006"))
 	log.WithFields(log.Fields{

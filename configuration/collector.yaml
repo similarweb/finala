@@ -188,7 +188,7 @@ providers:
         - description: Not in used
           enable: true
       apigateway:
-        - description: Api calls
+        - description: API calls
           enable: true
           metrics:
             - name: Count

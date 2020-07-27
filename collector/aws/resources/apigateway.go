@@ -63,7 +63,7 @@ func NewAPIGatewayManager(awsManager common.AWSManager, client interface{}) (com
 
 }
 
-// Detect checks with apigateway is unused
+// Detect checks which apigateway is unused
 func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{}, error) {
 
 	log.WithFields(log.Fields{
@@ -89,7 +89,7 @@ func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{},
 			log.WithFields(log.Fields{
 				"name":        *api.Name,
 				"metric_name": metric.Description,
-			}).Debug("check metric")
+			}).Debug("checking metric")
 
 			period := int64(metric.Period.Seconds())
 			metricEndTime := now.Add(time.Duration(-metric.StartTime))

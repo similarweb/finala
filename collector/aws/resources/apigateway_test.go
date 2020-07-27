@@ -66,8 +66,8 @@ func TestNewAPIGatewayManager(t *testing.T) {
 	})
 	t.Run("error", func(t *testing.T) {
 
-		mockClient := MockEmptyClient{}
-
+		type empty struct{}
+		mockClient := empty{}
 		apigateway, err := NewAPIGatewayManager(detector, &mockClient)
 		if err == nil {
 			t.Fatalf("unexpected error happened, got nil expected error")
@@ -184,7 +184,7 @@ func TestDetect(t *testing.T) {
 	}
 
 	if len(apiGatewatResponse) != 2 {
-		t.Fatalf("unexpected apigatewat response  count, got %d expected %d", len(apiGatewatResponse), 2)
+		t.Fatalf("unexpected apigateway response  count, got %d expected %d", len(apiGatewatResponse), 2)
 	}
 
 	if len(collector.Events) != 2 {

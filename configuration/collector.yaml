@@ -26,7 +26,7 @@ providers:
           constraint:
             operator: "=="
             value: 0
-      docDB:
+      documentDB:
         - description: Connection count
           enable: true
           metrics:
@@ -175,16 +175,27 @@ providers:
             formula: IndexingRate + SearchRate
             operator: "=="
             value: 0
-    resources:
       iamLastActivity:
-        enable: true
-        description: Last user activity
-        global: true
-        constraint:
-          operator: ">="
-          value: 90 # 90 Days
+        - description: Last user activity
+          enable: true
+          constraint:
+            operator: ">="
+            value: 90 # 90 Days
       elasticip:
-        enable: true
-        description: Not associated
+        - description: Not associated
+          enable: true
       ec2_volumes:
-        enable: true
+        - description: Not in used
+          enable: true
+      apigateway:
+        - description: API calls
+          enable: true
+          metrics:
+            - name: Count
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d 
+          constraint:
+            operator: "=="
+            value: 0
+        

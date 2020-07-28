@@ -50,7 +50,7 @@ var collectorCMD = &cobra.Command{
 		// init metric manager
 		metricManager := collector.NewMetricManager(awsProvider)
 
-		awsManager := aws.NewAnalyzeManager(collectorManager, metricManager, awsProvider.Accounts, awsProvider.Resources)
+		awsManager := aws.NewAnalyzeManager(collectorManager, metricManager, awsProvider.Accounts)
 
 		awsManager.All()
 

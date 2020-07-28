@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	queryParamFilterPrefix = "filter_"
+	queryParamFilterPrefix     = "filter_"
+	resourceTrendsLimitDefault = 60
 )
 
 // DetectEventsInfo descrive the incoming HTTP events
@@ -79,6 +80,32 @@ func (server *Server) GetResourceData(resp http.ResponseWriter, req *http.Reques
 
 	}
 	server.JSONWrite(resp, http.StatusOK, response)
+}
+
+// GetResourceTrends return trends by resource type, id, region and metric
+func (server *Server) GetResourceTrends(resp http.ResponseWriter, req *http.Request) {
+	queryParams := req.URL.Query()
+	params := mux.Vars(req)
+	resourceType := params["type"]
+	filters := httpparameters.GetFilterQueryParamWithOutPrefix(queryParamFilterPrefix, queryParams)
+
+	limitString := req.URL.Query().Get("limit")
+	var limit int = resourceTrendsLimitDefault
+	var err error
+	if limitString != "" {
+		limit, err = strconv.Atoi(limitString)
+		if err != nil || limit < 1 {
+			limit = resourceTrendsLimitDefault
+		}
+	}
+
+	trends, err := server.storage.GetResourceTrends(resourceType, filters, limit)
+	if err != nil {
+		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
+		return
+
+	}
+	server.JSONWrite(resp, http.StatusOK, trends)
 }
 
 // GetExecutionTags return resuts details by resource type
@@ -148,4 +175,14 @@ func (server *Server) NotFoundRoute(resp http.ResponseWriter, req *http.Request)
 //HealthCheckHandler return ok if server is up
 func (server *Server) HealthCheckHandler(resp http.ResponseWriter, req *http.Request) {
 	server.JSONWrite(resp, http.StatusOK, HealthResponse{Status: true})
+}
+
+// VersionHandler returns the latest Finala version
+func (server *Server) VersionHandler(resp http.ResponseWriter, req *http.Request) {
+	version, err := server.version.Get()
+	if err != nil {
+		server.JSONWrite(resp, http.StatusNotFound, HttpErrorResponse{Error: "Version was not found"})
+		return
+	}
+	server.JSONWrite(resp, http.StatusOK, version)
 }

@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improve CI/CD [[PR-81](https://github.com/similarweb/finala/pull/81)]
 - Add elastic ip resource detection [[PR-97](https://github.com/similarweb/finala/pull/97)]
 - Add elasticsearch resource detection [[PR-98](https://github.com/similarweb/finala/pull/98)]
-- Enable/Disalbe specific metrics detection [[PR-100](https://github.com/similarweb/finala/pull/100)]
+- Enable/Disable specific metrics detection [[PR-100](https://github.com/similarweb/finala/pull/100)]
 - Load dynamically all collector resources [[PR-101](https://github.com/similarweb/finala/pull/101)]
 - Add support to compare between executions API [[PR-106](https://github.com/similarweb/finala/pull/106)]
 - Add APIGateway detection [[PR-111](https://github.com/similarweb/finala/pull/111)]

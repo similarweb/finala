@@ -197,6 +197,10 @@ func (r *RDSManager) getPricingFilterInput(instance *rds.DBInstance) pricing.Get
 		databaseEngine = "PostgreSQL"
 	case "aurora":
 		databaseEngine = "Aurora MySQL"
+	case "aurora-mysql":
+		databaseEngine = "Aurora MySQL"
+	case "aurora-postgresql":
+		databaseEngine = "Aurora PostgreSQL"
 	default:
 		databaseEngine = *instance.Engine
 	}

@@ -4,27 +4,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v0.3.4 (Unreleased)
-- Ignore Neptune based instances for RDS instances collection [[PR-71](https://github.com/similarweb/finala/pull/71)]
+## v0.4.0 (Unreleased)
+- Revamp Finala User Interface
+
+## v0.3.4 (July 28,2020)
+### Added
 - Add the option to filter resources by tags in the API [[PR-73](https://github.com/similarweb/finala/pull/73)]
 - Add Redshift resource detection [[PR-74](https://github.com/similarweb/finala/pull/74)]
-- Fix the pricing for ELB/ELBV2 [[PR-76](https://github.com/similarweb/finala/pull/76)]
 - Implement golangci-lint and golang fmt [[PR-78](https://github.com/similarweb/finala/pull/78)]
 - Add CodeCov [[PR-79](https://github.com/similarweb/finala/pull/79)]
 - Improve CI/CD [[PR-81](https://github.com/similarweb/finala/pull/81)]
+- Add elastic ip resource detection [[PR-97](https://github.com/similarweb/finala/pull/97)]
+- Add elasticsearch resource detection [[PR-98](https://github.com/similarweb/finala/pull/98)]
+- Enable/Disalbe specific metrics detection [[PR-100](https://github.com/similarweb/finala/pull/100)]
+- Load dynamically all collector resources [[PR-101](https://github.com/similarweb/finala/pull/101)]
+- Add support to compare between executions API [[PR-106](https://github.com/similarweb/finala/pull/106)]
+- Add APIGateway detection [[PR-111](https://github.com/similarweb/finala/pull/111)]
+- Add support for Version notification on a new version [[PR-114](https://github.com/similarweb/finala/pull/114)]
+- Create index per day [[PR-115](https://github.com/similarweb/finala/pull/115)]
+### Changed
+- Update README.md [[PR-89](https://github.com/similarweb/finala/pull/89)]
+- Remove Notifier from Docker compose first run [[PR-90](https://github.com/similarweb/finala/pull/90)]
+- Improve pricing tests [[PR-109](https://github.com/similarweb/finala/pull/109)]
+- Improve dobdb tests [[PR-110](https://github.com/similarweb/finala/pull/110)]
+### Fixed
+- Ignore Neptune based instances for RDS instances collection [[PR-71](https://github.com/similarweb/finala/pull/71)]
+- Fix the pricing for ELB/ELBV2 [[PR-76](https://github.com/similarweb/finala/pull/76)]
 - Change GoRelease to have the correct semver tags [[PR-82](https://github.com/similarweb/finala/pull/82)]
 - Fix the Dockerfile release download [[PR-83](https://github.com/similarweb/finala/pull/83)]
 - Fix version preview [[PR-84](https://github.com/similarweb/finala/pull/84)]
-- Revamp Finala User Interface [[PR-85](https://github.com/similarweb/finala/pull/85)]
 - Don't change the Tag Key , use the original from AWS [[PR-86](https://github.com/similarweb/finala/pull/86)]
-- Update README.md [[PR-89](https://github.com/similarweb/finala/pull/89)]
-- Remove Notifier from Docker compose first run [[PR-90](https://github.com/similarweb/finala/pull/90)]
-- Add elastic ip resource detection [[PR-97](https://github.com/similarweb/finala/pull/97)]
-- Add elasticsearch resource detection [[PR-98](https://github.com/similarweb/finala/pull/98)]
+- Fix total records response [[PR-113](https://github.com/similarweb/finala/pull/113)]
+### Removed
 - Remove totalSpend field [[PR-99](https://github.com/similarweb/finala/pull/99)]
-- Enable/Disalbe specific metrics detection [[PR-100](https://github.com/similarweb/finala/pull/100)]
-- Load dynamically all collector resources [[PR-101](https://github.com/similarweb/finala/pull/101)]
-
 
 ## v0.3.3 (June 17,2020)
 ### Added

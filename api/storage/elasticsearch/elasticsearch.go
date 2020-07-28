@@ -3,9 +3,11 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"finala/api/config"
 	"finala/api/storage"
 	"finala/interpolation"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -16,6 +18,10 @@ import (
 )
 
 const (
+
+	// prefixDayIndex defins the index name of the current day
+	prefixIndexName = "finala-%s"
+
 	// indexMapping define the default index mapping
 	indexMapping = `{
 		"mappings":{
@@ -39,8 +45,8 @@ const (
 
 // StorageManager descrive elasticsearchStorage
 type StorageManager struct {
-	client       *elastic.Client
-	defaultIndex string
+	client          *elastic.Client
+	currentIndexDay string
 }
 
 // getESClient create new elasticsearch client
@@ -85,10 +91,26 @@ func NewStorageManager(conf config.ElasticsearchConfig) (*StorageManager, error)
 	}
 
 	storageManager := &StorageManager{
-		client:       esclient,
-		defaultIndex: conf.Index,
+		client: esclient,
 	}
-	storageManager.createIndex(conf.Index)
+
+	if !storageManager.setCreateCurrentIndexDay() {
+		return nil, errors.New("could not create index")
+	}
+	go func() {
+		for {
+			now := time.Now().In(time.UTC)
+			diff := storageManager.getDurationUntilTomorrow(now)
+			log.WithFields(log.Fields{
+				"now":      now,
+				"duration": diff,
+			}).Info("change index in")
+			// wait until duration end
+			<-time.After(diff)
+			storageManager.setCreateCurrentIndexDay()
+		}
+	}()
+
 	return storageManager, nil
 }
 
@@ -96,13 +118,13 @@ func NewStorageManager(conf config.ElasticsearchConfig) (*StorageManager, error)
 func (sm *StorageManager) Save(data string) bool {
 
 	_, err := sm.client.Index().
-		Index(sm.defaultIndex).
+		Index(sm.currentIndexDay).
 		BodyJson(data).
 		Do(context.Background())
 
 	if err != nil {
 		log.WithFields(log.Fields{
-			"index": sm.defaultIndex,
+			"index": sm.currentIndexDay,
 			"data":  data,
 		}).WithError(err).Error("Fail to save document")
 		return false
@@ -476,18 +498,19 @@ func (sm *StorageManager) GetExecutionTags(executionID string) (map[string][]str
 }
 
 // createIndex creating create elasticsearch index if not exists
-func (sm *StorageManager) createIndex(index string) {
+func (sm *StorageManager) createIndex(index string) error {
 
 	exists, err := sm.client.IndexExists(index).Do(context.Background())
 	if err != nil {
 		log.WithFields(log.Fields{
 			"index": index,
 		}).WithError(err).Error("Error when trying to check if elasticsearch exists")
-		return
+		return err
 	}
+
 	if exists {
 		log.WithField("index", index).Info("index already exists")
-		return
+		return nil
 	}
 
 	ctx := context.Background()
@@ -496,8 +519,45 @@ func (sm *StorageManager) createIndex(index string) {
 		log.WithFields(log.Fields{
 			"index": index,
 		}).WithError(err).Error("Error when trying to create elasticsearch index")
+		return err
 	}
 
 	log.WithField("index", index).Info("index created successfully")
+	return nil
+
+}
+
+// getDurationUntilTomorrow returns the duration time until tomorrow
+func (sm *StorageManager) getDurationUntilTomorrow(now time.Time) time.Duration {
+
+	zone, _ := now.Zone()
+	location, err := time.LoadLocation(zone)
+	if err != nil {
+		log.WithError(err).WithField("zone", zone).Warn("zone name not found")
+		location = time.UTC
+	}
+
+	tomorrow := getDayAfterDate(now, location)
+	diff := tomorrow.Sub(now)
+
+	return diff
+
+}
+
+// setCreateCurrentIndexDay create and set the current day as index
+func (sm *StorageManager) setCreateCurrentIndexDay() bool {
+	dt := time.Now().In(time.UTC)
+	newIndex := fmt.Sprintf(prefixIndexName, dt.Format("01-02-2006"))
+	log.WithFields(log.Fields{
+		"current_index_day":    sm.currentIndexDay,
+		"to_current_index_day": newIndex,
+	}).Info("change current index day")
+	err := sm.createIndex(newIndex)
+	if err != nil {
+		return false
+	}
+
+	sm.currentIndexDay = newIndex
+	return true
 
 }

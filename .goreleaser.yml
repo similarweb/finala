@@ -6,7 +6,7 @@ builds:
     - darwin
     - windows
   ldflags:
-     - -s -w -X finala/cmd.version={{.Version}} -X finala/cmd.commit={{.Commit}} -X finala/cmd.date={{.Date}} -X finala/cmd.builtBy=goreleaser
+     - -s -w -X finala/version.version={{.Version}} -X finala/version.commit={{.Commit}} -X finala/version.date={{.Date}} -X finala/version.builtBy=goreleaser
 archives:
   - id: finala
     replacements:

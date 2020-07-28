@@ -42,7 +42,7 @@ var apiServer = &cobra.Command{
 			log.WithError(err).Error("could not connect to elasticsearch")
 		}
 
-		apiManager := api.NewServer(port, storage)
+		apiManager := api.NewServer(port, storage, versionManager)
 
 		apiStopper := serverutil.RunAll(apiManager).StopFunc
 

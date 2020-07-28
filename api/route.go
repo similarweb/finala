@@ -176,3 +176,13 @@ func (server *Server) NotFoundRoute(resp http.ResponseWriter, req *http.Request)
 func (server *Server) HealthCheckHandler(resp http.ResponseWriter, req *http.Request) {
 	server.JSONWrite(resp, http.StatusOK, HealthResponse{Status: true})
 }
+
+// VersionHandler returns the latest Finala version
+func (server *Server) VersionHandler(resp http.ResponseWriter, req *http.Request) {
+	version, err := server.version.Get()
+	if err != nil {
+		server.JSONWrite(resp, http.StatusNotFound, HttpErrorResponse{Error: "Version was not found"})
+		return
+	}
+	server.JSONWrite(resp, http.StatusOK, version)
+}

@@ -64,7 +64,7 @@ func (v *Version) interval(ctx context.Context) {
 func (v *Version) printResults(notifierResponse *notifier.Response, err error) {
 
 	if err != nil {
-		log.WithError(err).Debug(fmt.Sprintf("failed to get Finala latest version"))
+		log.WithError(err).Debug("failed to get Finala latest version")
 		return
 	}
 

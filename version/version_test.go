@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	// "github.com/gorilla/mux"
+	"github.com/gorilla/mux"
 	notifier "github.com/similarweb/client-notifier"
 )
 
@@ -31,11 +31,17 @@ type WebServerMock struct {
 }
 
 func (nc *WebServerMock) StartWebServer() (string, error) {
-	http.HandleFunc(fmt.Sprintf("/api/v1/latest-version/%s/%s", nc.Organization, nc.Application), nc.HandleRequestHandler)
-
 	listener, err := net.Listen("tcp", ":0")
 	if err != nil {
 		return "", err
+	}
+	r := mux.NewRouter()
+
+	r.HandleFunc(fmt.Sprintf("/api/v1/latest-version/%s/%s", nc.Organization, nc.Application), nc.HandleRequestHandler)
+
+	srv := &http.Server{
+		Addr:    ":0",
+		Handler: r,
 	}
 
 	log.Println("listening on", listener.Addr().String())
@@ -43,7 +49,7 @@ func (nc *WebServerMock) StartWebServer() (string, error) {
 	port := listenerAddr[len(listenerAddr)-1]
 
 	go func() {
-		if err := http.Serve(listener, nil); err != nil {
+		if err := srv.Serve(listener); err != nil {
 			log.Println(err)
 		}
 	}()
@@ -113,7 +119,7 @@ func TestVersionInterval(t *testing.T) {
 		if version.response.CurrentVersion != "0.0.1" {
 			t.Fatalf("unexpected version error, got: %s, wanted: %s", version.response.CurrentVersion, "0.0.1")
 		}
-		time.Sleep(4 * time.Second)
+		time.Sleep(3 * time.Second)
 		if version.response.CurrentVersion != "0.0.2" {
 			t.Fatalf("unexpected version error, got: %s, wanted: %s", version.response.CurrentVersion, "0.0.2")
 		}

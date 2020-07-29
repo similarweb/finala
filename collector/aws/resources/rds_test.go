@@ -48,6 +48,14 @@ var defaultRDSMock = rds.DescribeDBInstancesOutput{
 			Engine:               awsClient.String("docdb"),
 			InstanceCreateTime:   testutils.TimePointer(time.Now()),
 		},
+		{
+			DBInstanceArn:        awsClient.String("ARN::5"),
+			DBInstanceIdentifier: awsClient.String("i-5"),
+			MultiAZ:              testutils.BoolPointer(false),
+			DBInstanceClass:      awsClient.String("t2.micro"),
+			Engine:               awsClient.String("aurora-mysql"),
+			InstanceCreateTime:   testutils.TimePointer(time.Now()),
+		},
 	},
 }
 
@@ -91,8 +99,8 @@ func TestDescribeRDSInstances(t *testing.T) {
 
 		result, _ := rdsManager.describeInstances(nil, nil)
 
-		if len(result) != 3 {
-			t.Fatalf("unexpected rds instance count, got %d expected %d", len(result), 3)
+		if len(result) != 4 {
+			t.Fatalf("unexpected rds instance count, got %d expected %d", len(result), 4)
 		}
 	})
 

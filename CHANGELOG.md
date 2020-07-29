@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v0.4.0 (Unreleased)
 - Revamp Finala User Interface
 
-## v0.3.4 (July 28,2020)
+## v0.3.4 (July 29,2020)
 ### Added
 - Add the option to filter resources by tags in the API [[PR-73](https://github.com/similarweb/finala/pull/73)]
 - Add Redshift resource detection [[PR-74](https://github.com/similarweb/finala/pull/74)]
@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix version preview [[PR-84](https://github.com/similarweb/finala/pull/84)]
 - Don't change the Tag Key , use the original from AWS [[PR-86](https://github.com/similarweb/finala/pull/86)]
 - Fix total records response [[PR-113](https://github.com/similarweb/finala/pull/113)]
+- Fix wrong pricing api filters for aurora-mysql [[PR-123](https://github.com/similarweb/finala/pull/123)]
 ### Removed
 - Remove totalSpend field [[PR-99](https://github.com/similarweb/finala/pull/99)]
 

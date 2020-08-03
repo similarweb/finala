@@ -50,6 +50,6 @@ func (n *NotifierMock) Send(message notifierCommon.NotifierReport) {
 	panic("Implement me")
 }
 
-func (n *NotifierMock) BuildSendURL(baseURL string, filters []common.Tag) string {
+func (n *NotifierMock) BuildSendURL(baseURL string, executionID string, filters []common.Tag) string {
 	return ""
 }

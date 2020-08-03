@@ -157,17 +157,18 @@ func TestFormatTagsElasticSearchQuery(t *testing.T) {
 
 func TestBuildSendURL(t *testing.T) {
 	baseURL := "http://127.0.0.1"
+	executionID := "general_123123"
 	slackManager := Manager{}
 	testCases := []struct {
 		tags        []common.Tag
 		expectedURL string
 	}{
 		{[]common.Tag{}, baseURL},
-		{commonTags, fmt.Sprintf("%s?filters=%s", baseURL, "team:a,stack:b")},
+		{commonTags, fmt.Sprintf("%s?executionId=%s&filters=%s", baseURL, executionID, "team:a,stack:b")},
 	}
 
 	for _, tc := range testCases {
-		costReportURL := slackManager.BuildSendURL(baseURL, tc.tags)
+		costReportURL := slackManager.BuildSendURL(baseURL, executionID, tc.tags)
 		if costReportURL != tc.expectedURL {
 			t.Fatalf("unexpected Notifier URL , got %s wanted:%s", costReportURL, tc.expectedURL)
 		}

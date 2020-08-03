@@ -7,6 +7,6 @@ type ConfigByName map[NotifierName]NotifierConfig
 type Notifier interface {
 	LoadConfig(notifierConfig NotifierConfig) (err error)
 	GetNotifyByTags(notifierConfig ConfigByName) (getNotifyByTags map[string]NotifyByTag)
-	BuildSendURL(baseURL string, filters []Tag) string
+	BuildSendURL(baseURL string, executionID string, filters []Tag) string
 	Send(message NotifierReport)
 }

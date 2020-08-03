@@ -80,7 +80,7 @@ func (sm *Manager) GetNotifyByTags(notifierConfig common.ConfigByName) map[strin
 
 // prepareAttachmentFields will prepare all the Attachment and all the fields
 func (sm *Manager) prepareAttachment(message common.NotifierReport, elasticSearchQueryTags []string) []slackApi.Attachment {
-	mainCostReportURL := sm.BuildSendURL(message.UIAddr, message.NotifyByTag.Tags)
+	mainCostReportURL := sm.BuildSendURL(message.UIAddr, message.ExecutionID, message.NotifyByTag.Tags)
 	// Finala's intro message Attachment
 	slackAttachments := []slackApi.Attachment{
 		{
@@ -95,7 +95,7 @@ func (sm *Manager) prepareAttachment(message common.NotifierReport, elasticSearc
 	for _, executionData := range message.ExecutionSummaryData {
 		additionalFilter := common.Tag{Name: "resource", Value: executionData.ResourceName}
 		filters := append(message.NotifyByTag.Tags, additionalFilter)
-		resourceLink := sm.BuildSendURL(message.UIAddr, filters)
+		resourceLink := sm.BuildSendURL(message.UIAddr, message.ExecutionID, filters)
 		// If the total spent is 0 or small than minimum cost to present we don't want to show it in Slack
 		if executionData.TotalSpent == 0 || executionData.TotalSpent <= message.NotifyByTag.MinimumCostToPresent {
 			continue
@@ -206,14 +206,14 @@ func (sm *Manager) getChannelID(to string) (string, error) {
 }
 
 // BuildSendURL will build the url the Notifier should send
-func (sm *Manager) BuildSendURL(baseURL string, filters []common.Tag) string {
+func (sm *Manager) BuildSendURL(baseURL string, executionID string, filters []common.Tag) string {
 	urlFilters := []string{}
 	for _, filter := range filters {
 		urlFilters = append(urlFilters, fmt.Sprintf("%s:%s", filter.Name, filter.Value))
 	}
 
 	if len(filters) > 0 {
-		return fmt.Sprintf("%s?filters=%s", baseURL, strings.Join(urlFilters, ","))
+		return fmt.Sprintf("%s?executionId=%s&filters=%s", baseURL, executionID, strings.Join(urlFilters, ","))
 	}
 	return baseURL
 }

@@ -88,6 +88,32 @@ func (ms *MockStorage) GetResources(resourceType string, executionID string, fil
 
 }
 
+func (ms *MockStorage) GetResourceTrends(resourceType string, filters map[string]string, limit int) ([]storage.ExecutionCost, error) {
+	var response []storage.ExecutionCost
+
+	if resourceType == "err" {
+		return nil, errors.New("error")
+	}
+
+	response = append(response, storage.ExecutionCost{
+		ExecutionID:        "dummy_123",
+		ExtractedTimestamp: 123,
+		CostSum:            16.5,
+	})
+	response = append(response, storage.ExecutionCost{
+		ExecutionID:        "dummy_312",
+		ExtractedTimestamp: 321,
+		CostSum:            19,
+	})
+
+	if len(response) > limit {
+		response = response[0:limit]
+	}
+
+	return response, nil
+
+}
+
 func (ms *MockStorage) GetExecutionTags(executionID string) (map[string][]string, error) {
 
 	response := map[string][]string{}

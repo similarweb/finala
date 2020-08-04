@@ -34,6 +34,8 @@ const ResourceScanning = ({ resources, currentExecution, setScanning }) => {
   if (resource) {
     isScanning = true;
     title = titleDirective(resource.ResourceName);
+  } else {
+    isScanning = false;
   }
 
   setScanning(isScanning);

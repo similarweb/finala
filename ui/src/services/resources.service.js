@@ -17,9 +17,14 @@ const getTransformedFilters = (filters) => {
     if (filter.id.substr(0, 8) === "resource") {
       return;
     }
-    const [key, value] = filter.id.split(" : ");
+    const [key, value] = filter.id.split(":");
     if (value) {
-      params[`filter_Data.Tag.${key}`] = value;
+      const paramKey = `filter_Data.Tag.${key}`;
+      if (params[paramKey]) {
+        params[paramKey] += `,${value}`;
+      } else {
+        params[paramKey] = value;
+      }
     }
   });
   return params;
@@ -47,7 +52,9 @@ function Summary(executionID, filters = []) {
     ...{ executionID },
     ...getTransformedFilters(filters),
   };
-  const searchParams = new window.URLSearchParams(params).toString();
+  const searchParams = decodeURIComponent(
+    new window.URLSearchParams(params).toString()
+  );
 
   return http
     .send(`api/v1/summary/${executionID}?${searchParams}`, `get`)

@@ -35,12 +35,7 @@ let fetchTimeoutRequest = false;
  * @param  {array} executions Executions list
  * @param  {func} setExecutions Update Executions list}
  */
-const RouterIndex = ({
-  currentExecution,
-  setCurrentExecution,
-  executions,
-  setExecutions,
-}) => {
+const RouterIndex = ({ currentExecution, executions, setExecutions }) => {
   const classes = useStyles();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -67,10 +62,7 @@ const RouterIndex = ({
         const executions = responseData;
         setExecutions(executions);
         setIsLoading(false);
-        if (executions.length) {
-          const currentExecutionId = executions[0].ID;
-          setCurrentExecution(currentExecutionId);
-        } else {
+        if (!executions.length) {
           fetchTimeoutRequest = setTimeout(fetchExecutions, 5000);
         }
       })
@@ -83,12 +75,13 @@ const RouterIndex = ({
    * update state on execution change
    */
   useEffect(() => {
-    if (!currentExecution) {
+    if (!executions.length) {
       init();
-    } else {
+    }
+    if (currentExecution) {
       setIsLoading(false);
     }
-  }, [currentExecution]);
+  }, [currentExecution, executions]);
 
   return (
     <div className={classes.root}>
@@ -117,7 +110,6 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
-  setCurrentExecution: (id) => dispatch({ type: "EXECUTION_SELECTED", id }),
   setExecutions: (data) => dispatch({ type: "EXECUTION_LIST", data }),
 });
 

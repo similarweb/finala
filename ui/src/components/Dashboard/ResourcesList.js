@@ -3,7 +3,8 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import colors from "./colors.json";
 import { makeStyles } from "@material-ui/core/styles";
-import { history } from "configureStore";
+import { setHistory } from "../../utils/History";
+
 import { Box, Chip } from "@material-ui/core";
 import { titleDirective, MoneyDirective } from "../../directives";
 
@@ -47,19 +48,15 @@ const ResourcesList = ({ resources, filters, addFilter, setResource }) => {
    */
   const setSelectedResource = (resource) => {
     const filter = {
-      title: `Resource : ${resource.display_title}`,
+      title: `Resource:${resource.display_title}`,
       id: `resource:${resource.ResourceName}`,
       type: "resource",
     };
     setResource(resource.ResourceName);
     addFilter(filter);
 
-    const searchParams = new window.URLSearchParams({
+    setHistory({
       filters: filters.map((f) => f.id),
-    });
-    history.push({
-      pathname: "/",
-      search: `?${searchParams.toString()}`,
     });
   };
 

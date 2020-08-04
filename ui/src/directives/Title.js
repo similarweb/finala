@@ -13,3 +13,6 @@ export const titleDirective = (title) => {
   );
   return titleWords.join(" ");
 };
+
+export const ucfirstDirective = (word) =>
+  word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();

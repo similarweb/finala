@@ -6,8 +6,28 @@ import MUIDataTable from "mui-datatables";
 import TextUtils from "utils/Text";
 import TagsDialog from "../Dialog/Tags";
 import { ResourcesService } from "services/resources.service";
+import ReportProblemIcon from "@material-ui/icons/ReportProblem";
+
+import { makeStyles, Card, CardContent } from "@material-ui/core";
+
+import Moment from "moment";
 
 let fetchTimeout = false;
+let lastResource = false;
+
+const useStyles = makeStyles(() => ({
+  Card: {
+    marginBottom: "20px",
+  },
+  CardContent: {
+    padding: "30px",
+    textAlign: "center",
+  },
+  AlertIcon: {
+    fontSize: "56px",
+    color: "red",
+  },
+}));
 
 /**
  * @param  {array} {filters  Filters List
@@ -23,6 +43,10 @@ const ResourceTable = ({
 }) => {
   const [headers, setHeaders] = useState([]);
   const [rows, setRows] = useState([]);
+  const [errorMessage, setErrorMessage] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  const classes = useStyles();
 
   const tableOptions = {
     selectableRows: "none",
@@ -47,6 +71,11 @@ const ResourceTable = ({
       case "Tag":
         renderr = (data) => <TagsDialog tags={data} />;
         break;
+      case "LaunchTime":
+        renderr = (data) => (
+          <span>{Moment(data).format("YYYY-MM-DD HH:mm")}</span>
+        );
+        break;
       default:
         renderr = (data) => <span>{data}</span>;
     }
@@ -58,9 +87,9 @@ const ResourceTable = ({
    * @param {object} exampleRow  sample row from data
    * @returns {array} Table header keys
    */
-  const getHeaderRow = (exampleRow) => {
+  const getHeaderRow = (row) => {
     const exclude = ["TotalSpendPrice"];
-    const keys = Object.keys(exampleRow).reduce((filtered, headerKey) => {
+    const keys = Object.keys(row).reduce((filtered, headerKey) => {
       if (exclude.indexOf(headerKey) === -1) {
         const header = {
           name: headerKey,
@@ -84,7 +113,6 @@ const ResourceTable = ({
     if (!currentResource) {
       return currentResource;
     }
-
     ResourcesService.GetContent(currentResource, currentExecution, filters)
       .then((responseData) => {
         if (!responseData) {
@@ -94,13 +122,15 @@ const ResourceTable = ({
         }
         const headers = getHeaderRow(responseData[0].Data);
         const rows = responseData.map((row) => row.Data);
+        const resourceInfo = resources[currentResource];
+
         setHeaders(headers);
         setRows(rows);
 
-        // resource in scanning mode
-        const resourceInfo = resources[currentResource];
         if (resourceInfo && resourceInfo.Status === 0) {
           fetchTimeout = setTimeout(getData, 5000);
+        } else {
+          clearTimeout(fetchTimeout);
         }
       })
       .catch(() => {
@@ -108,23 +138,65 @@ const ResourceTable = ({
       });
   };
 
-  /**
-   * refetch data when state changes
-   */
   useEffect(() => {
     if (!currentExecution || !currentResource) {
       return;
     }
-    getData();
+    let shouldRefreshData = false;
+    const resourceInfo = resources[currentResource];
 
-    // returned function will be called on component unmount
+    // resource not exists in selected execution
+    if (!resourceInfo) {
+      setRows([]);
+    }
+
+    // keep scanning
+    if (resourceInfo && resourceInfo.Status === 0) {
+      shouldRefreshData = true;
+    }
+
+    // check for error status
+    if (resourceInfo && resourceInfo.Status === 1) {
+      setHasError(true);
+      setErrorMessage(resourceInfo.ErrorMessage);
+    }
+
+    // new resource selected
+    if (JSON.stringify(lastResource) !== JSON.stringify(resourceInfo)) {
+      lastResource = resourceInfo;
+      shouldRefreshData = true;
+    }
+
+    // inital refresh
+    if (!rows) {
+      shouldRefreshData = true;
+    }
+    if (shouldRefreshData) {
+      getData();
+    }
+
+    // unmount, clear timers
     return () => {
       clearTimeout(fetchTimeout);
     };
-  }, [currentExecution, currentResource, resources, filters]);
+  }, [resources, currentResource, filters, currentExecution]);
 
   return (
     <Fragment>
+      {hasError && (
+        <Card className={classes.Card}>
+          <CardContent className={classes.CardContent}>
+            <ReportProblemIcon className={classes.AlertIcon} />
+            <h3>
+              {
+                " Finala couldn't scan the selected resource, please check system logs "
+              }
+            </h3>
+            {errorMessage && <h4>{errorMessage}</h4>}
+          </CardContent>
+        </Card>
+      )}
+
       <div id="resourcewrap">
         <MUIDataTable data={rows} columns={headers} options={tableOptions} />
       </div>

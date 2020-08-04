@@ -1,7 +1,7 @@
 import React, { Fragment, useState, useEffect } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import { history } from "configureStore";
+import { setHistory, getHistory } from "../../utils/History";
 import { TagsService } from "services/tags.service";
 import { makeStyles } from "@material-ui/core/styles";
 import { Box, Chip, TextField } from "@material-ui/core";
@@ -83,17 +83,10 @@ const FilterBar = ({
    * @param  {array} filters
    */
   const updateFilters = (filters) => {
-    // verify uniqueness & has value
-    const filtersList = filters.filter(
-      (v, i, a) => a.findIndex((t) => t.id === v.id) === i
-    );
-    setFilters(filtersList);
-    const searchParams = new window.URLSearchParams({
+    setFilters(filters);
+
+    setHistory({
       filters: filters.map((f) => f.id),
-    });
-    history.push({
-      pathname: "/",
-      search: `?${searchParams.toString()}`,
     });
   };
 
@@ -113,8 +106,7 @@ const FilterBar = ({
    * Loading base state from url (tags and resource)
    */
   const loadSearchState = () => {
-    const searchParams = new window.URLSearchParams(window.location.search);
-    const searchQuery = searchParams.get("filters");
+    const searchQuery = getHistory("filters");
     if (!searchQuery) {
       return;
     }
@@ -130,7 +122,7 @@ const FilterBar = ({
         if (filterValue) {
           const filterTitle = titleDirective(filterValue);
           filters.push({
-            title: `Resource : ${filterTitle}`,
+            title: `Resource:${filterTitle}`,
             id: filter,
             value: filterValue,
             type: "resource",
@@ -138,7 +130,7 @@ const FilterBar = ({
           resource = filterValue;
         }
       } else {
-        const [, filterValue] = filter.split(" : ");
+        const [, filterValue] = filter.split(":");
         if (filterValue) {
           filters.push({
             title: filter,
@@ -184,13 +176,13 @@ const FilterBar = ({
     }
 
     const id = opt[opt.length - 1].id;
-    filters.push({ title: `${id} : `, id, type: "tag", value: null });
+    filters.push({ title: `${id}:`, id, type: "tag", value: null });
 
     updateFilters(filters);
     const tagValuesList = tags[id].map((opt) => {
       return {
-        title: `${id} : ${opt}`,
-        id: `${id} : ${opt}`,
+        title: `${id}:${opt}`,
+        id: `${id}:${opt}`,
         value: opt,
         type: "tag",
       };

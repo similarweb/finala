@@ -4,7 +4,8 @@ import PropTypes from "prop-types";
 import colors from "./colors.json";
 import Chart from "react-apexcharts";
 import { titleDirective, MoneyDirective } from "../../directives";
-import { history } from "configureStore";
+import { setHistory } from "../../utils/History";
+
 import { Box, Card, CardContent } from "@material-ui/core";
 
 /**
@@ -92,19 +93,15 @@ const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
    */
   const setSelectedResource = (resource) => {
     const filter = {
-      title: `Resource : ${resource.display_title}`,
+      title: `Resource:${resource.display_title}`,
       id: `resource:${resource.ResourceName}`,
       type: "resource",
     };
     setResource(resource.ResourceName);
     addFilter(filter);
 
-    const searchParams = new window.URLSearchParams({
+    setHistory({
       filters: filters.map((f) => f.id),
-    });
-    history.push({
-      pathname: "/",
-      search: `?${searchParams.toString()}`,
     });
   };
 

@@ -1,14 +1,17 @@
-import React, { Fragment } from "react";
+import React, { Fragment, useEffect } from "react";
+import Moment from "moment";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
+import { setHistory, getHistory } from "../../utils/History";
+import { ucfirstDirective } from "../../directives/Title";
 import { Select, MenuItem } from "@material-ui/core";
-
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles(() => ({
   selector: {
     marginTop: "10px",
     width: "100%",
+    textAlign: "center",
     fontWeight: "bold",
     "& .MuiOutlinedInput-notchedOutline": {
       border: "0",
@@ -32,17 +35,50 @@ const ExecutionsIndex = ({
   setCurrentExecution,
 }) => {
   const classes = useStyles();
+
+  /**
+   *
+   * @param {string} executionId id of execution
+   * update the current execution and set the url history
+   */
+
+  const updateCurrentExecution = (executionId) => {
+    setCurrentExecution(executionId);
+    setHistory({ executionId });
+  };
+
+  /**
+   * Will load current exectution from url or from executions list
+   */
+  const loadSearchState = () => {
+    let executionId = getHistory("executionId");
+    if (!executionId) {
+      executionId = executions[0].ID;
+    }
+
+    if (executionId) {
+      updateCurrentExecution(executionId);
+    }
+  };
+
+  useEffect(() => {
+    if (!currentExecution) {
+      loadSearchState();
+    }
+  }, [currentExecution]);
+
   return (
     <Fragment>
       <Select
         className={classes.selector}
         variant="outlined"
         value={currentExecution}
-        onChange={(event) => setCurrentExecution(event.target.value)}
+        onChange={(event) => updateCurrentExecution(event.target.value)}
       >
         {executions.map((execution, i) => (
           <MenuItem key={i} value={execution.ID}>
-            {execution.Name} {execution.Time}
+            {ucfirstDirective(execution.Name)}{" "}
+            {Moment(execution.Time).format("YYYY-MM-DD HH:mm")}
           </MenuItem>
         ))}
       </Select>

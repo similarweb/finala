@@ -49,7 +49,6 @@ function GetExecutions() {
  */
 function Summary(executionID, filters = []) {
   const params = {
-    ...{ executionID },
     ...getTransformedFilters(filters),
   };
   const searchParams = decodeURIComponent(

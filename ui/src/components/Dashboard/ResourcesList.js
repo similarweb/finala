@@ -56,25 +56,27 @@ const ResourcesList = ({ resources, filters, addFilter, setResource }) => {
     addFilter(filter);
 
     setHistory({
-      filters: filters.map((f) => f.id),
+      filters: filters,
     });
   };
 
   return (
     <Fragment>
-      <Box mb={3}>
-        <h4 className={classes.title}>Resources:</h4>
-        {resourcesList.map((resource, i) => (
-          <Chip
-            className={classes.resource_chips}
-            onClick={() => setSelectedResource(resource)}
-            style={{ borderLeftColor: colors[i].hex }}
-            ma={2}
-            label={resource.title}
-            key={i}
-          />
-        ))}
-      </Box>
+      {resourcesList.length > 0 && (
+        <Box mb={3}>
+          <h4 className={classes.title}>Resources:</h4>
+          {resourcesList.map((resource, i) => (
+            <Chip
+              className={classes.resource_chips}
+              onClick={() => setSelectedResource(resource)}
+              style={{ borderLeftColor: colors[i].hex }}
+              ma={2}
+              label={resource.title}
+              key={i}
+            />
+          ))}
+        </Box>
+      )}
     </Fragment>
   );
 };

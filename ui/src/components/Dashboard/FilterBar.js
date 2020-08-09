@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from "react";
+import React, { Fragment, useState, useEffect, useRef } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { setHistory, getHistory } from "../../utils/History";
@@ -7,9 +7,9 @@ import { makeStyles } from "@material-ui/core/styles";
 import { Box, Chip, TextField } from "@material-ui/core";
 import Autocomplete from "@material-ui/lab/Autocomplete";
 import { titleDirective } from "../../directives";
-import CancelIcon from "@material-ui/icons/Cancel";
 
 let fetchTagsTimeout;
+let debounceTimeout;
 const useStyles = makeStyles(() => ({
   Autocomplete: {
     width: "100%",
@@ -54,8 +54,8 @@ const FilterBar = ({
   const classes = useStyles();
   const [tags, setTags] = useState({});
   const [options, setOptions] = useState([]);
-  const [tagValues, setTagValues] = useState([]);
-  let inputRef;
+  const [defaultOptions, setDefaultOptions] = useState([]);
+  const inputRef = useRef(null);
 
   /**
    * Fetching server tagslist for autocomplete
@@ -65,10 +65,15 @@ const FilterBar = ({
     TagsService.list(currentExecution)
       .then((responseData) => {
         const tagOptions = Object.keys(responseData).map((tagKey) => {
-          return { title: tagKey, id: tagKey };
+          return {
+            title: tagKey.trim(),
+            id: tagKey.trim(),
+            type: "tag:option",
+          };
         });
         setTags(responseData);
         setOptions(tagOptions);
+        setDefaultOptions(tagOptions);
 
         if (isScanning) {
           fetchTagsTimeout = setTimeout(fetchTags, 5000);
@@ -86,7 +91,7 @@ const FilterBar = ({
     setFilters(filters);
 
     setHistory({
-      filters: filters.map((f) => f.id),
+      filters: filters,
     });
   };
 
@@ -110,35 +115,34 @@ const FilterBar = ({
     if (!searchQuery) {
       return;
     }
-    const QFilters = searchQuery.split(",");
+    const QFilters = searchQuery.split(";");
     if (QFilters[0] === "") {
       return;
     }
     let resource = false;
     const filters = [];
     QFilters.forEach((filter) => {
-      if (filter.substr(0, 8) === "resource") {
-        let [, filterValue] = filter.split(":");
-        if (filterValue) {
-          const filterTitle = titleDirective(filterValue);
+      let [filterKey, filterValue] = filter.split(":");
+
+      if (filterValue && filterKey === "resource") {
+        const filterTitle = titleDirective(filterValue);
+        filters.push({
+          title: `Resource:${filterTitle}`,
+          id: filter,
+          value: filterValue,
+          type: "resource",
+        });
+        resource = filterValue;
+      } else if (filterValue) {
+        const filterValues = filterValue.split(",");
+
+        filterValues.forEach((filterValue) => {
           filters.push({
-            title: `Resource:${filterTitle}`,
-            id: filter,
-            value: filterValue,
-            type: "resource",
+            title: `${filterKey}:${filterValue}`,
+            id: `${filterKey}:${filterValue}`,
+            type: "filter",
           });
-          resource = filterValue;
-        }
-      } else {
-        const [, filterValue] = filter.split(":");
-        if (filterValue) {
-          filters.push({
-            title: filter,
-            id: filter,
-            value: filterValue,
-            type: "tag",
-          });
-        }
+        });
       }
     });
 
@@ -149,86 +153,149 @@ const FilterBar = ({
   };
 
   /**
-   * Callback for Options select, read tag values and set options for 2nd autocomplete
-   * @param {event} event Javascript onChange Event
-   * @param {object} opt  Selected option from autocomplete
+   *
+   * @param {any} opt -The value received from autocomplete-  Might be text or option value
+   *  will detect if its a free text and find the real option as it was selected from the selectbox
    */
-  const optionChanged = (event, opt) => {
-    if (!opt.length) {
-      updateFilters([]);
-      setResource(null);
-      return;
-    }
-    if (opt.length < filters.length) {
-      const filtersClone = filters.slice(0, opt.length);
-      updateFilters(filtersClone);
-      const hasResourceFilter = filtersClone.findIndex(
-        (f) => f.type === "resource"
-      );
-      if (hasResourceFilter === -1) {
-        setResource(null);
+  const getOptionValueFromList = (opt) => {
+    const lastOpt = opt[opt.length - 1];
+    const isFreeText = !(lastOpt && lastOpt.id);
+    let currentValue = opt[opt.length - 1];
+
+    if (isFreeText) {
+      const option = options.find((row) => {
+        return (
+          (row.type === "tag:option" && row.id === currentValue) ||
+          (row.type === "tag:value" && row.title === currentValue)
+        );
+      });
+      if (option) {
+        currentValue = option;
+        // if (option.type === "tag:option") {
+        //   isTagOption = true;
+        // }
       }
-      return;
     }
-    // verify option is in options list
-    if (!opt[opt.length - 1].id) {
-      return false;
-    }
-
-    const id = opt[opt.length - 1].id;
-    filters.push({ title: `${id}:`, id, type: "tag", value: null });
-
-    updateFilters(filters);
-    const tagValuesList = tags[id].map((opt) => {
-      return {
-        title: `${id}:${opt}`,
-        id: `${id}:${opt}`,
-        value: opt,
-        type: "tag",
-      };
-    });
-    setTagValues(tagValuesList);
-    inputRef.focus();
+    return currentValue;
   };
 
   /**
-   * Callback for Tag Values autocomplete, adds the filter to the filters list
-   * @param {event} event Javascript onChange Event
-   * @param {object} opt  Selected option from autocomplete
+   *
+   * @param {string} tagId the tag id from tags list
+   * @returns {array} list of all values for selected tag
    */
-  const onValueSelected = (event, opt) => {
-    const filtersClone = filters.slice(0, filters.length - 1);
-    const inFilters = filters.findIndex((row) => row.id === opt.id);
-    // prevent Duplicate
-    if (inFilters === -1) {
-      filtersClone.push({
-        title: opt.title,
-        id: opt.id,
-        value: opt.value,
-        type: "tag",
-      });
-    }
-    updateFilters(filtersClone);
-    setTagValues([]);
+  const getTagValueList = (tagId) => {
+    const tagValuesList = tags[tagId].map((opt) => {
+      return {
+        title: `${opt}`,
+        filterTitle: `${tagId}:${opt}`,
+        id: `${tagId}:${opt}`,
+        value: opt,
+        type: "tag:value",
+      };
+    });
+    return tagValuesList;
   };
 
   /**
    * Detect Autocomplete close reason, if its not because value selected, last selection will be removed
    * @param {event} event Javascript onChange Event
    * @param {string} opt  close type from autocomplete
+   * FTI: its seems like blur is sent before select-option, debounce values to handle
    */
   const onValueClosed = (event, opt) => {
-    if (opt !== "select-option") {
-      const filtersClone = filters.slice(0, filters.length - 1);
-      updateFilters(filtersClone);
-      setTagValues([]);
+    clearTimeout(debounceTimeout);
+    debounceTimeout = setTimeout(() => {
+      if (opt !== "select-option" && opt !== "create-option") {
+        //  remove incomplete tags
+        filters = filters.filter((row) => row.type !== "tag:incomplete");
+        updateFilters(filters);
+        setOptions(defaultOptions); // reset options after selection
+      }
+    }, 50);
+  };
+
+  /**
+   * Callback for Options select, read tag values and set options for 2nd autocomplete
+   * @param {event} event Javascript onChange Event
+   * @param {object} opt  Selected option from autocomplete
+   */
+  const optionChanged = (event, opt) => {
+    // clear-all applied
+    if (!opt.length) {
+      updateFilters([]);
+      setResource(null);
+      setOptions(defaultOptions); // reset options after selection
+      return;
     }
+    // handle option delete (keyboard backspace)
+    if (opt.length < filters.length) {
+      filters = filters.slice(0, opt.length);
+      updateFilters(filters);
+      const hasResourceFilter = filters.findIndex((f) => f.type === "resource");
+      if (hasResourceFilter === -1) {
+        setResource(null);
+      }
+      setOptions(defaultOptions); // reset options after selection
+      return;
+    }
+
+    const currentOption = getOptionValueFromList(opt);
+
+    // not valid option
+    if (!currentOption.id) {
+      return false;
+    }
+
+    const isTagValue = currentOption && currentOption.type === "tag:value";
+    const isTagOption = currentOption && currentOption.type === "tag:option";
+
+    if (isTagOption) {
+      // set new value lists
+      const tagValuesList = getTagValueList(currentOption.id);
+      setOptions(tagValuesList);
+      // add filter that will be deleted later
+      filters.push({
+        title: `${currentOption.id}:`,
+        id: currentOption.id,
+        type: "tag:incomplete",
+      });
+
+      updateFilters(filters);
+    }
+
+    if (isTagValue) {
+      filters.push({
+        title: currentOption.filterTitle,
+        id: currentOption.id,
+        type: "filter",
+      });
+
+      // verify unique ids & remove incomplete tags
+      filters = filters.filter((row, index) => {
+        const filterFirstIndex = filters.findIndex((f) => f.id === row.id);
+        return row.type !== "tag:incomplete" && filterFirstIndex === index;
+      });
+
+      updateFilters(filters);
+      setOptions(defaultOptions); // reset options after selection
+      return;
+    }
+
+    // trigger options open
+    inputRef.current.blur();
+    setTimeout(() => {
+      inputRef.current.focus();
+    });
+
+    return;
   };
 
   useEffect(() => {
     if (filters.length === 0) {
       loadSearchState();
     }
+    setOptions(defaultOptions); // reset options after selection
   }, [filters]);
 
   useEffect(() => {
@@ -245,61 +312,38 @@ const FilterBar = ({
           value={filters}
           openOnFocus={true}
           className={classes.Autocomplete}
-          id="fixed-tags-demo"
           onChange={optionChanged}
+          onClose={onValueClosed}
           freeSolo
           options={options}
           getOptionLabel={(option) => option.title}
           getOptionSelected={() => false}
           renderTags={(value) =>
             value.map((option) => (
-              <Chip
-                className={classes.chips}
-                ma={2}
-                label={option.title}
-                key={option.title}
-                onDelete={() => deleteFilter(option)}
-                deleteIcon={<CancelIcon />}
-              />
+              <Fragment key={option.title}>
+                {option.type === "tag:incomplete" && (
+                  <span key={option.title}>{option.title}</span>
+                )}
+                {option.type !== "tag:incomplete" && (
+                  <Chip
+                    className={classes.chips}
+                    ma={2}
+                    label={option.title}
+                    key={option.title}
+                    onDelete={() => deleteFilter(option)}
+                  />
+                )}
+              </Fragment>
             ))
           }
           renderInput={(params) => (
             <TextField
               {...params}
               className={classes.filterInput}
+              inputRef={inputRef}
               variant="outlined"
               label="Add Filter"
               placeholder="Add Filter"
-            />
-          )}
-        />
-        <Autocomplete
-          options={tagValues}
-          onChange={onValueSelected}
-          onClose={onValueClosed}
-          openOnFocus={true}
-          getOptionLabel={(option) => option.title}
-          getOptionSelected={() => false}
-          renderTags={(value) =>
-            value.map((option) => (
-              <Chip
-                className={classes.chips}
-                ma={2}
-                label={option.title}
-                key={option.title}
-              />
-            ))
-          }
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              inputRef={(input) => {
-                inputRef = input;
-              }}
-              className={classes.valueAutoComplete}
-              variant="outlined"
-              label=""
-              placeholder=""
             />
           )}
         />

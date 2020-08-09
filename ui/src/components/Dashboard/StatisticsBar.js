@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect } from "react";
+import React, { Fragment, useEffect, useState } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { ResourcesService } from "services/resources.service";
@@ -9,6 +9,7 @@ import {
   CardContent,
   Grid,
   Typography,
+  LinearProgress,
   Tooltip,
 } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
@@ -39,6 +40,9 @@ const useStyles = makeStyles(() => ({
   grid: {
     textAlign: "center",
   },
+  progress: {
+    margin: "30px",
+  },
 }));
 
 /**
@@ -58,6 +62,8 @@ const StatisticsBar = ({
   setResources,
 }) => {
   const classes = useStyles();
+
+  const [isLoading, setIsLoading] = useState(true);
 
   let HighestResourceName = "";
   let HighestResourceValue = 0;
@@ -83,9 +89,13 @@ const StatisticsBar = ({
    */
   const getData = () => {
     clearTimeout(fetchTimeout);
+    if (!isScanning) {
+      setIsLoading(true);
+    }
     ResourcesService.Summary(currentExecution, filters)
       .then((responseData) => {
         setResources(responseData);
+        setIsLoading(false);
         if (isScanning) {
           fetchTimeout = setTimeout(getData, 5000);
         }
@@ -119,9 +129,14 @@ const StatisticsBar = ({
               <Grid item sm={4} xs={12} className={classes.grid}>
                 <Tooltip title="Monthly Unused resources are effected from filters ">
                   <div>
-                    <Typography className={classes.unused}>
-                      {MoneyDirective(TotalSpent)}
-                    </Typography>
+                    {isLoading && (
+                      <LinearProgress className={classes.progress} />
+                    )}
+                    {!isLoading && (
+                      <Typography className={classes.unused}>
+                        {MoneyDirective(TotalSpent)}
+                      </Typography>
+                    )}
                     <Typography>Monthly unused resources</Typography>
                   </div>
                 </Tooltip>
@@ -129,17 +144,25 @@ const StatisticsBar = ({
               <Grid item sm={4} xs={12} className={classes.middleGrid}>
                 <Tooltip title="Daily waste is the amount you pay daily for unused resources and can be saved">
                   <div>
-                    <Typography className={classes.unused_daily}>
-                      {MoneyDirective(DailySpent)}
-                    </Typography>
+                    {isLoading && (
+                      <LinearProgress className={classes.progress} />
+                    )}
+                    {!isLoading && (
+                      <Typography className={classes.unused_daily}>
+                        {MoneyDirective(DailySpent)}
+                      </Typography>
+                    )}
                     <Typography>Daily waste</Typography>
                   </div>
                 </Tooltip>
               </Grid>
               <Grid item sm={4} xs={12} className={classes.grid}>
-                <Typography className={classes.unused_resource}>
-                  {titleDirective(HighestResourceName).toUpperCase()}
-                </Typography>
+                {isLoading && <LinearProgress className={classes.progress} />}
+                {!isLoading && (
+                  <Typography className={classes.unused_resource}>
+                    {titleDirective(HighestResourceName).toUpperCase()}
+                  </Typography>
+                )}
                 <Typography>Most unused resource</Typography>
               </Grid>
             </Grid>

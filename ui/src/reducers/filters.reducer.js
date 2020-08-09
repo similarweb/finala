@@ -24,6 +24,11 @@ export function filters(state = initialState, action) {
     if (inFilters === -1) {
       state.filters.push(action.data);
     }
+
+    state.filters = state.filters.filter(
+      (row) => row.type !== "tag:incomplete"
+    );
+
     return state.filters;
   };
 

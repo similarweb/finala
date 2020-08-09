@@ -3,6 +3,33 @@ import { history } from "configureStore";
 const windowParams = new window.URLSearchParams(window.location.search);
 let savedFilters = windowParams.get("filters");
 let savedExecutionId = windowParams.get("executionId");
+
+/**
+ *
+ * @param {array} filters filters list
+ * @returns filters params for request
+ */
+export const transformFilters = (filters) => {
+  // return filters;
+  const params = {};
+  const list = [];
+
+  filters.forEach((filter) => {
+    const [key, value] = filter.id.split(":");
+    if (value) {
+      if (!params[key]) {
+        params[key] = [];
+      }
+      params[key].push(value);
+    }
+  });
+  for (const key in params) {
+    const paramsAsString = params[key].join(",");
+    list.push(`${key}:${paramsAsString}`);
+  }
+  return list.join(";");
+};
+
 /**
  *
  * @param {filters, executionId} historyParams , filters: list of active filters, executionId: current selected execution (might be false for clearing property)
@@ -10,7 +37,7 @@ let savedExecutionId = windowParams.get("executionId");
  */
 export const setHistory = (historyParams = {}) => {
   savedFilters = historyParams.hasOwnProperty("filters")
-    ? historyParams.filters
+    ? transformFilters(historyParams.filters)
     : savedFilters;
 
   savedExecutionId = historyParams.hasOwnProperty("executionId")

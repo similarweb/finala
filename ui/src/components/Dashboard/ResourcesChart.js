@@ -101,7 +101,7 @@ const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
     addFilter(filter);
 
     setHistory({
-      filters: filters.map((f) => f.id),
+      filters: filters,
     });
   };
 
@@ -121,19 +121,21 @@ const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
 
   return (
     <Fragment>
-      <Box mb={3}>
-        <Card>
-          <CardContent>
-            <Chart
-              id="MainChart"
-              height={getChartHeight()}
-              options={chartOptions.options}
-              series={chartOptions.series}
-              type="bar"
-            />
-          </CardContent>
-        </Card>
-      </Box>
+      {sortedResources.length > 0 && (
+        <Box mb={3}>
+          <Card>
+            <CardContent>
+              <Chart
+                id="MainChart"
+                height={getChartHeight()}
+                options={chartOptions.options}
+                series={chartOptions.series}
+                type="bar"
+              />
+            </CardContent>
+          </Card>
+        </Box>
+      )}
     </Fragment>
   );
 };

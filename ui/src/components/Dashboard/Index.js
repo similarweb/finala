@@ -51,7 +51,7 @@ const DashboardIndex = ({
     );
     setResource(null);
     setFilters(updatedFilters);
-    setHistory({ filters: updatedFilters.map((f) => f.id) });
+    setHistory({ filters: updatedFilters });
   };
 
   return (

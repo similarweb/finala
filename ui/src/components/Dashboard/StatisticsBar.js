@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState } from "react";
+import React, { Fragment, useEffect, useState, useRef } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { ResourcesService } from "services/resources.service";
@@ -20,17 +20,20 @@ const useStyles = makeStyles(() => ({
     fontSize: "42px",
     color: "orangered",
     fontFamily: "MuseoModerno",
+    minHeight: "63px",
   },
   unused_daily: {
     fontSize: "42px",
     color: "purple",
     fontFamily: "MuseoModerno",
+    minHeight: "63px",
   },
   unused_resource: {
     fontSize: "42px",
     color: "darkgreen",
     fontFamily: "Nunito",
     fontWeight: "400",
+    minHeight: "63px",
   },
   middleGrid: {
     textAlign: "center",
@@ -51,6 +54,7 @@ const useStyles = makeStyles(() => ({
  * @param  {bool} isScanning indicate if the system is in scan mode
  * @param  {func} currentResource  Current Selected Resource
  * @param  {string} currentExecution Current Selected Execution
+ * @param  {func} setIsLoadingResources Update loading status of resources
  * @param  {func} setResources Update Resources List}
  */
 const StatisticsBar = ({
@@ -59,11 +63,14 @@ const StatisticsBar = ({
   isScanning,
   currentExecution,
   currentResource,
+  setIsLoadingResources,
   setResources,
 }) => {
   const classes = useStyles();
 
   const [isLoading, setIsLoading] = useState(true);
+
+  const isScanningRef = useRef(isScanning);
 
   let HighestResourceName = "";
   let HighestResourceValue = 0;
@@ -89,14 +96,15 @@ const StatisticsBar = ({
    */
   const getData = () => {
     clearTimeout(fetchTimeout);
-    if (!isScanning) {
-      setIsLoading(true);
-    }
+    setIsLoading(true);
+    setIsLoadingResources(true);
+
     ResourcesService.Summary(currentExecution, filters)
       .then((responseData) => {
         setResources(responseData);
         setIsLoading(false);
-        if (isScanning) {
+        setIsLoadingResources(false);
+        if (isScanningRef.current) {
           fetchTimeout = setTimeout(getData, 5000);
         }
       })
@@ -112,6 +120,8 @@ const StatisticsBar = ({
     if (!currentExecution) {
       return;
     }
+
+    isScanningRef.current = isScanning;
     getData();
 
     // returned function will be called on component unmount
@@ -181,6 +191,7 @@ StatisticsBar.propTypes = {
   resources: PropTypes.object,
   filters: PropTypes.array,
   setResources: PropTypes.func,
+  setIsLoadingResources: PropTypes.func,
 };
 
 const mapStateToProps = (state) => ({
@@ -192,6 +203,8 @@ const mapStateToProps = (state) => ({
 });
 const mapDispatchToProps = (dispatch) => ({
   setResources: (data) => dispatch({ type: "RESOURCE_LIST", data }),
+  setIsLoadingResources: (data) =>
+    dispatch({ type: "SET_IS_LOADING_RESOURCES", data }),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(StatisticsBar);

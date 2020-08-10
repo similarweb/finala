@@ -56,6 +56,7 @@ const FilterBar = ({
   const [options, setOptions] = useState([]);
   const [defaultOptions, setDefaultOptions] = useState([]);
   const inputRef = useRef(null);
+  const isScanningRef = useRef(isScanning);
 
   /**
    * Fetching server tagslist for autocomplete
@@ -75,7 +76,7 @@ const FilterBar = ({
         setOptions(tagOptions);
         setDefaultOptions(tagOptions);
 
-        if (isScanning) {
+        if (isScanningRef.current) {
           fetchTagsTimeout = setTimeout(fetchTags, 5000);
         }
       })
@@ -299,9 +300,11 @@ const FilterBar = ({
   }, [filters]);
 
   useEffect(() => {
-    if (currentExecution) {
-      fetchTags();
+    isScanningRef.current = isScanning;
+    if (!currentExecution) {
+      return;
     }
+    fetchTags();
   }, [currentExecution, isScanning]);
 
   return (

@@ -8,7 +8,12 @@ import TagsDialog from "../Dialog/Tags";
 import { ResourcesService } from "services/resources.service";
 import ReportProblemIcon from "@material-ui/icons/ReportProblem";
 
-import { makeStyles, Card, CardContent } from "@material-ui/core";
+import {
+  makeStyles,
+  Card,
+  CardContent,
+  LinearProgress,
+} from "@material-ui/core";
 
 import Moment from "moment";
 
@@ -23,9 +28,18 @@ const useStyles = makeStyles(() => ({
     padding: "30px",
     textAlign: "center",
   },
+  noDataTitle: {
+    textAlign: "center",
+    fontWeight: "bold",
+    margin: "5px",
+    fontSize: "14px",
+  },
   AlertIcon: {
     fontSize: "56px",
     color: "red",
+  },
+  progress: {
+    margin: "30px",
   },
 }));
 
@@ -45,6 +59,7 @@ const ResourceTable = ({
   const [rows, setRows] = useState([]);
   const [errorMessage, setErrorMessage] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const classes = useStyles();
 
@@ -113,8 +128,10 @@ const ResourceTable = ({
     if (!currentResource) {
       return currentResource;
     }
+    setIsLoading(true);
     ResourcesService.GetContent(currentResource, currentExecution, filters)
       .then((responseData) => {
+        setIsLoading(false);
         if (!responseData) {
           setHeaders([]);
           setRows([]);
@@ -134,6 +151,7 @@ const ResourceTable = ({
         }
       })
       .catch(() => {
+        setIsLoading(false);
         fetchTimeout = setTimeout(getData, 5000);
       });
   };
@@ -147,6 +165,7 @@ const ResourceTable = ({
 
     // resource not exists in selected execution
     if (!resourceInfo) {
+      setHasError(false);
       setRows([]);
     }
 
@@ -172,6 +191,7 @@ const ResourceTable = ({
       shouldRefreshData = true;
     }
     if (shouldRefreshData) {
+      setHasError(false);
       getData();
     }
 
@@ -183,23 +203,47 @@ const ResourceTable = ({
 
   return (
     <Fragment>
-      {hasError && (
+      {!hasError && isLoading && (
         <Card className={classes.Card}>
           <CardContent className={classes.CardContent}>
-            <ReportProblemIcon className={classes.AlertIcon} />
-            <h3>
-              {
-                " Finala couldn't scan the selected resource, please check system logs "
-              }
-            </h3>
+            <div className={classes.noDataTitle}>
+              <LinearProgress className={classes.progress} />
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {!isLoading && (hasError || !rows.length) && (
+        <Card className={classes.Card}>
+          <CardContent className={classes.CardContent}>
+            {(hasError || !rows.length) && !isLoading && (
+              <ReportProblemIcon className={classes.AlertIcon} />
+            )}
+
+            {hasError && (
+              <h3>
+                {
+                  " Finala couldn't scan the selected resource, please check system logs "
+                }
+              </h3>
+            )}
+
+            {!hasError && !rows.length && (
+              <div className={classes.noDataTitle}>
+                <h3>No data found.</h3>
+              </div>
+            )}
+
             {errorMessage && <h4>{errorMessage}</h4>}
           </CardContent>
         </Card>
       )}
 
-      <div id="resourcewrap">
-        <MUIDataTable data={rows} columns={headers} options={tableOptions} />
-      </div>
+      {!hasError && rows.length > 0 && !isLoading && (
+        <div id="resourcewrap">
+          <MUIDataTable data={rows} columns={headers} options={tableOptions} />
+        </div>
+      )}
     </Fragment>
   );
 };

@@ -6,15 +6,46 @@ import Chart from "react-apexcharts";
 import { titleDirective, MoneyDirective } from "../../directives";
 import { setHistory } from "../../utils/History";
 
-import { Box, Card, CardContent } from "@material-ui/core";
+import {
+  Box,
+  Card,
+  CardContent,
+  LinearProgress,
+  makeStyles,
+} from "@material-ui/core";
+import ReportProblemIcon from "@material-ui/icons/ReportProblem";
+
+const useStyles = makeStyles(() => ({
+  noDataTitle: {
+    textAlign: "center",
+    fontWeight: "bold",
+    margin: "5px",
+    fontSize: "14px",
+  },
+  AlertIcon: {
+    fontSize: "56px",
+    color: "red",
+  },
+  progress: {
+    margin: "30px",
+  },
+}));
 
 /**
  * @param  {array} {resources  Resources List
  * @param  {array} filters  Filters List
+ * @param  {bool} isLoadingResources  isLoading state for resources
  * @param  {func} addFilter Add filter to  filters list
  * @param  {func} setResource Update Selected Resource}
  */
-const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
+const ResourcesChart = ({
+  resources,
+  filters,
+  isLoadingResources,
+  addFilter,
+  setResource,
+}) => {
+  const classes = useStyles();
   const colorList = colors.map((color) => color.hex);
   const sortedResources = Object.values(resources)
     .filter((row) => row.TotalSpent > 0)
@@ -121,10 +152,10 @@ const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
 
   return (
     <Fragment>
-      {sortedResources.length > 0 && (
-        <Box mb={3}>
-          <Card>
-            <CardContent>
+      <Box mb={3}>
+        <Card>
+          <CardContent>
+            {!isLoadingResources && sortedResources.length > 0 && (
               <Chart
                 id="MainChart"
                 height={getChartHeight()}
@@ -132,10 +163,19 @@ const ResourcesChart = ({ resources, filters, addFilter, setResource }) => {
                 series={chartOptions.series}
                 type="bar"
               />
-            </CardContent>
-          </Card>
-        </Box>
-      )}
+            )}
+            {isLoadingResources && (
+              <LinearProgress className={classes.progress} />
+            )}
+            {!isLoadingResources && !sortedResources.length && (
+              <div className={classes.noDataTitle}>
+                <ReportProblemIcon className={classes.AlertIcon} />
+                <h3>No data found.</h3>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </Box>
     </Fragment>
   );
 };
@@ -144,12 +184,14 @@ ResourcesChart.defaultProps = {};
 ResourcesChart.propTypes = {
   resources: PropTypes.object,
   filters: PropTypes.array,
+  isLoadingResources: PropTypes.bool,
   addFilter: PropTypes.func,
   setResource: PropTypes.func,
 };
 
 const mapStateToProps = (state) => ({
   resources: state.resources.resources,
+  isLoadingResources: state.resources.isLoadingResources,
   filters: state.filters.filters,
 });
 

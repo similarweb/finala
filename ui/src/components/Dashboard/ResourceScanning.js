@@ -21,24 +21,32 @@ const useStyles = makeStyles(() => ({
 /**
  * will show a scanning message if some of the resources are still in progress
  * @param  {array} {resources  Resources List
+ * @param  {bool} isScanning indicate if the system is in scan mode
  * @param  {string} currentExecution Current Selected Execution
  * @param  {func} setScanning  Update scanning status}
  */
-const ResourceScanning = ({ resources, currentExecution, setScanning }) => {
+const ResourceScanning = ({
+  resources,
+  currentExecution,
+  isScanning,
+  setScanning,
+}) => {
   const classes = useStyles();
   const resource = Object.values(resources).find((row) => row.Status === 0);
 
-  let isScanning = false;
+  let localIsScanning = false;
   let title = "";
 
   if (resource) {
-    isScanning = true;
+    localIsScanning = true;
     title = titleDirective(resource.ResourceName);
   } else {
-    isScanning = false;
+    localIsScanning = false;
   }
 
-  setScanning(isScanning);
+  if (localIsScanning !== isScanning) {
+    setScanning(localIsScanning);
+  }
 
   useEffect(() => {
     if (!currentExecution) {
@@ -63,11 +71,13 @@ ResourceScanning.propTypes = {
   resources: PropTypes.object,
   currentExecution: PropTypes.string,
   setScanning: PropTypes.func,
+  isScanning: PropTypes.bool,
 };
 
 const mapStateToProps = (state) => ({
   resources: state.resources.resources,
   currentExecution: state.executions.current,
+  isScanning: state.executions.isScanning,
 });
 
 const mapDispatchToProps = (dispatch) => ({

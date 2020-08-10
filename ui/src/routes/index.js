@@ -81,7 +81,7 @@ const RouterIndex = ({ currentExecution, executions, setExecutions }) => {
     if (currentExecution) {
       setIsLoading(false);
     }
-  }, [currentExecution, executions]);
+  }, [currentExecution]);
 
   return (
     <div className={classes.root}>

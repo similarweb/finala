@@ -30,11 +30,12 @@ Resource            | Potential Cost Optimization| Unused Resource         |
 API Gateway         | :heavy_minus_sign:         | :ballot_box_with_check:
 DocumentDB          | :ballot_box_with_check:    | :heavy_minus_sign:
 DynamoDB            | :ballot_box_with_check:    | :heavy_minus_sign:
-EC2 Instances       | :ballot_box_with_check:    | :heavy_minus_sign:
-EC2 ELB             | :ballot_box_with_check:    | :heavy_minus_sign:
 EC2 ALB,NLB         | :ballot_box_with_check:    | :heavy_minus_sign:
-EC2 Volumes         | :ballot_box_with_check:    | :heavy_minus_sign:
 EC2 Elastic IPs     | :ballot_box_with_check:    | :heavy_minus_sign:
+EC2 ELB             | :ballot_box_with_check:    | :heavy_minus_sign:
+EC2 NAT Gateways    | :ballot_box_with_check:    | :heavy_minus_sign:
+EC2 Instances       | :ballot_box_with_check:    | :heavy_minus_sign:
+EC2 Volumes         | :ballot_box_with_check:    | :heavy_minus_sign:
 ElasticCache        | :ballot_box_with_check:    | :heavy_minus_sign:
 ElasticSearch       | :ballot_box_with_check:    | :heavy_minus_sign:
 IAM User            | :heavy_minus_sign:         | :ballot_box_with_check:

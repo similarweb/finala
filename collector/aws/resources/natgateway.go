@@ -87,23 +87,15 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 		return DetectedNATGateways, err
 	}
 
-	pricingUsageTypeFilter := []*pricing.Filter{
-		{
-			Type:  awsClient.String("TERM_MATCH"),
-			Field: awsClient.String("usagetype"),
-			Value: awsClient.String(fmt.Sprintf("%sNatGateway-Hours", pricingRegionPrefix)),
-		},
-	}
-
-	pricingFilters := ngw.getPricingFilterInput(pricingUsageTypeFilter)
+	pricingFilters := ngw.getPricingFilterInput(pricingRegionPrefix)
 	// Get NAT gateway pricing
 	price, err := ngw.awsManager.GetPricingClient().GetPrice(pricingFilters, "", ngw.awsManager.GetRegion())
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
-			"region": ngw.awsManager.GetRegion(),
+			"region":        ngw.awsManager.GetRegion(),
+			"price_filters": pricingFilters,
 		}).Error("could not get NAT gateway price")
 		ngw.awsManager.GetCollector().CollectError(ngw.Name, err)
-
 		return DetectedNATGateways, err
 	}
 
@@ -204,37 +196,36 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 }
 
 // getPricingFilterInput prepares the right filter for NAT gateway
-func (ngw *NatGatewayManager) getPricingFilterInput(extraFilters []*pricing.Filter) pricing.GetProductsInput {
-	filters := []*pricing.Filter{
-		{
-			Type:  awsClient.String("TERM_MATCH"),
-			Field: awsClient.String("group"),
-			Value: awsClient.String("NGW:NatGateway"),
-		},
-		{
-			Type:  awsClient.String("TERM_MATCH"),
-			Field: awsClient.String("productFamily"),
-			Value: awsClient.String("NAT Gateway"),
-		},
-		{
-			Type:  awsClient.String("TERM_MATCH"),
-			Field: awsClient.String("operation"),
-			Value: awsClient.String("NatGateway"),
-		},
-		{
-			Type:  awsClient.String("TERM_MATCH"),
-			Field: awsClient.String("termType"),
-			Value: awsClient.String("OnDemand"),
-		},
-	}
-
-	if extraFilters != nil {
-		filters = append(filters, extraFilters...)
-	}
-
+func (ngw *NatGatewayManager) getPricingFilterInput(pricingRegionPrefix string) pricing.GetProductsInput {
 	return pricing.GetProductsInput{
 		ServiceCode: &ngw.servicePricingCode,
-		Filters:     filters,
+		Filters: []*pricing.Filter{
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("group"),
+				Value: awsClient.String("NGW:NatGateway"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("productFamily"),
+				Value: awsClient.String("NAT Gateway"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("operation"),
+				Value: awsClient.String("NatGateway"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("termType"),
+				Value: awsClient.String("OnDemand"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("usagetype"),
+				Value: awsClient.String(fmt.Sprintf("%sNatGateway-Hours", pricingRegionPrefix)),
+			},
+		},
 	}
 }
 

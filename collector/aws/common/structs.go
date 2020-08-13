@@ -6,6 +6,7 @@ import (
 	"finala/collector/aws/pricing"
 	"finala/collector/config"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
 )
@@ -25,7 +26,7 @@ type AWSManager interface {
 	GetCloudWatchClient() *cloudwatch.CloudwatchManager
 	GetPricingClient() *pricing.PricingManager
 	GetRegion() string
-	GetSession() *session.Session
+	GetSession() (*session.Session, *aws.Config)
 	GetAccountIdentity() *sts.GetCallerIdentityOutput
 	SetGlobal(resourceName collector.ResourceIdentifier)
 	IsGlobalSet(resourceName collector.ResourceIdentifier) bool

@@ -3,12 +3,13 @@ package aws
 import (
 	awsClient "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	log "github.com/sirupsen/logrus"
 )
 
-// CreateNewSession return new AWS session
-func CreateNewSession(accessKey, secretKey, sessionToken, region string) *session.Session {
+// CreateAuthConfiguration return aws auth configuration
+func CreateAuthConfiguration(accessKey, secretKey, sessionToken, role, region string) (*session.Session, *awsClient.Config) {
 	var credentialsAWS *credentials.Credentials
 
 	// Use separate call for AWS credentials defined in config.yaml
@@ -23,6 +24,10 @@ func CreateNewSession(accessKey, secretKey, sessionToken, region string) *sessio
 		Credentials: credentialsAWS,
 	}))
 
-	return sess
-
+	conf := awsClient.Config{}
+	if role != "" {
+		log.WithField("role", role).Info("assume role provided")
+		conf.Credentials = stscreds.NewCredentials(sess, role, func(p *stscreds.AssumeRoleProvider) {})
+	}
+	return sess, &conf
 }

@@ -6,6 +6,7 @@ import (
 	"finala/collector/aws/pricing"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
 )
@@ -57,8 +58,8 @@ func (dm *MockAWSManager) GetRegion() string {
 	return dm.region
 }
 
-func (dm *MockAWSManager) GetSession() *session.Session {
-	return dm.session
+func (dm *MockAWSManager) GetSession() (*session.Session, *aws.Config) {
+	return dm.session, &aws.Config{}
 }
 
 func (dm *MockAWSManager) GetAccountIdentity() *sts.GetCallerIdentityOutput {

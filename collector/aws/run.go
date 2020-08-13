@@ -38,8 +38,8 @@ func (app *Analyze) All() {
 
 	for _, account := range app.awsAccounts {
 
-		globalsession := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, "")
-		stsManager := NewSTSManager(sts.New(globalsession))
+		globalsession, globalConfig := CreateAuthConfiguration(account.AccessKey, account.SecretKey, account.SessionToken, account.Role, "")
+		stsManager := NewSTSManager(sts.New(globalsession, globalConfig))
 
 		for _, region := range account.Regions {
 			resourcesDetection := NewDetectorManager(app.cl, account, stsManager, app.global, region)

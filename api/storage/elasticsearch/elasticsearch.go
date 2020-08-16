@@ -160,11 +160,17 @@ func (sm *StorageManager) GetSummary(executionID string, filters map[string]stri
 		"event_type":   eventTypeQuery,
 	}).Debug("Going to get get summary with the following fields")
 
-	searchResult, err := sm.client.Search().
-		Query(elastic.NewBoolQuery().Must(eventTypeQuery, executionIDQuery)).
-		Pretty(true).
-		Size(100).
-		Do(context.Background())
+	searchQuery := sm.client.Search().
+		Query(elastic.NewBoolQuery().Must(eventTypeQuery, executionIDQuery))
+
+	searchResultTotalHits, err := searchQuery.Size(0).Do(context.Background())
+
+	if err != nil {
+		log.WithError(err).Error("error when trying get total hits summary")
+		return summary, err
+	}
+
+	searchResult, err := searchQuery.Size(int(searchResultTotalHits.TotalHits())).Do(context.Background())
 
 	if err != nil {
 		log.WithError(err).Error("error when trying to get summary data")

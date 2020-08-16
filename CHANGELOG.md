@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## v0.4.0 (Unreleased)
 - Revamp Finala User Interface
 
+## v0.3.5 (August 13,2020)
+### Added
+- Add NAT Gateways detection [[PR-128](https://github.com/similarweb/finala/pull/128)]
+- Support Assume Role [[PR-130](https://github.com/similarweb/finala/pull/130)]
+
 ## v0.3.4 (July 29,2020)
 ### Added
 - Add the option to filter resources by tags in the API [[PR-73](https://github.com/similarweb/finala/pull/73)]

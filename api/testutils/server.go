@@ -1,10 +1,11 @@
 package testutils
 
 import (
-	"log"
 	"net"
 	"net/http"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
 )

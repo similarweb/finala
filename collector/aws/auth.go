@@ -17,7 +17,6 @@ type AuthDescriptor interface {
 
 // Auth will hold the aws auth struct
 type Auth struct {
-	region  string
 	account config.AWSAccount
 }
 

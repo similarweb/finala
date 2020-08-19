@@ -5,8 +5,21 @@ import (
 	collectorTestutils "finala/collector/testutils"
 	"testing"
 
+	awsClient "github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
 )
+
+type mockAuth struct {
+}
+
+func (ma *mockAuth) Login(region string) (*session.Session, *awsClient.Config) {
+
+	config := &awsClient.Config{Region: &region}
+
+	sess := session.Must(session.NewSession(config))
+	return sess, config
+}
 
 type MockSTS struct{}
 
@@ -38,10 +51,11 @@ func TestDetector(t *testing.T) {
 		SessionToken: "session",
 		Regions:      []string{"bar"},
 	}
+	mockAuth := &mockAuth{}
 	mockSTS := NewMockSTS()
 	collector := collectorTestutils.NewMockCollector()
 	global := make(map[string]struct{})
-	detector := NewDetectorManager(collector, account, mockSTS, global, region)
+	detector := NewDetectorManager(mockAuth, collector, account, mockSTS, global, region)
 
 	if detector.GetRegion() != region {
 		t.Fatalf("unexpected collector region, got %s expected %s", detector.GetRegion(), region)

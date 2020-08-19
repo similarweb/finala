@@ -39,7 +39,7 @@ var apiServer = &cobra.Command{
 		storage, err := elasticsearch.NewStorageManager(configStruct.Storage.ElasticSearch)
 
 		if err != nil {
-			log.WithError(err).Error("could not connect to elasticsearch")
+			os.Exit(1)
 		}
 
 		apiManager := api.NewServer(port, storage, versionManager)

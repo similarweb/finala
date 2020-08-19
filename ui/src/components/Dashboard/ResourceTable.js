@@ -123,39 +123,43 @@ const ResourceTable = ({
   /**
    * fetch data for global selected resource
    */
-  const getData = () => {
+  const getData = async () => {
     clearTimeout(fetchTimeout);
     if (!currentResource) {
       return currentResource;
     }
-    setIsLoading(true);
-    ResourcesService.GetContent(currentResource, currentExecution, filters)
-      .then((responseData) => {
-        setIsLoading(false);
-        if (!responseData) {
-          setHeaders([]);
-          setRows([]);
-          return false;
-        }
-        const headers = getHeaderRow(responseData[0].Data);
-        const rows = responseData.map((row) => row.Data);
-        const resourceInfo = resources[currentResource];
+    const responseData = await ResourcesService.GetContent(
+      currentResource,
+      currentExecution,
+      filters
+    ).catch(() => false);
 
-        setHeaders(headers);
-        setRows(rows);
+    if (!responseData) {
+      setHeaders([]);
+      setRows([]);
+      setIsLoading(false);
+      fetchTimeout = setTimeout(getData, 5000);
+      return false;
+    }
 
-        if (resourceInfo && resourceInfo.Status === 0) {
-          fetchTimeout = setTimeout(getData, 5000);
-        } else {
-          clearTimeout(fetchTimeout);
-        }
-      })
-      .catch(() => {
-        setIsLoading(false);
-        fetchTimeout = setTimeout(getData, 5000);
-      });
+    const headers = getHeaderRow(responseData[0].Data);
+    const rows = responseData.map((row) => row.Data);
+    const resourceInfo = resources[currentResource];
+
+    setHeaders(headers);
+    setRows(rows);
+
+    if (resourceInfo && resourceInfo.Status === 0) {
+      fetchTimeout = setTimeout(getData, 5000);
+    } else {
+      clearTimeout(fetchTimeout);
+    }
+    setIsLoading(false);
   };
 
+  /**
+   * Detect if we should refetch data when currentResource, filters changes
+   */
   useEffect(() => {
     if (!currentExecution || !currentResource) {
       return;
@@ -166,7 +170,11 @@ const ResourceTable = ({
     // resource not exists in selected execution
     if (!resourceInfo) {
       setHasError(false);
+      setIsLoading(false);
       setRows([]);
+      setHeaders([]);
+      lastResource = false;
+      return;
     }
 
     // keep scanning
@@ -178,28 +186,65 @@ const ResourceTable = ({
     if (resourceInfo && resourceInfo.Status === 1) {
       setHasError(true);
       setErrorMessage(resourceInfo.ErrorMessage);
+      setIsLoading(false);
+      return;
     }
 
     // new resource selected
-    if (JSON.stringify(lastResource) !== JSON.stringify(resourceInfo)) {
+    if (
+      resourceInfo &&
+      JSON.stringify(lastResource) !== JSON.stringify(resourceInfo)
+    ) {
       lastResource = resourceInfo;
       shouldRefreshData = true;
     }
 
     // inital refresh
-    if (!rows) {
+    if (!rows.length) {
       shouldRefreshData = true;
     }
+
     if (shouldRefreshData) {
       setHasError(false);
-      getData();
+      setIsLoading(true);
+      (async () => await getData())();
+      // setIsLoading(false);
     }
 
     // unmount, clear timers
     return () => {
       clearTimeout(fetchTimeout);
+      lastResource = false;
     };
-  }, [resources, currentResource, filters, currentExecution]);
+  }, [currentResource, filters]);
+
+  /**
+   * resource list has been changed
+   * fetch data only if we never fetched data before
+   */
+  useEffect(() => {
+    if (!currentExecution || !currentResource) {
+      return;
+    }
+    const resourceInfo = resources[currentResource];
+    if (
+      (resourceInfo && resourceInfo.Status === 0) ||
+      (resourceInfo && !headers.length)
+    ) {
+      (async () => await getData())();
+    }
+  }, [resources]);
+
+  /**
+   * currentExecution has been changed, refresh the table
+   */
+  useEffect(() => {
+    if (!currentExecution || !currentResource) {
+      return;
+    }
+    setIsLoading(true);
+    (async () => await getData())();
+  }, [currentExecution]);
 
   return (
     <Fragment>
@@ -228,7 +273,7 @@ const ResourceTable = ({
               </h3>
             )}
 
-            {!hasError && !rows.length && (
+            {!isLoading && !hasError && !rows.length && !headers.length && (
               <div className={classes.noDataTitle}>
                 <h3>No data found.</h3>
               </div>

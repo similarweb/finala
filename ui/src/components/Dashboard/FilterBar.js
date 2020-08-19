@@ -61,28 +61,29 @@ const FilterBar = ({
   /**
    * Fetching server tagslist for autocomplete
    */
-  const fetchTags = () => {
+  const fetchTags = async () => {
     clearTimeout(fetchTagsTimeout);
-    TagsService.list(currentExecution)
-      .then((responseData) => {
-        const tagOptions = Object.keys(responseData).map((tagKey) => {
-          return {
-            title: tagKey.trim(),
-            id: tagKey.trim(),
-            type: "tag:option",
-          };
-        });
-        setTags(responseData);
-        setOptions(tagOptions);
-        setDefaultOptions(tagOptions);
+    const responseData = await TagsService.list(currentExecution).catch(
+      () => false
+    );
+    if (!responseData) {
+      fetchTagsTimeout = setTimeout(fetchTags, 5000);
+      return false;
+    }
 
-        if (isScanningRef.current) {
-          fetchTagsTimeout = setTimeout(fetchTags, 5000);
-        }
-      })
-      .catch(() => {
-        fetchTagsTimeout = setTimeout(fetchTags, 5000);
-      });
+    const tagOptions = Object.keys(responseData).map((tagKey) => ({
+      title: tagKey.trim(),
+      id: tagKey.trim(),
+      type: "tag:option",
+    }));
+
+    setTags(responseData);
+    setOptions(tagOptions);
+    setDefaultOptions(tagOptions);
+
+    if (isScanningRef.current) {
+      fetchTagsTimeout = setTimeout(fetchTags, 5000);
+    }
   };
   /**
    * Update filters list & history from auto complete
@@ -90,7 +91,6 @@ const FilterBar = ({
    */
   const updateFilters = (filters) => {
     setFilters(filters);
-
     setHistory({
       filters: filters,
     });
@@ -292,6 +292,9 @@ const FilterBar = ({
     return;
   };
 
+  /**
+   * filters changed
+   */
   useEffect(() => {
     if (filters.length === 0) {
       loadSearchState();
@@ -299,13 +302,35 @@ const FilterBar = ({
     setOptions(defaultOptions); // reset options after selection
   }, [filters]);
 
+  /**
+   * currentExecution changed
+   */
   useEffect(() => {
-    isScanningRef.current = isScanning;
     if (!currentExecution) {
       return;
     }
+    isScanningRef.current = isScanning;
     fetchTags();
-  }, [currentExecution, isScanning]);
+  }, [currentExecution]);
+
+  /**
+   * isScanning changed
+   */
+  useEffect(() => {
+    if (!currentExecution) {
+      return;
+    }
+    if (isScanning !== isScanningRef.current) {
+      isScanningRef.current = isScanning;
+      if (isScanning) {
+        fetchTagsTimeout = setTimeout(fetchTags, 5000);
+      }
+    }
+
+    return () => {
+      clearTimeout(fetchTagsTimeout);
+    };
+  }, [isScanning]);
 
   return (
     <Fragment>

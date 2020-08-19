@@ -2,6 +2,7 @@ const initialState = {
   list: [],
   current: "",
   isScanning: false,
+  isAppLoading: true,
 };
 
 /**
@@ -11,6 +12,9 @@ const initialState = {
  */
 export function executions(state = initialState, action) {
   switch (action.type) {
+    case "IS_APP_LOADING":
+      state.isAppLoading = action.isLoading;
+      return { ...state };
     case "IS_SCANNING":
       state.isScanning = action.isScanning;
       return { ...state };

@@ -31,8 +31,8 @@ const useStyles = makeStyles(() => ({
 
 /**
  * @param  {string} {currentResource  Current Selected Resource
- * @param  {func} setResource  Update Selected Resource
  * @param  {func} setFilters  Update Filters
+ * @param  {func} setResource  Update Selected Resource
  * @param  {array} filters   Filters List } */
 const DashboardIndex = ({
   currentResource,
@@ -58,13 +58,13 @@ const DashboardIndex = ({
     <Fragment>
       <Box mb={2}>
         <Grid container className={classes.root} spacing={0}>
-          <Grid item sm={9} xs={12} className={classes.logoGrid}>
+          <Grid item sm={8} xs={12} className={classes.logoGrid}>
             <a href="javascript:void(0)" onClick={gotoHome}>
               <Logo />
             </a>
             <ResourceScanning />
           </Grid>
-          <Grid item sm={3} xs={12} className={classes.selectorGrid}>
+          <Grid item sm={4} xs={12} className={classes.selectorGrid}>
             <ExecutionIndex />
           </Grid>
         </Grid>

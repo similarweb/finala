@@ -34,14 +34,14 @@ const useStyles = makeStyles(() => ({
 /**
  * @param  {array} {resources  Resources List
  * @param  {array} filters  Filters List
- * @param  {bool} isLoadingResources  isLoading state for resources
+ * @param  {bool} isResourceListLoading  isLoading state for resources
  * @param  {func} addFilter Add filter to  filters list
  * @param  {func} setResource Update Selected Resource}
  */
 const ResourcesChart = ({
   resources,
   filters,
-  isLoadingResources,
+  isResourceListLoading,
   addFilter,
   setResource,
 }) => {
@@ -155,7 +155,7 @@ const ResourcesChart = ({
       <Box mb={3}>
         <Card>
           <CardContent>
-            {!isLoadingResources && sortedResources.length > 0 && (
+            {!isResourceListLoading && sortedResources.length > 0 && (
               <Chart
                 id="MainChart"
                 height={getChartHeight()}
@@ -164,10 +164,10 @@ const ResourcesChart = ({
                 type="bar"
               />
             )}
-            {isLoadingResources && (
+            {isResourceListLoading && (
               <LinearProgress className={classes.progress} />
             )}
-            {!isLoadingResources && !sortedResources.length && (
+            {!isResourceListLoading && !sortedResources.length && (
               <div className={classes.noDataTitle}>
                 <ReportProblemIcon className={classes.AlertIcon} />
                 <h3>No data found.</h3>
@@ -184,14 +184,14 @@ ResourcesChart.defaultProps = {};
 ResourcesChart.propTypes = {
   resources: PropTypes.object,
   filters: PropTypes.array,
-  isLoadingResources: PropTypes.bool,
+  isResourceListLoading: PropTypes.bool,
   addFilter: PropTypes.func,
   setResource: PropTypes.func,
 };
 
 const mapStateToProps = (state) => ({
   resources: state.resources.resources,
-  isLoadingResources: state.resources.isLoadingResources,
+  isResourceListLoading: state.resources.isResourceListLoading,
   filters: state.filters.filters,
 });
 

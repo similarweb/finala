@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { connect } from "react-redux";
 import { Route, Switch } from "react-router";
 import PropTypes from "prop-types";
-import { ResourcesService } from "services/resources.service";
-import { SettingsService } from "services/settings.service";
 import Dashboard from "../components/Dashboard/Index";
 import PageLoader from "../components/PageLoader";
 import NotFound from "../components/NotFound";
 import NoData from "../components/NoData";
+import DataFactory from "../components/DataFactory";
 
 import { CssBaseline, makeStyles, Box } from "@material-ui/core";
 
@@ -27,70 +26,22 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
-let fetchTimeoutRequest = false;
-
 /**
- * @param  {string} {currentExecution Global Execution Id
- * @param  {func} setCurrentExecution Update Current Execution
+ * @param  {bool} isAppLoading App loading state
  * @param  {array} executions Executions list
- * @param  {func} setExecutions Update Executions list}
  */
-const RouterIndex = ({ currentExecution, executions, setExecutions }) => {
+const RouterIndex = ({ isAppLoading, executions }) => {
   const classes = useStyles();
-  const [isLoading, setIsLoading] = useState(true);
-
-  /**
-   * start fetching data from server
-   */
-  const init = () => {
-    return SettingsService.GetSettings().then(
-      () => {
-        return fetchExecutions();
-      },
-      () => {}
-    );
-  };
-
-  /**
-   * fetch executions from server
-   */
-
-  const fetchExecutions = () => {
-    clearTimeout(fetchTimeoutRequest);
-    ResourcesService.GetExecutions()
-      .then((responseData) => {
-        const executions = responseData;
-        setExecutions(executions);
-        setIsLoading(false);
-        if (!executions.length) {
-          fetchTimeoutRequest = setTimeout(fetchExecutions, 5000);
-        }
-      })
-      .catch(() => {
-        fetchTimeoutRequest = setTimeout(fetchExecutions, 5000);
-      });
-  };
-
-  /**
-   * update state on execution change
-   */
-  useEffect(() => {
-    if (!executions.length) {
-      init();
-    }
-    if (currentExecution) {
-      setIsLoading(false);
-    }
-  }, [currentExecution]);
 
   return (
     <div className={classes.root}>
       <CssBaseline />
+      <DataFactory />
       <main className={classes.content}>
         <Box component="div" m={3}>
-          {isLoading && <PageLoader />}
-          {!isLoading && !executions.length && <NoData />}
-          {!isLoading && executions.length > 0 && (
+          {isAppLoading && <PageLoader />}
+          {!isAppLoading && !executions.length && <NoData />}
+          {!isAppLoading && executions.length > 0 && (
             <Box component="div">
               <Switch>
                 <Route exact path="/" component={Dashboard} />
@@ -105,20 +56,17 @@ const RouterIndex = ({ currentExecution, executions, setExecutions }) => {
 };
 
 const mapStateToProps = (state) => ({
-  currentExecution: state.executions.current,
   executions: state.executions.list,
+  isAppLoading: state.executions.isAppLoading,
 });
 
-const mapDispatchToProps = (dispatch) => ({
-  setExecutions: (data) => dispatch({ type: "EXECUTION_LIST", data }),
-});
+const mapDispatchToProps = () => ({});
 
 RouterIndex.defaultProps = {};
 RouterIndex.propTypes = {
-  currentExecution: PropTypes.string,
+  isAppLoading: PropTypes.bool,
   executions: PropTypes.array,
   setCurrentExecution: PropTypes.func,
-  setExecutions: PropTypes.func,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(RouterIndex);

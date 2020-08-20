@@ -190,7 +190,11 @@ const ResourceTable = ({
           <MUIDataTable
             data={currentResourceData}
             columns={headers}
-            options={tableOptions}
+            options={Object.assign(tableOptions, {
+              downloadOptions: {
+                filename: `${currentResource}.csv`,
+              },
+            })}
           />
         </div>
       )}

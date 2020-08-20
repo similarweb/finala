@@ -15,6 +15,7 @@ type AWSAccount struct {
 	Name         string   `yaml:"name"`
 	AccessKey    string   `yaml:"access_key"`
 	SecretKey    string   `yaml:"secret_key"`
+	Role         string   `yaml:"role"`
 	SessionToken string   `yaml:"session_token"`
 	Regions      []string `yaml:"regions"`
 }
@@ -35,24 +36,17 @@ type MetricDataConfiguration struct {
 // MetricConfig describe metrics configuration
 type MetricConfig struct {
 	Description string                    `yaml:"description"`
+	Enable      bool                      `yaml:"enable"`
 	Data        []MetricDataConfiguration `yaml:"metrics"`
 	Period      time.Duration             `yaml:"period"`
 	StartTime   time.Duration             `yaml:"start_time"`
 	Constraint  MetricConstraintConfig    `yaml:"constraint"`
 }
 
-// ResourceConfig describe resource configuration
-type ResourceConfig struct {
-	Description string                 `yaml:"description"`
-	Global      bool                   `yaml:"global"`
-	Constraint  MetricConstraintConfig `yaml:"constraint"`
-}
-
 // ProviderConfig describe the available providers
 type ProviderConfig struct {
-	Accounts  []AWSAccount              `yaml:"accounts"`
-	Metrics   map[string][]MetricConfig `yaml:"metrics"`
-	Resources map[string]ResourceConfig `yaml:"resources"`
+	Accounts []AWSAccount              `yaml:"accounts"`
+	Metrics  map[string][]MetricConfig `yaml:"metrics"`
 }
 
 // APIServerConfig descrive the api configuration

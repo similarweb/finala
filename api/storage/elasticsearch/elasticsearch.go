@@ -3,9 +3,11 @@ package elasticsearch
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"finala/api/config"
 	"finala/api/storage"
 	"finala/interpolation"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -16,6 +18,10 @@ import (
 )
 
 const (
+
+	// prefixDayIndex defins the index name of the current day
+	prefixIndexName = "finala-%s"
+
 	// indexMapping define the default index mapping
 	indexMapping = `{
 		"mappings":{
@@ -28,6 +34,9 @@ const (
 				},
 				"EventType":{
 					"type":"keyword"
+				},
+				"Timestamp":{
+					"type":"date"
 				}
 			}
 		}
@@ -36,8 +45,8 @@ const (
 
 // StorageManager descrive elasticsearchStorage
 type StorageManager struct {
-	client       *elastic.Client
-	defaultIndex string
+	client          *elastic.Client
+	currentIndexDay string
 }
 
 // getESClient create new elasticsearch client
@@ -45,7 +54,7 @@ func getESClient(conf config.ElasticsearchConfig) (*elastic.Client, error) {
 
 	client, err := elastic.NewClient(elastic.SetURL(strings.Join(conf.Endpoints, ",")),
 		elastic.SetErrorLog(log.New()),
-		//elastic.SetTraceLog(log.New()), // Uncomment for debugging ElasticSearch Queries
+		// elastic.SetTraceLog(log.New()), // Uncomment for debugging ElasticSearch Queries
 		elastic.SetBasicAuth(conf.Username, conf.Password),
 		elastic.SetSniff(false),
 		elastic.SetHealthcheck(true))
@@ -82,10 +91,26 @@ func NewStorageManager(conf config.ElasticsearchConfig) (*StorageManager, error)
 	}
 
 	storageManager := &StorageManager{
-		client:       esclient,
-		defaultIndex: conf.Index,
+		client: esclient,
 	}
-	storageManager.createIndex(conf.Index)
+
+	if !storageManager.setCreateCurrentIndexDay() {
+		return nil, errors.New("could not create index")
+	}
+	go func() {
+		for {
+			now := time.Now().In(time.UTC)
+			diff := storageManager.getDurationUntilTomorrow(now)
+			log.WithFields(log.Fields{
+				"now":      now,
+				"duration": diff,
+			}).Info("change index in")
+			// wait until duration end
+			<-time.After(diff)
+			storageManager.setCreateCurrentIndexDay()
+		}
+	}()
+
 	return storageManager, nil
 }
 
@@ -93,13 +118,13 @@ func NewStorageManager(conf config.ElasticsearchConfig) (*StorageManager, error)
 func (sm *StorageManager) Save(data string) bool {
 
 	_, err := sm.client.Index().
-		Index(sm.defaultIndex).
+		Index(sm.currentIndexDay).
 		BodyJson(data).
 		Do(context.Background())
 
 	if err != nil {
 		log.WithFields(log.Fields{
-			"index": sm.defaultIndex,
+			"index": sm.currentIndexDay,
 			"data":  data,
 		}).WithError(err).Error("Fail to save document")
 		return false
@@ -110,10 +135,16 @@ func (sm *StorageManager) Save(data string) bool {
 }
 
 // getDynamicMatchQuery will iterate through a filters map and create Match Query for each of them
-func (sm *StorageManager) getDynamicMatchQuery(filters map[string]string) []elastic.Query {
+func (sm *StorageManager) getDynamicMatchQuery(filters map[string]string, operator string) []elastic.Query {
 	dynamicMatchQuery := []elastic.Query{}
+	var mq *elastic.MatchQuery
 	for name, value := range filters {
-		dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery(name, value))
+		mq = elastic.NewMatchQuery(name, value)
+		if operator == "and" {
+			mq = mq.Operator("and")
+		}
+
+		dynamicMatchQuery = append(dynamicMatchQuery, mq)
 	}
 	return dynamicMatchQuery
 }
@@ -129,11 +160,17 @@ func (sm *StorageManager) GetSummary(executionID string, filters map[string]stri
 		"event_type":   eventTypeQuery,
 	}).Debug("Going to get get summary with the following fields")
 
-	searchResult, err := sm.client.Search().
-		Query(elastic.NewBoolQuery().Must(eventTypeQuery, executionIDQuery)).
-		Pretty(true).
-		Size(100).
-		Do(context.Background())
+	searchQuery := sm.client.Search().
+		Query(elastic.NewBoolQuery().Must(eventTypeQuery, executionIDQuery))
+
+	searchResultTotalHits, err := searchQuery.Size(0).Do(context.Background())
+
+	if err != nil {
+		log.WithError(err).Error("error when trying get total hits summary")
+		return summary, err
+	}
+
+	searchResult, err := searchQuery.Size(int(searchResultTotalHits.TotalHits())).Do(context.Background())
 
 	if err != nil {
 		log.WithError(err).Error("error when trying to get summary data")
@@ -195,7 +232,7 @@ func (sm *StorageManager) getResourceSummaryDetails(executionID string, filters 
 	var totalSpent float64
 	var resourceCount int64
 
-	dynamicMatchQuery := sm.getDynamicMatchQuery(filters)
+	dynamicMatchQuery := sm.getDynamicMatchQuery(filters, "or")
 	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery("ExecutionID", executionID))
 	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery("EventType", "resource_detected"))
 
@@ -268,14 +305,14 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 
 		for _, executionIDValue := range executionsIDs.Buckets {
 			executionID := string(executionIDValue.Key)
-			data := strings.Split(executionID, "_")
 
-			// Remove the last element of Data which is the timestamp and leave all the others elements
-			// Which construct the executionName
-			executionName := strings.Join(data[:len(data)-1], "_")
+			executionName, err := interpolation.ExtractExecutionName(executionID)
+			if err != nil {
+				log.WithError(err).WithField("execution_name", executionName).Error("could not extract execution name")
+				continue
+			}
 
-			// Always take the last element which is the timestamp of the collector's run
-			collectorExecutionTime, err := strconv.ParseInt(data[len(data)-1], 10, 64)
+			collectorExecutionTime, err := interpolation.ExtractTimestamp(executionID)
 			if err != nil {
 				log.WithError(err).WithField("collector_execution_time", collectorExecutionTime).Error("could not parse to int64")
 				continue
@@ -295,16 +332,27 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 func (sm *StorageManager) GetResources(resourceType string, executionID string, filters map[string]string) ([]map[string]interface{}, error) {
 
 	var resources []map[string]interface{}
-	dynamicMatchQuery := sm.getDynamicMatchQuery(filters)
+	dynamicMatchQuery := sm.getDynamicMatchQuery(filters, "or")
 	componentQ := elastic.NewMatchQuery("EventType", "resource_detected")
 	deploymentQ := elastic.NewMatchQuery("ExecutionID", executionID)
 	ResourceNameQ := elastic.NewMatchQuery("ResourceName", resourceType)
 	generalQ := elastic.NewBoolQuery()
 	generalQ = generalQ.Must(componentQ).Must(deploymentQ).Must(ResourceNameQ).Must(dynamicMatchQuery...)
+	searchResultTotalHits, err := sm.client.Search().
+		Query(generalQ).
+		Pretty(true).
+		Size(0).
+		Do(context.Background())
+
+	if err != nil {
+		log.WithError(err).Error("elasticsearch query error")
+		return resources, err
+	}
+
 	searchResult, err := sm.client.Search().
 		Query(generalQ).
 		Pretty(true).
-		Size(100).
+		Size(int(searchResultTotalHits.TotalHits())).
 		Do(context.Background())
 
 	if err != nil {
@@ -322,6 +370,78 @@ func (sm *StorageManager) GetResources(resourceType string, executionID string, 
 		}
 
 		resources = append(resources, rowData)
+	}
+
+	return resources, nil
+}
+
+// GetResourceTrends return resource data
+func (sm *StorageManager) GetResourceTrends(resourceType string, filters map[string]string, limit int) ([]storage.ExecutionCost, error) {
+	// Per resource trends, filters should take care of granularity (per resource: Data.ResourceID, Data.Region, Data.Metric -> Data.PricePerMonth)
+	var resources []storage.ExecutionCost
+	var mustNotQuery []elastic.Query
+
+	// Must
+	mustQuery := sm.getDynamicMatchQuery(filters, "and")
+	mustQuery = append(mustQuery, elastic.NewMatchQuery("ResourceName", resourceType).Operator("and"))
+
+	// Unsupported Types - MustNot
+	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("EventType", "service_status").Operator("and"))
+	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_iam_users").Operator("and"))
+	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_elastic_ip").Operator("and"))
+	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_lambda").Operator("and"))
+	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_ec2_volume").Operator("and"))
+
+	queryBuilder := elastic.NewBoolQuery().MustNot(mustNotQuery...).Must(mustQuery...)
+	searchResult, err := sm.client.Search().
+		Query(queryBuilder).
+		Pretty(true).
+		Size(0).
+		Do(context.Background())
+
+	if err != nil {
+		log.WithError(err).Error("elasticsearch query size error")
+		return resources, err
+	}
+
+	searchResultQuerySize := int(searchResult.TotalHits())
+	searchResult, err = sm.client.Search().
+		Query(queryBuilder).
+		Pretty(true).
+		Size(searchResultQuerySize).
+		SortBy(elastic.NewFieldSort("Timestamp").Desc()).
+		Aggregation("executions", elastic.NewTermsAggregation().Field("ExecutionID").OrderByKeyDesc(). // Aggregate by ExecutionID
+														SubAggregation("monthly-cost", elastic.NewSumAggregation().Field("Data.PricePerMonth"))). // Sub aggregate and sum by Data.PricePerMonth per bucket
+		Do(context.Background())
+
+	if err != nil {
+		log.WithError(err).Error("elasticsearch query error")
+		return resources, err
+	}
+
+	executions, found := searchResult.Aggregations.Terms("executions")
+	if found {
+		for _, ppm := range executions.Buckets {
+			executionId := ppm.Key.(string)
+			monthlyAgg, _ := ppm.Aggregations.Sum("monthly-cost")
+
+			// Extract the timestamp from the ExecutionID
+			timestamp, err := interpolation.ExtractTimestamp(executionId)
+			if err != nil {
+				timestamp = 0
+			}
+
+			resources = append(resources, storage.ExecutionCost{
+				ExecutionID:        executionId,
+				ExtractedTimestamp: timestamp,
+				CostSum:            *monthlyAgg.Value,
+			})
+		}
+	}
+
+	// Maximum number of resources to return
+	if len(resources) > limit {
+		resources = resources[0:limit]
 	}
 
 	return resources, nil
@@ -384,18 +504,19 @@ func (sm *StorageManager) GetExecutionTags(executionID string) (map[string][]str
 }
 
 // createIndex creating create elasticsearch index if not exists
-func (sm *StorageManager) createIndex(index string) {
+func (sm *StorageManager) createIndex(index string) error {
 
 	exists, err := sm.client.IndexExists(index).Do(context.Background())
 	if err != nil {
 		log.WithFields(log.Fields{
 			"index": index,
 		}).WithError(err).Error("Error when trying to check if elasticsearch exists")
-		return
+		return err
 	}
+
 	if exists {
 		log.WithField("index", index).Info("index already exists")
-		return
+		return nil
 	}
 
 	ctx := context.Background()
@@ -404,8 +525,45 @@ func (sm *StorageManager) createIndex(index string) {
 		log.WithFields(log.Fields{
 			"index": index,
 		}).WithError(err).Error("Error when trying to create elasticsearch index")
+		return err
 	}
 
 	log.WithField("index", index).Info("index created successfully")
+	return nil
+
+}
+
+// getDurationUntilTomorrow returns the duration time until tomorrow
+func (sm *StorageManager) getDurationUntilTomorrow(now time.Time) time.Duration {
+
+	zone, _ := now.Zone()
+	location, err := time.LoadLocation(zone)
+	if err != nil {
+		log.WithError(err).WithField("zone", zone).Warn("zone name not found")
+		location = time.UTC
+	}
+
+	tomorrow := getDayAfterDate(now, location)
+	diff := tomorrow.Sub(now)
+
+	return diff
+
+}
+
+// setCreateCurrentIndexDay create and set the current day as index
+func (sm *StorageManager) setCreateCurrentIndexDay() bool {
+	dt := time.Now().In(time.UTC)
+	newIndex := fmt.Sprintf(prefixIndexName, dt.Format("01-02-2006"))
+	log.WithFields(log.Fields{
+		"current_index_day":    sm.currentIndexDay,
+		"to_current_index_day": newIndex,
+	}).Info("change current index day")
+	err := sm.createIndex(newIndex)
+	if err != nil {
+		return false
+	}
+
+	sm.currentIndexDay = newIndex
+	return true
 
 }

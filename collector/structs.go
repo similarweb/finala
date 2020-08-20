@@ -29,18 +29,17 @@ type EventStatusData struct {
 
 // PriceDetectedFields describe the pricing field
 type PriceDetectedFields struct {
-	ResourceID      string
-	LaunchTime      time.Time
-	PricePerHour    float64
-	PricePerMonth   float64
-	TotalSpendPrice float64
-	Tag             map[string]string
+	ResourceID    string
+	LaunchTime    time.Time
+	PricePerHour  float64
+	PricePerMonth float64
+	Tag           map[string]string
 }
 
 // EventCollector collector event data structure
 type EventCollector struct {
 	EventType    string
-	ResourceName string
+	ResourceName ResourceIdentifier
 	EventTime    int64
 	Data         interface{}
 }

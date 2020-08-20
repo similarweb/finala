@@ -14,7 +14,6 @@ import (
 type ElasticsearchConfig struct {
 	Username  string   `yaml:"username"`
 	Password  string   `yaml:"password"`
-	Index     string   `yaml:"index"`
 	Endpoints []string `yaml:"endpoints"`
 }
 

@@ -78,16 +78,13 @@ func TestAddEvent(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	coll.UpdateServiceStatus(collector.EventCollector{
-		ResourceName: "test",
-		Data:         "test data",
-	})
+	coll.CollectStart(collector.ResourceIdentifier("test"))
 	coll.AddResource(collector.EventCollector{
 		ResourceName: "test1",
 		Data:         "test data",
 	})
 
-	time.Sleep(time.Second * 2)
+	time.Sleep(time.Second * 3)
 
 	if receivedData.receivedCount != 2 {
 		t.Fatalf("unexpected collector send data, got %d, expected %d", receivedData.receivedCount, 2)
@@ -125,10 +122,8 @@ func TestAddEventServerUnavailable(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	coll.UpdateServiceStatus(collector.EventCollector{
-		ResourceName: "test",
-		Data:         "test data",
-	})
+	coll.CollectStart(collector.ResourceIdentifier("test"))
+
 	coll.AddResource(collector.EventCollector{
 		ResourceName: "test1",
 		Data:         "test data",

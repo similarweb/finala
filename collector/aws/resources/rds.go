@@ -41,6 +41,14 @@ type DetectedAWSRDS struct {
 	collector.PriceDetectedFields
 }
 
+// elasticSearchVolumeType will hold the available volume types for ESCluster EBS
+var rdsVolumeType = map[string]string{
+	"gp2":      "General Purpose",
+	"standard": "Magnetic",
+	"io1":      "Provisioned IOPS",
+	"aurora":   "General Purpose-Aurora",
+}
+
 func init() {
 	register.Registry("rds", NewRDSManager)
 }
@@ -89,8 +97,6 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 
 		log.WithField("name", *instance.DBInstanceIdentifier).Debug("checking RDS")
 
-		price, _ := r.awsManager.GetPricingClient().GetPrice(r.getPricingFilterInput(instance), "", r.awsManager.GetRegion())
-
 		for _, metric := range metrics {
 			log.WithFields(log.Fields{
 				"name":        *instance.DBInstanceIdentifier,
@@ -136,8 +142,28 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 					"formula_value":       formulaValue,
 					"name":                *instance.DBInstanceIdentifier,
 					"instance_type":       *instance.DBInstanceClass,
+					"engine":              *instance.Engine,
 					"region":              r.awsManager.GetRegion(),
 				}).Info("RDS instance detected as unutilized resource")
+
+				instancePrice, err := r.awsManager.GetPricingClient().GetPrice(r.getPricingInstanceFilterInput(instance), "", r.awsManager.GetRegion())
+				if err != nil {
+					log.WithError(err).Error("Could not get rds instance price")
+					continue
+				}
+
+				storagePrice, err := r.awsManager.GetPricingClient().GetPrice(r.getPricingStorageFilterInput(instance), "", r.awsManager.GetRegion())
+				if err != nil {
+					log.WithError(err).Error("Could not get rds storage price")
+					continue
+				}
+				totalHourlyPrice := storagePrice + instancePrice
+				log.WithFields(log.Fields{
+					"instance_hour_price": instancePrice,
+					"storage_hour_price":  storagePrice,
+					"total_hour_price":    totalHourlyPrice,
+					"rds_AZ_multi":        *instance.MultiAZ,
+					"region":              r.awsManager.GetRegion()}).Info("Found the following price list")
 
 				tags, err := r.client.ListTagsForResource(&rds.ListTagsForResourceInput{
 					ResourceName: instance.DBInstanceArn,
@@ -159,8 +185,8 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 					PriceDetectedFields: collector.PriceDetectedFields{
 						ResourceID:    *instance.DBInstanceArn,
 						LaunchTime:    *instance.InstanceCreateTime,
-						PricePerHour:  price,
-						PricePerMonth: price * collector.TotalMonthHours,
+						PricePerHour:  totalHourlyPrice,
+						PricePerMonth: totalHourlyPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
 					},
 				}
@@ -183,7 +209,7 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 }
 
 // getPricingFilterInput prepare document rds pricing filter
-func (r *RDSManager) getPricingFilterInput(instance *rds.DBInstance) pricing.GetProductsInput {
+func (r *RDSManager) getPricingInstanceFilterInput(instance *rds.DBInstance) pricing.GetProductsInput {
 
 	deploymentOption := "Single-AZ"
 
@@ -223,7 +249,45 @@ func (r *RDSManager) getPricingFilterInput(instance *rds.DBInstance) pricing.Get
 			},
 		},
 	}
+}
 
+func (r *RDSManager) getPricingStorageFilterInput(instance *rds.DBInstance) pricing.GetProductsInput {
+	deploymentOption := "Single-AZ"
+
+	if *instance.MultiAZ {
+		deploymentOption = "Multi-AZ"
+	}
+
+	return pricing.GetProductsInput{
+		ServiceCode: &r.servicePricingCode,
+		Filters: []*pricing.Filter{
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("volumeType"),
+				Value: awsClient.String(rdsVolumeType[*instance.StorageType]),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("productFamily"),
+				Value: awsClient.String("Database Storage"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("termType"),
+				Value: awsClient.String("OnDemand"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("deploymentOption"),
+				Value: &deploymentOption,
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("usagetype"),
+				Value: awsClient.String("Aurora:StorageUsage"),
+			},
+		},
+	}
 }
 
 // describeInstances return list of rds instances

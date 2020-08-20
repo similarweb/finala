@@ -281,11 +281,6 @@ func (r *RDSManager) getPricingStorageFilterInput(instance *rds.DBInstance) pric
 				Field: awsClient.String("deploymentOption"),
 				Value: &deploymentOption,
 			},
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("usagetype"),
-				Value: awsClient.String("Aurora:StorageUsage"),
-			},
 		},
 	}
 }

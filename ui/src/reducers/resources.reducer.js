@@ -1,7 +1,9 @@
 const initialState = {
   resources: {},
   currentResource: null,
+  currentResourceData: [],
   isResourceListLoading: true,
+  isResourceTableLoading: true,
 };
 
 /**
@@ -11,6 +13,12 @@ const initialState = {
  */
 export function resources(state = initialState, action) {
   switch (action.type) {
+    case "SET_CURRENT_RESOURCE_DATA":
+      state.currentResourceData = action.data;
+      return { ...state };
+    case "IS_RESOURCE_TABLE_LOADING":
+      state.isResourceTableLoading = action.isLoading;
+      return { ...state };
     case "IS_RESOURCE_LIST_LOADING":
       state.isResourceListLoading = action.isLoading;
       return { ...state };

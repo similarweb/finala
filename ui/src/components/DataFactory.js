@@ -7,8 +7,9 @@ import { titleDirective } from "../directives";
 import { getHistory, setHistory } from "../utils/History";
 
 let fetchTimeoutRequest = false;
+let fetchTableTimeoutRequest = false;
 let initTimeoutRequest = false;
-let lastFiltersSearched = "";
+let lastFiltersSearched = "[]";
 
 /**
  * will show a scanning message if some of the resources are still in progress
@@ -17,8 +18,11 @@ let lastFiltersSearched = "";
  * @param  {string} currentExecution Current Selected Execution
  * @param  {func} setCurrentExecution Update Current Execution
  *
+ * @param  {string} currentResource Current selected resource
  * @param  {func} setResources Update Resources List
+ * @param  {func} setCurrentResourceData Update current resource data
  * @param  {func} setIsResourceListLoading  update isLoading state for resources
+ * @param  {func} setIsResourceTableLoading  update isLoading state for resources table
  *
  * @param  {array} resources  Resources List
  * @param  {bool} isScanning indicate if the system is in scan mode
@@ -33,10 +37,14 @@ const DataFacotry = ({
   currentExecution,
   setCurrentExecution,
 
+  currentResource,
   setResources,
+  setCurrentResourceData,
   setIsResourceListLoading,
+  setIsResourceTableLoading,
 
   filters,
+  resources,
   setIsAppLoading,
   setIsScanning,
 }) => {
@@ -107,6 +115,29 @@ const DataFacotry = ({
     setIsResourceListLoading(true);
     await getResources(currentExecution, filters);
     setIsResourceListLoading(false);
+
+    if (currentResource) {
+      await onCurrentResourceChanged(
+        currentResource,
+        currentExecution,
+        filters
+      );
+    }
+  };
+  /**
+   * Triggered every-time currentResource changes and re-load resources table data
+   * @param  {string} currentExecution Current Selected Execution
+   * @param  {array} filters  Filters List
+   */
+  const onCurrentResourceChanged = async (
+    currentResource,
+    currentExecution,
+    filters = []
+  ) => {
+    clearTimeout(fetchTableTimeoutRequest);
+    setIsResourceTableLoading(true);
+    await getResourceTable(currentResource, currentExecution, filters);
+    setIsResourceTableLoading(false);
   };
 
   /**
@@ -137,6 +168,42 @@ const DataFacotry = ({
     setResources(ResourcesList);
     return true;
   };
+  /**
+   * Will fetch resource data from server
+   * @param  {string} currentResource Current Selected Resource
+   * @param  {string} currentExecution Current Selected Execution
+   * @param  {array} filters  Filters List
+   */
+  const getResourceTable = async (
+    currentResource,
+    currentExecution,
+    filters = []
+  ) => {
+    const ResourceRows = await ResourcesService.GetContent(
+      currentResource,
+      currentExecution,
+      filters
+    ).catch(() => []);
+
+    let rows = [];
+    if (ResourceRows && ResourceRows.length) {
+      rows = ResourceRows.map((row) => row.Data);
+    }
+    setCurrentResourceData(rows);
+
+    const resourceInfo = resources[currentResource];
+    // resource in scanning mode - refresh
+    if (resourceInfo && resourceInfo.Status == 0) {
+      fetchTableTimeoutRequest = setTimeout(
+        () => getResourceTable(currentResource, currentExecution, filters),
+        5000
+      );
+    } else {
+      clearTimeout(fetchTableTimeoutRequest);
+    }
+
+    return true;
+  };
 
   /**
    * Initial Load - set baseURL using Settings Api
@@ -153,6 +220,14 @@ const DataFacotry = ({
       onCurrentExecutionChanged(currentExecution, filters);
     }
   }, [currentExecution]);
+  /**
+   * currentResource Change detection
+   */
+  useEffect(() => {
+    if (currentExecution && currentResource) {
+      onCurrentResourceChanged(currentResource, currentExecution, filters);
+    }
+  }, [currentResource]);
 
   /**
    * filters Change detection
@@ -180,10 +255,13 @@ DataFacotry.propTypes = {
   setExecutions: PropTypes.func,
   setIsAppLoading: PropTypes.func,
   setIsResourceListLoading: PropTypes.func,
+  setIsResourceTableLoading: PropTypes.func,
   setIsScanning: PropTypes.func,
   setResources: PropTypes.func,
+  setCurrentResourceData: PropTypes.func,
   setCurrentExecution: PropTypes.func,
 
+  currentResource: PropTypes.string,
   resources: PropTypes.object,
   filters: PropTypes.array,
   currentExecution: PropTypes.string,
@@ -195,6 +273,7 @@ DataFacotry.propTypes = {
 
 const mapStateToProps = (state) => ({
   resources: state.resources.resources,
+  currentResource: state.resources.currentResource,
   currentExecution: state.executions.current,
   filters: state.filters.filters,
   isScanning: state.executions.isScanning,
@@ -206,9 +285,13 @@ const mapDispatchToProps = (dispatch) => ({
     dispatch({ type: "IS_APP_LOADING", isLoading }),
   setIsResourceListLoading: (isLoading) =>
     dispatch({ type: "IS_RESOURCE_LIST_LOADING", isLoading }),
+  setIsResourceTableLoading: (isLoading) =>
+    dispatch({ type: "IS_RESOURCE_TABLE_LOADING", isLoading }),
   setIsScanning: (isScanning) => dispatch({ type: "IS_SCANNING", isScanning }),
   setResources: (data) => dispatch({ type: "RESOURCE_LIST", data }),
   setCurrentExecution: (id) => dispatch({ type: "EXECUTION_SELECTED", id }),
+  setCurrentResourceData: (data) =>
+    dispatch({ type: "SET_CURRENT_RESOURCE_DATA", data }),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(DataFacotry);

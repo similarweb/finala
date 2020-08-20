@@ -11,6 +11,7 @@ providers:
       - name: <account_name>
         # access_key: <access_key>
         # secret_key: <secret_key>
+        # role: 
         regions:
           - us-east-1
           - us-west-2
@@ -198,4 +199,14 @@ providers:
           constraint:
             operator: "=="
             value: 0
-        
+      natgateway:
+        - description: Active connection count
+          enable: true
+          metrics:
+            - name: ActiveConnectionCount
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "=="
+            value: 0        

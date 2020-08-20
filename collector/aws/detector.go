@@ -7,6 +7,7 @@ import (
 	"finala/collector/config"
 	"fmt"
 
+	awsClient "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	awsCloudwatch "github.com/aws/aws-sdk-go/service/cloudwatch"
 	awsPricing "github.com/aws/aws-sdk-go/service/pricing"
@@ -20,7 +21,7 @@ type DetectorDescriptor interface {
 	GetCloudWatchClient() *cloudwatch.CloudwatchManager
 	GetPricingClient() *pricing.PricingManager
 	GetRegion() string
-	GetSession() *session.Session
+	GetSession() (*session.Session, *awsClient.Config)
 	GetAccountIdentity() *sts.GetCallerIdentityOutput
 }
 
@@ -35,6 +36,7 @@ type DetectorManager struct {
 	cloudWatchClient *cloudwatch.CloudwatchManager
 	pricing          *pricing.PricingManager
 	session          *session.Session
+	awsConfig        *awsClient.Config
 	accountIdentity  *sts.GetCallerIdentityOutput
 	region           string
 	global           map[string]struct{}
@@ -43,11 +45,11 @@ type DetectorManager struct {
 // NewDetectorManager create new instance of detector manager
 func NewDetectorManager(collector collector.CollectorDescriber, account config.AWSAccount, stsManager *STSManager, global map[string]struct{}, region string) *DetectorManager {
 
-	priceSession := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, defaultRegionPrice)
+	priceSession, _ := CreateAuthConfiguration(account.AccessKey, account.SecretKey, account.SessionToken, account.Role, defaultRegionPrice)
 	pricingManager := pricing.NewPricingManager(awsPricing.New(priceSession), defaultRegionPrice)
 
-	regionSession := CreateNewSession(account.AccessKey, account.SecretKey, account.SessionToken, region)
-	cloudWatchCLient := cloudwatch.NewCloudWatchManager(awsCloudwatch.New(regionSession))
+	regionSession, regionConfig := CreateAuthConfiguration(account.AccessKey, account.SecretKey, account.SessionToken, account.Role, region)
+	cloudWatchCLient := cloudwatch.NewCloudWatchManager(awsCloudwatch.New(regionSession, regionConfig))
 
 	callerIdentityOutput, _ := stsManager.client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 	return &DetectorManager{
@@ -56,6 +58,7 @@ func NewDetectorManager(collector collector.CollectorDescriber, account config.A
 		pricing:          pricingManager,
 		region:           region,
 		session:          regionSession,
+		awsConfig:        regionConfig,
 		accountIdentity:  callerIdentityOutput,
 		global:           global,
 	}
@@ -87,8 +90,8 @@ func (dm *DetectorManager) GetRegion() string {
 }
 
 // GetSession return the aws session
-func (dm *DetectorManager) GetSession() *session.Session {
-	return dm.session
+func (dm *DetectorManager) GetSession() (*session.Session, *awsClient.Config) {
+	return dm.session, dm.awsConfig
 }
 
 // GetAccountIdentity return the caller identity

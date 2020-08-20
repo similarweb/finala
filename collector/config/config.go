@@ -15,6 +15,7 @@ type AWSAccount struct {
 	Name         string   `yaml:"name"`
 	AccessKey    string   `yaml:"access_key"`
 	SecretKey    string   `yaml:"secret_key"`
+	Role         string   `yaml:"role"`
 	SessionToken string   `yaml:"session_token"`
 	Regions      []string `yaml:"regions"`
 }

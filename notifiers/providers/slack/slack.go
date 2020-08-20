@@ -79,19 +79,23 @@ func (sm *Manager) GetNotifyByTags(notifierConfig common.ConfigByName) map[strin
 }
 
 // prepareAttachmentFields will prepare all the Attachment and all the fields
-func (sm *Manager) prepareAttachment(message common.NotifierReport, tags []string) []slackApi.Attachment {
+func (sm *Manager) prepareAttachment(message common.NotifierReport, elasticSearchQueryTags []string) []slackApi.Attachment {
+	mainCostReportURL := sm.BuildSendURL(message.UIAddr, message.ExecutionID, message.NotifyByTag.Tags)
 	// Finala's intro message Attachment
 	slackAttachments := []slackApi.Attachment{
 		{
 			Color:      greenMessageColor,
 			AuthorName: AuthorName,
 			Pretext: fmt.Sprintf("Here is the *Monthly* <%s|Cost report> for your notification group: %s *filtered by: %s*",
-				message.UIAddr,
+				mainCostReportURL,
 				message.GroupName,
-				strings.Join(tags, " AND ")),
+				strings.Join(elasticSearchQueryTags, " AND ")),
 		}}
 	var totalPotentialSaving float64
 	for _, executionData := range message.ExecutionSummaryData {
+		additionalFilter := common.Tag{Name: "resource", Value: executionData.ResourceName}
+		filters := append(message.NotifyByTag.Tags, additionalFilter)
+		resourceLink := sm.BuildSendURL(message.UIAddr, message.ExecutionID, filters)
 		// If the total spent is 0 or small than minimum cost to present we don't want to show it in Slack
 		if executionData.TotalSpent == 0 || executionData.TotalSpent <= message.NotifyByTag.MinimumCostToPresent {
 			continue
@@ -102,7 +106,9 @@ func (sm *Manager) prepareAttachment(message common.NotifierReport, tags []strin
 			Fields: []slackApi.AttachmentField{
 				{
 					Title: strings.ToUpper(executionData.ResourceName),
-					Value: fmt.Sprintf("Potential Saving: $%s", humanize.Commaf(math.Floor(executionData.TotalSpent))),
+					Value: fmt.Sprintf("Potential Saving: <%s|$%s>",
+						resourceLink,
+						humanize.Commaf(math.Floor(executionData.TotalSpent))),
 					Short: false,
 				},
 			},
@@ -197,4 +203,17 @@ func (sm *Manager) getChannelID(to string) (string, error) {
 		return to, nil
 	}
 	return sm.getUserIDByEmail(to)
+}
+
+// BuildSendURL will build the url the Notifier should send
+func (sm *Manager) BuildSendURL(baseURL string, executionID string, filters []common.Tag) string {
+	urlFilters := []string{}
+	for _, filter := range filters {
+		urlFilters = append(urlFilters, fmt.Sprintf("%s:%s", filter.Name, filter.Value))
+	}
+
+	if len(filters) > 0 {
+		return fmt.Sprintf("%s?executionId=%s&filters=%s", baseURL, executionID, strings.Join(urlFilters, ";"))
+	}
+	return baseURL
 }

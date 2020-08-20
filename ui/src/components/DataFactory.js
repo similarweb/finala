@@ -179,6 +179,7 @@ const DataFacotry = ({
     currentExecution,
     filters = []
   ) => {
+    clearTimeout(fetchTableTimeoutRequest);
     const ResourceRows = await ResourcesService.GetContent(
       currentResource,
       currentExecution,

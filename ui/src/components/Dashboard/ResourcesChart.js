@@ -117,6 +117,12 @@ const ResourcesChart = ({
     }
     return 120 * sortedResources.length;
   };
+  /**
+   * update chart height according to number of resources
+   */
+  const getCardHeight = () => {
+    return getChartHeight() + 50;
+  };
 
   /**
    *
@@ -154,7 +160,7 @@ const ResourcesChart = ({
     <Fragment>
       <Box mb={3}>
         <Card>
-          <CardContent>
+          <CardContent style={{ minHeight: getCardHeight() }}>
             {!isResourceListLoading && sortedResources.length > 0 && (
               <Chart
                 id="MainChart"

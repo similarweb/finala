@@ -57,6 +57,7 @@ const FilterBar = ({
   const [defaultOptions, setDefaultOptions] = useState([]);
   const inputRef = useRef(null);
   const isScanningRef = useRef(isScanning);
+  const isFilterBarOpen = useRef(false);
 
   /**
    * Fetching server tagslist for autocomplete
@@ -77,8 +78,10 @@ const FilterBar = ({
       type: "tag:option",
     }));
 
-    setTags(responseData);
-    setOptions(tagOptions);
+    if (!isFilterBarOpen.current) {
+      setTags(responseData);
+      setOptions(tagOptions);
+    }
     setDefaultOptions(tagOptions);
 
     if (isScanningRef.current) {
@@ -209,6 +212,7 @@ const FilterBar = ({
     debounceTimeout = setTimeout(() => {
       if (opt !== "select-option" && opt !== "create-option") {
         //  remove incomplete tags
+        isFilterBarOpen.current = false;
         filters = filters.filter((row) => row.type !== "tag:incomplete");
         updateFilters(filters);
         setOptions(defaultOptions); // reset options after selection
@@ -222,6 +226,7 @@ const FilterBar = ({
    * @param {object} opt  Selected option from autocomplete
    */
   const optionChanged = (event, opt) => {
+    isFilterBarOpen.current = false;
     // clear-all applied
     if (!opt.length) {
       updateFilters([]);
@@ -285,6 +290,7 @@ const FilterBar = ({
 
     // trigger options open
     inputRef.current.blur();
+    isFilterBarOpen.current = true;
     setTimeout(() => {
       inputRef.current.focus();
     });

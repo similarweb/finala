@@ -13,7 +13,7 @@ import Logo from "./Logo";
 const useStyles = makeStyles(() => ({
   Root: {
     maxWidth: "600px",
-    margin: "20% auto",
+    margin: "15% auto",
     textAlign: "center",
   },
   Card: {

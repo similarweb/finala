@@ -164,7 +164,7 @@ func TestBuildSendURL(t *testing.T) {
 		expectedURL string
 	}{
 		{[]common.Tag{}, baseURL},
-		{commonTags, fmt.Sprintf("%s?executionId=%s&filters=%s", baseURL, executionID, "team:a,stack:b")},
+		{commonTags, fmt.Sprintf("%s?executionId=%s&filters=%s", baseURL, executionID, "team:a;stack:b")},
 	}
 
 	for _, tc := range testCases {

@@ -213,7 +213,7 @@ func (sm *Manager) BuildSendURL(baseURL string, executionID string, filters []co
 	}
 
 	if len(filters) > 0 {
-		return fmt.Sprintf("%s?executionId=%s&filters=%s", baseURL, executionID, strings.Join(urlFilters, ","))
+		return fmt.Sprintf("%s?executionId=%s&filters=%s", baseURL, executionID, strings.Join(urlFilters, ";"))
 	}
 	return baseURL
 }

@@ -1,6 +1,6 @@
 const path = require("path");
 const webpack = require("webpack");
-const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
 
 module.exports = (options) => ({
@@ -30,10 +30,16 @@ module.exports = (options) => ({
       },
       {
         test: /\.(css|sass|scss)$/,
-        use: ExtractTextPlugin.extract({
-          fallback: "style-loader",
-          use: "css-loader!sass-loader",
-        }),
+        use: [
+          {
+            loader: MiniCssExtractPlugin.loader,
+            options: {
+              hmr: process.env.NODE_ENV === "development",
+            },
+          },
+          "css-loader",
+          "sass-loader",
+        ],
       },
       {
         test: /\.(png|jp(e*)g)$/,
@@ -58,7 +64,7 @@ module.exports = (options) => ({
     ]),
   },
   plugins: options.plugins.concat([
-    new ExtractTextPlugin("app.[hash].css"),
+    new MiniCssExtractPlugin(), // "app.[hash].css"
     new FaviconsWebpackPlugin("./src/styles/icons/icon.png"),
   ]),
   resolveLoader: {

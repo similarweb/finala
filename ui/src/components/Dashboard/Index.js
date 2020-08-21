@@ -1,182 +1,100 @@
-import React from "react";
-import PropTypes from 'prop-types';
-import { connect } from 'react-redux';
-import TextUtils from "utils/Text"
-import numeral from 'numeral';
-import Highcharts from 'highcharts'
-import HighchartsReact from 'highcharts-react-official'
-import Paper from '@material-ui/core/Paper';
-import MUIDataTable from "mui-datatables";
-import { MuiThemeProvider, createMuiTheme } from "@material-ui/core/styles";
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Typography from '@material-ui/core/Typography';
+import React, { Fragment } from "react";
+import { connect } from "react-redux";
+import { makeStyles } from "@material-ui/core/styles";
+import { setHistory } from "../../utils/History";
 
+import PropTypes from "prop-types";
+import FilterBar from "./FilterBar";
+import StatisticsBar from "./StatisticsBar";
+import ResourceScanning from "./ResourceScanning";
+import ResourcesChart from "./ResourcesChart";
+import ResourcesList from "./ResourcesList";
+import ResourceTable from "./ResourceTable";
+import ExecutionIndex from "../Executions/Index";
+import Logo from "../Logo";
+import { Grid, Box } from "@material-ui/core";
 
-const tableFontSize = 12;
-
-const getMuiTheme = () => createMuiTheme({
-  overrides: {
-    MUIDataTableHeadCell:{
-      root:{
-        color: "#878787"
-      }
-    },
-    MUIDataTableBodyCell: {
-      root: {
-        fontSize: tableFontSize,
-        
-      },
-      cellStackedSmall: { 
-        fontSize: tableFontSize,
-    },
-    responsiveStackedSmall: { 
-        fontSize: tableFontSize,
-    },
-      
-    }
-  }
-});
-
+const useStyles = makeStyles(() => ({
+  root: {
+    width: "100%",
+  },
+  title: {
+    fontFamily: "MuseoModerno",
+  },
+  logoGrid: {
+    textAlign: "left",
+  },
+  selectorGrid: {
+    textAlign: "right",
+  },
+}));
 
 /**
- * Dashboard page 
- */
-@connect(state => ({
-  resources: state.resources,
-}))
-export default class Dashboard extends React.Component {
-  
-  static propTypes = {    
-    /**
-     * List of all un-usage resources
-     */
-    resources : PropTypes.object, 
-  };  
-
-  state = {
-    /**
-     * Fetch ajax timeout
-     */
-    timeoutAjaxCall: null,
-
-  }
+ * @param  {string} {currentResource  Current Selected Resource
+ * @param  {func} setFilters  Update Filters
+ * @param  {func} setResource  Update Selected Resource
+ * @param  {array} filters   Filters List } */
+const DashboardIndex = ({
+  currentResource,
+  setFilters,
+  setResource,
+  filters,
+}) => {
+  const classes = useStyles();
 
   /**
-   * Get PIE and Table data 
+   * Will clear selected filter and show main page
    */
-  getData(){
-    const pie = {
-      chart: {
-        plotBackgroundColor: null,
-        plotBorderWidth: null,
-        plotShadow: false,
-        type: 'pie'
-      },
-      title: {
-        text: 'Potential spend save'
-      },
-      tooltip: {
-          pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
-      },
-      accessibility: {
-          point: {
-              valueSuffix: '%'
-          }
-      },
-      plotOptions: {
-          pie: {
-              allowPointSelect: true,
-              cursor: 'pointer',
-              dataLabels: {
-                  enabled: true,
-                  format: '<b>{point.name}</b>: {point.percentage:.1f} %'
-              }
-          }
-      },
-        series: [
-        
-        ]
-    };
-    const table = {
-      headers: [
-        {label: "Resource".toUpperCase()}, 
-        {label:"Optional spend save".toUpperCase(),options: { 
-          sortDirection: 'desc',
-          customBodyRender: (data) => {
-            return (
-            <span>{numeral(data).format('0,0[.]00 $')}</span>
-            )
-          }              
-        }}],
-      data:[]
-    }
-   
-    const seriesData = []
-    Object.keys(this.props.resources).map((resourceName) => {
-      seriesData.push(
-        {
-          name: TextUtils.ParseName(resourceName),
-          y: this.props.resources[resourceName].TotalSpent
-      }
-      )
-
-      table.data.push(
-        [TextUtils.ParseName(resourceName), this.props.resources[resourceName].TotalSpent]
-      )
-
-    })
-    pie.series = [{data: seriesData}]
-    return {pie, table}
-  }
-
-  /**
-   * Component render
-   */
-  render() {
-    const data = this.getData()
-    return (
-      <div className="">
-
-        <h1>Dashboard</h1>
-        {Object.keys(this.props.resources).length > 0 ?(
-          <div>
-            <Paper elevation={3} >
-            <HighchartsReact
-              allowChartUpdate={true}
-                highcharts={Highcharts}
-                options={data.pie}
-            />
-          </Paper>
-
-          <br/>
-          <MuiThemeProvider theme={getMuiTheme()}>
-            <MUIDataTable
-                  data={data.table.data}
-                  columns={data.table.headers}
-                  options={{selectableRows: false}}
-              />
-          </MuiThemeProvider>
-          </div>
-        ) : (
-          <div
-          style={{
-              position: 'absolute', 
-              left: '50%', 
-              top: '50%',
-              transform: 'translate(-50%, -50%)',
-              textAlign: "center"
-          }}
-          >
-          <CircularProgress size={50}/>
-          <Typography variant="subtitle1" >
-          Fetching data...
-          </Typography>
-          </div>
-        )
-        }
-
-       
-      </div>
+  const gotoHome = () => {
+    const updatedFilters = filters.filter(
+      (filter) => filter.id.substr(0, 8) !== "resource"
     );
-  }
-}
+    setResource(null);
+    setFilters(updatedFilters);
+    setHistory({ filters: updatedFilters });
+  };
+
+  return (
+    <Fragment>
+      <Box mb={2}>
+        <Grid container className={classes.root} spacing={0}>
+          <Grid item sm={8} xs={12} className={classes.logoGrid}>
+            <a href="javascript:void(0)" onClick={gotoHome}>
+              <Logo />
+            </a>
+            <ResourceScanning />
+          </Grid>
+          <Grid item sm={4} xs={12} className={classes.selectorGrid}>
+            <ExecutionIndex />
+          </Grid>
+        </Grid>
+      </Box>
+
+      <FilterBar />
+      <StatisticsBar />
+      <ResourcesList />
+      {!currentResource && <ResourcesChart />}
+      {currentResource && <ResourceTable />}
+    </Fragment>
+  );
+};
+
+DashboardIndex.defaultProps = {};
+DashboardIndex.propTypes = {
+  currentResource: PropTypes.string,
+  filters: PropTypes.array,
+  setFilters: PropTypes.func,
+  setResource: PropTypes.func,
+};
+
+const mapStateToProps = (state) => ({
+  currentResource: state.resources.currentResource,
+  filters: state.filters.filters,
+});
+
+const mapDispatchToProps = (dispatch) => ({
+  setFilters: (data) => dispatch({ type: "SET_FILTERS", data }),
+  setResource: (data) => dispatch({ type: "SET_RESOURCE", data }),
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(DashboardIndex);

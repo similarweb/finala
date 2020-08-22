@@ -44,12 +44,10 @@ type DetectedAWSRDS struct {
 
 // RDSVolumeType will hold the available volume types for RDS types
 var rdsStorageType = map[string]string{
-	"gp2":               "General Purpose",
-	"standard":          "Magnetic",
-	"io1":               "Provisioned IOPS",
-	"aurora":            "General Purpose-Aurora",
-	"aurora-postgresql": "General Purpose-Aurora",
-	"aurora-mysql":      "General Purpose-Aurora",
+	"gp2":      "General Purpose",
+	"standard": "Magnetic",
+	"io1":      "Provisioned IOPS",
+	"aurora":   "General Purpose-Aurora",
 }
 
 func init() {
@@ -168,7 +166,7 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 
 				var hourlyStoragePrice float64
 				if rdsStorageType, found := rdsStorageType[*instance.StorageType]; found {
-					storagePricingFilters := pricing.GetProductsInput{}
+					var storagePricingFilters pricing.GetProductsInput
 					switch *instance.Engine {
 					case "aurora", "aurora-mysql", "aurora-postgresql":
 						storagePricingFilters = r.getPricingAuroraStorageFilterInput(rdsStorageType, pricingRegionPrefix)
@@ -177,7 +175,7 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 						storagePricingFilters = r.getPricingRDSStorageFilterInput(rdsStorageType, deploymentOption)
 					}
 
-					log.WithField("storage_filters", storagePricingFilters).Info("pricing storage filters")
+					log.WithField("storage_filters", storagePricingFilters).Debug("pricing storage filters")
 					storagePrice, err := r.awsManager.GetPricingClient().GetPrice(storagePricingFilters, "", r.awsManager.GetRegion())
 					if err != nil {
 						log.WithError(err).Error("Could not get rds storage price")

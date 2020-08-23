@@ -38,11 +38,12 @@ func (app *Analyze) All() {
 
 	for _, account := range app.awsAccounts {
 
-		globalsession, globalConfig := CreateAuthConfiguration(account.AccessKey, account.SecretKey, account.SessionToken, account.Role, "")
+		awsAuth := NewAuth(account)
+		globalsession, globalConfig := awsAuth.Login("")
 		stsManager := NewSTSManager(sts.New(globalsession, globalConfig))
 
 		for _, region := range account.Regions {
-			resourcesDetection := NewDetectorManager(app.cl, account, stsManager, app.global, region)
+			resourcesDetection := NewDetectorManager(awsAuth, app.cl, account, stsManager, app.global, region)
 			for resourceType, resourceDetector := range register.GetResources() {
 
 				resource, err := resourceDetector(resourcesDetection, nil)

@@ -86,7 +86,7 @@ const ResourceTable = ({
         );
         break;
       default:
-        renderr = (data) => <span>{data}</span>;
+        renderr = (data) => <span>{`${data}`}</span>;
     }
     return renderr;
   };

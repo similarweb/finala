@@ -1,25 +1,24 @@
-import React from 'react'
+import React from "react";
 import { connect } from "react-redux";
-import {history} from 'configureStore'
-
+import { history } from "configureStore";
 
 @connect()
 /**
-* Route not found
-*/    
+ * Route not found
+ */
 export default class NotFound extends React.Component {
-
   /**
    * When component mount redirect to root route
    */
   componentDidMount() {
-    history.push("/")
+    history.push("/");
   }
- 
-  /** 
-  * Component render
-  */    
+
+  /**
+   * Component render
+   */
+
   render() {
-    return ("")
+    return "";
   }
 }

@@ -46,8 +46,7 @@ func (au *Auth) Login(region string) (*session.Session, *awsClient.Config) {
 
 	log.WithField("region", region).Info("auth: using default AWS auth client")
 	config := &awsClient.Config{
-		Region:      &region,
-		Credentials: &credentials.Credentials{},
+		Region: &region,
 	}
 
 	sess := session.Must(session.NewSession(config))
@@ -71,9 +70,16 @@ func (au *Auth) withStaticCredentials(accessKey, secretKey, sessionToken, region
 func (au *Auth) withProfile(profile, region string) (*session.Session, *awsClient.Config) {
 
 	log.WithField("region", region).Info("auth: using aws profile")
+
+	// If empty will look for "AWS_SHARED_CREDENTIALS_FILE" env variable. If the
+	// env value is empty will default to current user's home directory.
+	// Linux/OSX: "$HOME/.aws/credentials"
+	// Windows:   "%USERPROFILE%\.aws\credentials"
+	filePath := ""
+
 	config := &awsClient.Config{
 		Region:      &region,
-		Credentials: credentials.NewSharedCredentials("", profile),
+		Credentials: credentials.NewSharedCredentials(filePath, profile),
 	}
 	sess := session.Must(session.NewSession(config))
 	return sess, config

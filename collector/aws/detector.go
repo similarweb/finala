@@ -32,7 +32,6 @@ const (
 
 // DetectorManager describe tje detector manager
 type DetectorManager struct {
-	awsAuth          AuthDescriptor
 	collector        collector.CollectorDescriber
 	cloudWatchClient *cloudwatch.CloudwatchManager
 	pricing          *pricing.PricingManager
@@ -54,7 +53,6 @@ func NewDetectorManager(awsAuth AuthDescriptor, collector collector.CollectorDes
 
 	callerIdentityOutput, _ := stsManager.client.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 	return &DetectorManager{
-		awsAuth:          awsAuth,
 		collector:        collector,
 		cloudWatchClient: cloudWatchCLient,
 		pricing:          pricingManager,

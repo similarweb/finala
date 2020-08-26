@@ -41,7 +41,6 @@ const DashboardIndex = ({
   filters,
 }) => {
   const classes = useStyles();
-
   /**
    * Will clear selected filter and show main page
    */
@@ -73,8 +72,7 @@ const DashboardIndex = ({
       <FilterBar />
       <StatisticsBar />
       <ResourcesList />
-      {!currentResource && <ResourcesChart />}
-      {currentResource && <ResourceTable />}
+      {currentResource ? <ResourceTable /> : <ResourcesChart />}
     </Fragment>
   );
 };

@@ -76,7 +76,7 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 
 	km.awsManager.GetCollector().CollectStart(km.Name)
 
-	streams, err := km.describeStreams()
+	streams, err := km.describeStreams(nil, nil)
 	if err != nil {
 		km.awsManager.GetCollector().CollectError(km.Name, err)
 		return detectedStreams, err
@@ -229,9 +229,11 @@ func (km *KinesisManager) getPricingFilterInput(extraFilters []*pricing.Filter) 
 }
 
 // describeStreams will return all kinesis streams
-func (km *KinesisManager) describeStreams() ([]*kinesis.StreamDescription, error) {
+func (km *KinesisManager) describeStreams(exclusiveStartStreamName *string, kinesisStreams []*kinesis.StreamDescription) ([]*kinesis.StreamDescription, error) {
 
-	input := &kinesis.ListStreamsInput{}
+	input := &kinesis.ListStreamsInput{
+		ExclusiveStartStreamName: exclusiveStartStreamName,
+	}
 
 	resp, err := km.client.ListStreams(input)
 	if err != nil {
@@ -239,14 +241,24 @@ func (km *KinesisManager) describeStreams() ([]*kinesis.StreamDescription, error
 		return nil, err
 	}
 
-	kinesisStreams := []*kinesis.StreamDescription{}
+	if kinesisStreams == nil {
+		kinesisStreams = []*kinesis.StreamDescription{}
+	}
+
+	var lastStreamName string
 	for _, kinesisStreamName := range resp.StreamNames {
+		lastStreamName = *kinesisStreamName
 		streamDesc, err := km.client.DescribeStream(&kinesis.DescribeStreamInput{StreamName: kinesisStreamName})
 		if err != nil {
 			log.WithField("error", err).Error("could not describe the kinesis stream")
 			return nil, err
 		}
 		kinesisStreams = append(kinesisStreams, streamDesc.StreamDescription)
+	}
+
+	if lastStreamName != "" {
+		log.WithField("last_stream_name", lastStreamName).Debug("Kinesis stream pagination request")
+		return km.describeStreams(&lastStreamName, kinesisStreams)
 	}
 
 	return kinesisStreams, nil

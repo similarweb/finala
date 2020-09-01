@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	// connectionInterval defines the time wait duration until the next connection retry
+	// connectionInterval defines the time duration to wait until the next connection retry
 	connectionInterval = 5 * time.Second
-	// connectionTimeout defines the maximum duration time until return connection error
+	// connectionTimeout defines the maximum time duration until the API returns a connection error
 	connectionTimeout = 60 * time.Second
 )
 

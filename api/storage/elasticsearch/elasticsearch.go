@@ -18,7 +18,7 @@ import (
 
 var (
 	ErrInvalidQuery            = errors.New("invalid query")
-	ErrAggregationTermNotFound = errors.New("aggregation terms not found")
+	ErrAggregationTermNotFound = errors.New("aggregation terms was not found")
 )
 
 const (
@@ -212,7 +212,7 @@ func (sm *StorageManager) getResourceSummaryDetails(executionID string, filters 
 		Aggregation("sum", elastic.NewSumAggregation().Field("Data.PricePerMonth")).
 		Size(0).Do(context.Background())
 
-	if nil != err {
+	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
 			"filters":      filters,
 			"milliseconds": searchResult.TookInMillis,
@@ -251,7 +251,7 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 			SubAggregation("MaxEventTime", elastic.NewMaxAggregation().Field("EventTime")))).
 		Do(context.Background())
 
-	if nil != err {
+	if err != nil {
 		log.WithError(err).Error("error when trying to get executions collectors")
 		return executions, ErrInvalidQuery
 	}

@@ -17,7 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type dummyDox struct {
+type dummyDoc struct {
 	ExecutionID  string
 	ResourceName string
 	EventType    string
@@ -106,7 +106,7 @@ func GetPostParams(req *http.Request) string {
 
 func GetDummyDoc(resourceName string, data map[string]interface{}) []byte {
 
-	dummy := dummyDox{
+	dummy := dummyDoc{
 		ExecutionID:  "executionID",
 		ResourceName: resourceName,
 		EventType:    "service_status",

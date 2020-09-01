@@ -2,6 +2,7 @@ package slack
 
 import (
 	"finala/notifiers/common"
+	"fmt"
 
 	"github.com/nlopes/slack"
 	"github.com/pkg/errors"
@@ -152,6 +153,26 @@ func TestFormatTagsElasticSearchQuery(t *testing.T) {
 			t.Fatalf("formatted tags do not contain expected element , wanted %s got %v", expectedTagElement, formattedTags)
 		}
 	})
+}
+
+func TestBuildSendURL(t *testing.T) {
+	baseURL := "http://127.0.0.1"
+	executionID := "general_123123"
+	slackManager := Manager{}
+	testCases := []struct {
+		tags        []common.Tag
+		expectedURL string
+	}{
+		{[]common.Tag{}, baseURL},
+		{commonTags, fmt.Sprintf("%s?executionId=%s&filters=%s", baseURL, executionID, "team:a;stack:b")},
+	}
+
+	for _, tc := range testCases {
+		costReportURL := slackManager.BuildSendURL(baseURL, executionID, tc.tags)
+		if costReportURL != tc.expectedURL {
+			t.Fatalf("unexpected Notifier URL , got %s wanted:%s", costReportURL, tc.expectedURL)
+		}
+	}
 }
 func TestUpdateUsers(t *testing.T) {
 	t.Run("unable to get users from slack api, existing list remains the same", func(t *testing.T) {

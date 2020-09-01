@@ -31,6 +31,8 @@ test-html:  ## Run tests with HTML for the project
 		$(TEST_EXEC_CMD) | true
 		$(GOTOOL) cover -html=cover.out
 
+checks: test lint fmt ## Run all tests,linting and FMT
+
 lint:
 	golangci-lint run
 

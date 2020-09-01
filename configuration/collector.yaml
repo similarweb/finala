@@ -11,6 +11,7 @@ providers:
       - name: <account_name>
         # access_key: <access_key>
         # secret_key: <secret_key>
+        # profile: 
         # role: 
         regions:
           - us-east-1

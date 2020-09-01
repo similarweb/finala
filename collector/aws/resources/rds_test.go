@@ -6,6 +6,7 @@ import (
 	"finala/collector/config"
 	"finala/collector/testutils"
 	collectorTestutils "finala/collector/testutils"
+	"fmt"
 	"reflect"
 	"testing"
 	"time"
@@ -86,6 +87,26 @@ func (r *MockAWSRDSClient) ListTagsForResource(*rds.ListTagsForResourceInput) (*
 
 }
 
+func RDSManagerMock() (*RDSManager, error) {
+	collector := collectorTestutils.NewMockCollector()
+	detector := awsTestutils.AWSManager(collector, nil, nil, "us-east-1")
+
+	mockClient := MockAWSRDSClient{
+		responseDescribeDBInstances: defaultRDSMock,
+	}
+
+	rdsInterface, err := NewRDSManager(detector, &mockClient)
+	if err != nil {
+		return &RDSManager{}, fmt.Errorf("unexpected rds error happened, got %v expected %v", err, nil)
+	}
+
+	rdsManager, ok := rdsInterface.(*RDSManager)
+	if !ok {
+		return &RDSManager{}, fmt.Errorf("unexpected rds struct, got %s expected %s", reflect.TypeOf(rdsInterface), "*RDSManager")
+	}
+
+	return rdsManager, nil
+}
 func TestDescribeRDSInstances(t *testing.T) {
 
 	collector := collectorTestutils.NewMockCollector()
@@ -215,21 +236,9 @@ func TestDetectRDS(t *testing.T) {
 }
 
 func TestGetPricingDatabaseEngine(t *testing.T) {
-	collector := collectorTestutils.NewMockCollector()
-	detector := awsTestutils.AWSManager(collector, nil, nil, "us-east-1")
-
-	mockClient := MockAWSRDSClient{
-		responseDescribeDBInstances: defaultRDSMock,
-	}
-
-	rdsInterface, err := NewRDSManager(detector, &mockClient)
+	rdsManager, err := RDSManagerMock()
 	if err != nil {
-		t.Fatalf("unexpected rds error happened, got %v expected %v", err, nil)
-	}
-
-	rdsManager, ok := rdsInterface.(*RDSManager)
-	if !ok {
-		t.Fatalf("unexpected rds struct, got %s expected %s", reflect.TypeOf(rdsInterface), "*RDSManager")
+		t.Fatalf(err.Error())
 	}
 
 	testResults := []string{"PostgreSQL", "Aurora MySQL", "mysql", "docdb", "Aurora MySQL"}
@@ -242,21 +251,9 @@ func TestGetPricingDatabaseEngine(t *testing.T) {
 	}
 }
 func TestGetPricingDeploymentOption(t *testing.T) {
-	collector := collectorTestutils.NewMockCollector()
-	detector := awsTestutils.AWSManager(collector, nil, nil, "us-east-1")
-
-	mockClient := MockAWSRDSClient{
-		responseDescribeDBInstances: defaultRDSMock,
-	}
-
-	rdsInterface, err := NewRDSManager(detector, &mockClient)
+	rdsManager, err := RDSManagerMock()
 	if err != nil {
-		t.Fatalf("unexpected rds error happened, got %v expected %v", err, nil)
-	}
-
-	rdsManager, ok := rdsInterface.(*RDSManager)
-	if !ok {
-		t.Fatalf("unexpected rds struct, got %s expected %s", reflect.TypeOf(rdsInterface), "*RDSManager")
+		t.Fatalf(err.Error())
 	}
 
 	testResults := []string{"Multi-AZ", "Single-AZ", "Single-AZ", "Single-AZ", "Single-AZ"}

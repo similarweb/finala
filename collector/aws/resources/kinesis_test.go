@@ -38,11 +38,17 @@ var defaultKinesisDescribeStreamMock = kinesis.DescribeStreamOutput{
 type MockAWSKinesisClient struct {
 	responseListstreams    kinesis.ListStreamsOutput
 	responseDescribestream kinesis.DescribeStreamOutput
+	listStreamCountRequest int
 	err                    error
 }
 
 func (r *MockAWSKinesisClient) ListStreams(*kinesis.ListStreamsInput) (*kinesis.ListStreamsOutput, error) {
-
+	r.listStreamCountRequest++
+	if r.listStreamCountRequest == 2 {
+		return &kinesis.ListStreamsOutput{
+			StreamNames: []*string{},
+		}, r.err
+	}
 	return &r.responseListstreams, r.err
 
 }
@@ -81,7 +87,7 @@ func TestDescribeKinesisStreams(t *testing.T) {
 			t.Fatalf("unexpected kinesis struct, got %s expected %s", reflect.TypeOf(kinesisInterface), "*KinesisManager")
 		}
 
-		result, _ := kinesisManager.describeStreams()
+		result, _ := kinesisManager.describeStreams(nil, nil)
 
 		if len(result) != len(defaultKinesisListStreamMock.StreamNames) {
 			t.Fatalf("unexpected kinesis stream count, got %d expected %d", len(result), len(defaultKinesisListStreamMock.StreamNames))
@@ -106,7 +112,7 @@ func TestDescribeKinesisStreams(t *testing.T) {
 			t.Fatalf("unexpected kinesis struct, got %s expected %s", reflect.TypeOf(kinesisInterface), "*KinesisManager")
 		}
 
-		_, err = kinesisManager.describeStreams()
+		_, err = kinesisManager.describeStreams(nil, nil)
 
 		if err == nil {
 			t.Fatalf("unexpected describe stream error, returned empty answer")

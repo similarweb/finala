@@ -24,5 +24,5 @@ export const useTableFilters = () => {
     Object.assign(state, newFilters);
     setState({ ...state });
   };
-  return [state, handleChange];
+  return [handleChange];
 };

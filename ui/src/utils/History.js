@@ -62,15 +62,15 @@ export const setHistory = (historyParams = {}) => {
 /**
  *
  * @param {string} query params name from url
- * @param {any} default return default value in case the query not exists
+ * @param {any} defaultValue return default value in case the query not exists
  * @returns {string} Param value from url
  */
-export const getHistory = (query, defaultReturn = null) => {
+export const getHistory = (query, defaultValue = null) => {
   const searchParams = new window.URLSearchParams(window.location.search);
   const searchQuery = searchParams.get(query);
   if (searchQuery) {
     return searchQuery;
   } else {
-    return defaultReturn;
+    return defaultValue;
   }
 };

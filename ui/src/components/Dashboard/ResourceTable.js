@@ -57,8 +57,7 @@ const ResourceTable = ({
   const [errorMessage, setErrorMessage] = useState(false);
   const [hasError, setHasError] = useState(false);
   const classes = useStyles();
-  // eslint-disable-next-line
-  const [tableFilters, setTableFilters] = useTableFilters({});
+  const [setTableFilters] = useTableFilters({});
   const [tableOptions, setTableOptions] = useState({});
 
   // setting table configuration on first load

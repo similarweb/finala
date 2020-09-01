@@ -6,6 +6,8 @@ import MUIDataTable from "mui-datatables";
 import TextUtils from "utils/Text";
 import TagsDialog from "../Dialog/Tags";
 import ReportProblemIcon from "@material-ui/icons/ReportProblem";
+import { getHistory } from "../../utils/History";
+import { useTableFilters } from "../../Hooks/TableHooks";
 
 import {
   makeStyles,
@@ -54,13 +56,23 @@ const ResourceTable = ({
   const [headers, setHeaders] = useState([]);
   const [errorMessage, setErrorMessage] = useState(false);
   const [hasError, setHasError] = useState(false);
-
   const classes = useStyles();
+  const [setTableFilters] = useTableFilters({});
+  const [tableOptions, setTableOptions] = useState({});
 
-  const tableOptions = {
-    selectableRows: "none",
-    responsive: "standard",
-  };
+  // setting table configuration on first load
+  useEffect(() => {
+    setTableOptions({
+      page: parseInt(getHistory("page", 0)),
+      searchText: getHistory("search", ""),
+      sortOrder: {
+        name: getHistory("sortColumn", ""),
+        direction: getHistory("direction", "desc"),
+      },
+      selectableRows: "none",
+      responsive: "standard",
+    });
+  }, []);
 
   /**
    * format table cell by type
@@ -191,6 +203,26 @@ const ResourceTable = ({
             data={currentResourceData}
             columns={headers}
             options={Object.assign(tableOptions, {
+              onSearchChange: (searchText) => {
+                setTableFilters([
+                  {
+                    key: "search",
+                    value: searchText ? searchText : "",
+                  },
+                ]);
+              },
+              onColumnSortChange: (changedColumn, direction) => {
+                setTableFilters([
+                  { key: "sortColumn", value: changedColumn },
+                  { key: "direction", value: direction },
+                ]);
+              },
+              onChangePage: (currentPage) => {
+                setTableFilters([{ key: "page", value: currentPage }]);
+              },
+              onChangeRowsPerPage: (numberOfRows) => {
+                setTableFilters([{ key: "rows", value: numberOfRows }]);
+              },
               downloadOptions: {
                 filename: `${currentResource}.csv`,
               },

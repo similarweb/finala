@@ -1,0 +1,52 @@
+[
+    {
+        "_index": "index-08-18-2020",
+        "_type": "_doc",
+        "_id": "a",
+        "_score": 5.8059154,
+        "_source": {
+            "ExecutionID": "general_1597723781",
+            "ResourceName": "aws_elb",
+            "EventType": "resource_detected",
+            "EventTime": 1597723787928189000,
+            "Timestamp": "2020-08-18T07:09:51.773854+03:00",
+            "Data": {
+                "LaunchTime": "2017-02-28T12:17:05.98Z",
+                "Metric": "Request count",
+                "PricePerHour": 0.025,
+                "PricePerMonth": 18.25,
+                "Region": "us-east-1",
+                "ResourceID": "resource-name",
+                "Tag": {
+                    "Name": "resource-name",
+                    "environment": "staging"
+                }
+            }
+        }
+    },
+    {
+        "_index": "index-08-18-2020",
+        "_type": "_doc",
+        "_id": "b",
+        "_score": 5.8059154,
+        "_source": {
+            "ExecutionID": "general_1597723781",
+            "ResourceName": "aws_elb",
+            "EventType": "resource_detected",
+            "EventTime": 1597723788398850000,
+            "Timestamp": "2020-08-18T07:09:51.876397+03:00",
+            "Data": {
+                "LaunchTime": "2017-02-28T13:00:40.81Z",
+                "Metric": "Request count",
+                "PricePerHour": 0.025,
+                "PricePerMonth": 18.25,
+                "Region": "us-east-1",
+                "ResourceID": "resource-name-2",
+                "Tag": {
+                    "Name": "resource-name-2",
+                    "environment": "production"
+                }
+            }
+        }
+    }
+]

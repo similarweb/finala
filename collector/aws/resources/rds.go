@@ -7,6 +7,7 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
+	"fmt"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -15,6 +16,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	log "github.com/sirupsen/logrus"
 )
+
+// ErrRDSStorageTypeNotFound will be used when a storage type is not found
+var ErrRDSStorageTypeNotFound = errors.New("Could not find RDS storage type")
 
 // RDSClientDescreptor is an interface defining the aws rds client
 type RDSClientDescreptor interface {
@@ -39,6 +43,14 @@ type DetectedAWSRDS struct {
 	MultiAZ      bool
 	Engine       string
 	collector.PriceDetectedFields
+}
+
+// RDSVolumeType will hold the available volume types for RDS types
+var rdsStorageType = map[string]string{
+	"gp2":      "General Purpose",
+	"standard": "Magnetic",
+	"io1":      "Provisioned IOPS",
+	"aurora":   "General Purpose-Aurora",
 }
 
 func init() {
@@ -77,6 +89,16 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 	r.awsManager.GetCollector().CollectStart(r.Name)
 
 	detected := []DetectedAWSRDS{}
+
+	pricingRegionPrefix, err := r.awsManager.GetPricingClient().GetRegionPrefix(r.awsManager.GetRegion())
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"region": r.awsManager.GetRegion(),
+		}).Error("Could not get pricing region prefix")
+		r.awsManager.GetCollector().CollectError(r.Name, err)
+		return detected, err
+	}
+
 	instances, err := r.describeInstances(nil, nil)
 	if err != nil {
 		log.WithField("error", err).Error("could not describe rds instances")
@@ -89,7 +111,27 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 
 		log.WithField("name", *instance.DBInstanceIdentifier).Debug("checking RDS")
 
-		price, _ := r.awsManager.GetPricingClient().GetPrice(r.getPricingFilterInput(instance), "", r.awsManager.GetRegion())
+		instancePricingFilters := r.getPricingInstanceFilterInput(instance)
+		instancePrice, err := r.awsManager.GetPricingClient().GetPrice(instancePricingFilters, "", r.awsManager.GetRegion())
+		if err != nil {
+			log.WithError(err).Error("Could not get rds instance price")
+			continue
+		}
+
+		hourlyStoragePrice, err := r.getHourlyStoragePrice(instance, pricingRegionPrefix)
+		if err != nil {
+			log.WithError(err).Error("Could not get rds storage price")
+			continue
+		}
+
+		totalHourlyPrice := hourlyStoragePrice + instancePrice
+
+		log.WithFields(log.Fields{
+			"instance_hour_price": instancePrice,
+			"storage_hour_price":  hourlyStoragePrice,
+			"total_hour_price":    totalHourlyPrice,
+			"rds_AZ_multi":        *instance.MultiAZ,
+			"region":              r.awsManager.GetRegion()}).Debug("Found the following price list")
 
 		for _, metric := range metrics {
 			log.WithFields(log.Fields{
@@ -136,6 +178,7 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 					"formula_value":       formulaValue,
 					"name":                *instance.DBInstanceIdentifier,
 					"instance_type":       *instance.DBInstanceClass,
+					"engine":              *instance.Engine,
 					"region":              r.awsManager.GetRegion(),
 				}).Info("RDS instance detected as unutilized resource")
 
@@ -159,8 +202,8 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 					PriceDetectedFields: collector.PriceDetectedFields{
 						ResourceID:    *instance.DBInstanceArn,
 						LaunchTime:    *instance.InstanceCreateTime,
-						PricePerHour:  price,
-						PricePerMonth: price * collector.TotalMonthHours,
+						PricePerHour:  totalHourlyPrice,
+						PricePerMonth: totalHourlyPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
 					},
 				}
@@ -182,26 +225,38 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 
 }
 
+func (r *RDSManager) getHourlyStoragePrice(instance *rds.DBInstance, pricingRegionPrefix string) (float64, error) {
+	var hourlyStoragePrice float64
+	if rdsStorageType, found := rdsStorageType[*instance.StorageType]; found {
+		var storagePricingFilters pricing.GetProductsInput
+		switch *instance.Engine {
+		case "aurora", "aurora-mysql", "aurora-postgresql":
+			storagePricingFilters = r.getPricingAuroraStorageFilterInput(rdsStorageType, pricingRegionPrefix)
+		default:
+			deploymentOption := r.getPricingDeploymentOption(instance)
+			storagePricingFilters = r.getPricingRDSStorageFilterInput(rdsStorageType, deploymentOption)
+		}
+
+		log.WithField("storage_filters", storagePricingFilters).Debug("pricing storage filters")
+		storagePrice, err := r.awsManager.GetPricingClient().GetPrice(storagePricingFilters, "", r.awsManager.GetRegion())
+		if err != nil {
+			log.WithField("storage_filters", storagePricingFilters).WithError(err).Error("Could not get rds storage price")
+			return hourlyStoragePrice, err
+		}
+
+		hourlyStoragePrice = (storagePrice * float64(*instance.AllocatedStorage)) / collector.TotalMonthHours
+		return hourlyStoragePrice, nil
+	}
+
+	log.WithField("rds_storage_type", *instance.StorageType).Error(ErrRDSStorageTypeNotFound.Error())
+	return 0, ErrRDSStorageTypeNotFound
+}
+
 // getPricingFilterInput prepare document rds pricing filter
-func (r *RDSManager) getPricingFilterInput(instance *rds.DBInstance) pricing.GetProductsInput {
+func (r *RDSManager) getPricingInstanceFilterInput(instance *rds.DBInstance) pricing.GetProductsInput {
 
-	deploymentOption := "Single-AZ"
-
-	if *instance.MultiAZ {
-		deploymentOption = "Multi-AZ"
-	}
-
-	var databaseEngine string
-	switch *instance.Engine {
-	case "postgres":
-		databaseEngine = "PostgreSQL"
-	case "aurora", "aurora-mysql":
-		databaseEngine = "Aurora MySQL"
-	case "aurora-postgresql":
-		databaseEngine = "Aurora PostgreSQL"
-	default:
-		databaseEngine = *instance.Engine
-	}
+	databaseEngine := r.getPricingDatabaseEngine(instance)
+	deploymentOption := r.getPricingDeploymentOption(instance)
 
 	return pricing.GetProductsInput{
 		ServiceCode: &r.servicePricingCode,
@@ -223,7 +278,88 @@ func (r *RDSManager) getPricingFilterInput(instance *rds.DBInstance) pricing.Get
 			},
 		},
 	}
+}
 
+// getPricingDatabaseEngine will return the pricing Database Engine according to the RDS instance engine.
+func (r *RDSManager) getPricingDatabaseEngine(instance *rds.DBInstance) string {
+	var databaseEngine string
+	switch *instance.Engine {
+	case "postgres":
+		databaseEngine = "PostgreSQL"
+	case "aurora", "aurora-mysql":
+		databaseEngine = "Aurora MySQL"
+	case "aurora-postgresql":
+		databaseEngine = "Aurora PostgreSQL"
+	default:
+		databaseEngine = *instance.Engine
+	}
+	return databaseEngine
+}
+
+// getPricingDeploymentOption will return the pricing deployment option according to the RDS instance deploy option
+func (r *RDSManager) getPricingDeploymentOption(instance *rds.DBInstance) string {
+	deploymentOption := "Single-AZ"
+
+	if *instance.MultiAZ {
+		deploymentOption = "Multi-AZ"
+	}
+
+	return deploymentOption
+}
+
+// getPricingRDSStorageFilterInput will set the right filters for RDS Storage pricing
+func (r *RDSManager) getPricingRDSStorageFilterInput(rdsStorageType string, deploymentOption string) pricing.GetProductsInput {
+
+	return pricing.GetProductsInput{
+		ServiceCode: &r.servicePricingCode,
+		Filters: []*pricing.Filter{
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("volumeType"),
+				Value: awsClient.String(rdsStorageType),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("productFamily"),
+				Value: awsClient.String("Database Storage"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("termType"),
+				Value: awsClient.String("OnDemand"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("deploymentOption"),
+				Value: awsClient.String(deploymentOption),
+			},
+		},
+	}
+}
+
+// getPricingAuroraStorageFilterInput will set the right filters for Aurora Storage
+func (r *RDSManager) getPricingAuroraStorageFilterInput(rdsStorageType string, pricingRegionPrefix string) pricing.GetProductsInput {
+
+	return pricing.GetProductsInput{
+		ServiceCode: &r.servicePricingCode,
+		Filters: []*pricing.Filter{
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("volumeType"),
+				Value: awsClient.String(rdsStorageType),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("databaseEngine"),
+				Value: awsClient.String("Any"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("usagetype"),
+				Value: awsClient.String(fmt.Sprintf("%sAurora:StorageUsage", pricingRegionPrefix)),
+			},
+		},
+	}
 }
 
 // describeInstances return list of rds instances
@@ -244,7 +380,7 @@ func (r *RDSManager) describeInstances(Marker *string, instances []*rds.DBInstan
 	}
 
 	for _, instance := range resp.DBInstances {
-		// Ignore DocumentDB and Neptune engine types as we have a seperate
+		// Ignore DocumentDB and Neptune engine types as we have a separate
 		// module for them and the default API call returns them
 		if *instance.Engine != "docdb" && *instance.Engine != "neptune" {
 			instances = append(instances, instance)

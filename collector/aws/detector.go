@@ -43,12 +43,12 @@ type DetectorManager struct {
 }
 
 // NewDetectorManager create new instance of detector manager
-func NewDetectorManager(collector collector.CollectorDescriber, account config.AWSAccount, stsManager *STSManager, global map[string]struct{}, region string) *DetectorManager {
+func NewDetectorManager(awsAuth AuthDescriptor, collector collector.CollectorDescriber, account config.AWSAccount, stsManager *STSManager, global map[string]struct{}, region string) *DetectorManager {
 
-	priceSession, _ := CreateAuthConfiguration(account.AccessKey, account.SecretKey, account.SessionToken, account.Role, defaultRegionPrice)
+	priceSession, _ := awsAuth.Login(defaultRegionPrice)
 	pricingManager := pricing.NewPricingManager(awsPricing.New(priceSession), defaultRegionPrice)
 
-	regionSession, regionConfig := CreateAuthConfiguration(account.AccessKey, account.SecretKey, account.SessionToken, account.Role, region)
+	regionSession, regionConfig := awsAuth.Login(region)
 	cloudWatchCLient := cloudwatch.NewCloudWatchManager(awsCloudwatch.New(regionSession, regionConfig))
 
 	callerIdentityOutput, _ := stsManager.client.GetCallerIdentity(&sts.GetCallerIdentityInput{})

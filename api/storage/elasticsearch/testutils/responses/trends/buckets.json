@@ -1,0 +1,18 @@
+{
+    "buckets" : [
+      {
+        "key" : "general_1597723781",
+        "doc_count" : 2,
+        "monthly-cost" : {
+          "value" : 36.5
+        }
+      },
+      {
+        "key" : "general_1597336737",
+        "doc_count" : 17,
+        "monthly-cost" : {
+          "value" : 310.25
+        }
+      }
+    ]
+  }

@@ -150,7 +150,7 @@ const FilterBar = ({
       }
     });
 
-    updateFilters(filters);
+    setFilters(filters);
     if (resource) {
       setResource(resource);
     }

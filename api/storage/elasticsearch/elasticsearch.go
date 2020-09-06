@@ -10,11 +10,15 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
 
 	elastic "github.com/olivere/elastic/v7"
 	log "github.com/sirupsen/logrus"
+)
+
+var (
+	ErrInvalidQuery            = errors.New("invalid query")
+	ErrAggregationTermNotFound = errors.New("aggregation terms was not found")
 )
 
 const (
@@ -45,53 +49,20 @@ const (
 
 // StorageManager descrive elasticsearchStorage
 type StorageManager struct {
-	client          *elastic.Client
+	client          elasticSearchDescriptor
 	currentIndexDay string
-}
-
-// getESClient create new elasticsearch client
-func getESClient(conf config.ElasticsearchConfig) (*elastic.Client, error) {
-
-	client, err := elastic.NewClient(elastic.SetURL(strings.Join(conf.Endpoints, ",")),
-		elastic.SetErrorLog(log.New()),
-		// elastic.SetTraceLog(log.New()), // Uncomment for debugging ElasticSearch Queries
-		elastic.SetBasicAuth(conf.Username, conf.Password),
-		elastic.SetSniff(false),
-		elastic.SetHealthcheck(true))
-
-	return client, err
-
 }
 
 // NewStorageManager creates new elasticsearch storage
 func NewStorageManager(conf config.ElasticsearchConfig) (*StorageManager, error) {
 
-	var esclient *elastic.Client
-
-	c := make(chan int, 1)
-	go func() {
-		var err error
-		for {
-			esclient, err = getESClient(conf)
-			if err == nil {
-				break
-			}
-			log.WithFields(log.Fields{
-				"endpoint": conf.Endpoints,
-			}).WithError(err).Warn("could not initialize connection to elasticsearch, retrying in 5 seconds")
-			time.Sleep(5 * time.Second)
-		}
-		c <- 1
-	}()
-
-	select {
-	case <-c:
-	case <-time.After(60 * time.Second):
-		log.Fatal("could not connect elasticsearch, timed out after 1 minute")
+	client, err := NewClient(conf)
+	if err != nil {
+		return nil, err
 	}
 
 	storageManager := &StorageManager{
-		client: esclient,
+		client: client,
 	}
 
 	if !storageManager.setCreateCurrentIndexDay() {
@@ -241,7 +212,7 @@ func (sm *StorageManager) getResourceSummaryDetails(executionID string, filters 
 		Aggregation("sum", elastic.NewSumAggregation().Field("Data.PricePerMonth")).
 		Size(0).Do(context.Background())
 
-	if nil != err {
+	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
 			"filters":      filters,
 			"milliseconds": searchResult.TookInMillis,
@@ -280,17 +251,15 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 			SubAggregation("MaxEventTime", elastic.NewMaxAggregation().Field("EventTime")))).
 		Do(context.Background())
 
-	if nil != err {
-		log.WithError(err).WithFields(log.Fields{
-			"milliseconds": searchResult.TookInMillis,
-		}).Error("error when trying to get executions collectors")
-		return executions, nil
+	if err != nil {
+		log.WithError(err).Error("error when trying to get executions collectors")
+		return executions, ErrInvalidQuery
 	}
 
 	resp, ok := searchResult.Aggregations.Terms("orderedExecutionID")
 	if !ok {
 		log.Error("orderedExecutionID field term does not exist")
-		return executions, nil
+		return executions, ErrAggregationTermNotFound
 	}
 
 	for _, ExecutionIDBuckets := range resp.Buckets {
@@ -422,17 +391,17 @@ func (sm *StorageManager) GetResourceTrends(resourceType string, filters map[str
 	executions, found := searchResult.Aggregations.Terms("executions")
 	if found {
 		for _, ppm := range executions.Buckets {
-			executionId := ppm.Key.(string)
+			executionID := ppm.Key.(string)
 			monthlyAgg, _ := ppm.Aggregations.Sum("monthly-cost")
 
 			// Extract the timestamp from the ExecutionID
-			timestamp, err := interpolation.ExtractTimestamp(executionId)
+			timestamp, err := interpolation.ExtractTimestamp(executionID)
 			if err != nil {
 				timestamp = 0
 			}
 
 			resources = append(resources, storage.ExecutionCost{
-				ExecutionID:        executionId,
+				ExecutionID:        executionID,
 				ExtractedTimestamp: timestamp,
 				CostSum:            *monthlyAgg.Value,
 			})

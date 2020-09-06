@@ -1,0 +1,10 @@
+{
+    "buckets": [
+        {
+            "doc_count": 34,
+            "invalid-key": {
+                "buckets": []
+            }
+        }
+    ]
+}

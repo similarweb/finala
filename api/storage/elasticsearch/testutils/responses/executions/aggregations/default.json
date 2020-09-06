@@ -1,0 +1,33 @@
+{
+    "took": 4,
+    "buckets": [
+        {
+            "doc_count": 34,
+            "ExecutionIDDesc": {
+                "buckets": [
+                    {
+                        "key": "execution_1",
+                        "doc_count": 1,
+                        "MaxEventTime": {
+                            "value": 1597725395201886000
+                        }
+                    },
+                    {
+                        "key": "execution_2",
+                        "doc_count": 3,
+                        "MaxEventTime": {
+                            "value": 1597725358399338000
+                        }
+                    },
+                    {
+                        "key": "executionName",
+                        "doc_count": 1,
+                        "MaxEventTime": {
+                            "value": 1597725395201886000
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}

@@ -111,6 +111,8 @@ func (sm *StorageManager) getDynamicMatchQuery(filters map[string]string, operat
 	var mq *elastic.MatchQuery
 	for name, value := range filters {
 		mq = elastic.NewMatchQuery(name, value)
+		// Minimum number of clauses that must match for a document to be returned
+		mq.MinimumShouldMatch("100%")
 		if operator == "and" {
 			mq = mq.Operator("and")
 		}
@@ -123,8 +125,8 @@ func (sm *StorageManager) getDynamicMatchQuery(filters map[string]string, operat
 // GetSummary returns executions summary
 func (sm *StorageManager) GetSummary(executionID string, filters map[string]string) (map[string]storage.CollectorsSummary, error) {
 	summary := map[string]storage.CollectorsSummary{}
-	executionIDQuery := elastic.NewMatchQuery("ExecutionID", executionID)
-	eventTypeQuery := elastic.NewMatchQuery("EventType", "service_status")
+	executionIDQuery := elastic.NewTermQuery("ExecutionID", executionID)
+	eventTypeQuery := elastic.NewTermQuery("EventType", "service_status")
 
 	log.WithFields(log.Fields{
 		"execution_id": executionIDQuery,
@@ -204,8 +206,8 @@ func (sm *StorageManager) getResourceSummaryDetails(executionID string, filters 
 	var resourceCount int64
 
 	dynamicMatchQuery := sm.getDynamicMatchQuery(filters, "or")
-	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery("ExecutionID", executionID))
-	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewMatchQuery("EventType", "resource_detected"))
+	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewTermQuery("ExecutionID", executionID))
+	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewTermQuery("EventType", "resource_detected"))
 
 	searchResult, err := sm.client.Search().
 		Query(elastic.NewBoolQuery().Must(dynamicMatchQuery...)).
@@ -214,8 +216,7 @@ func (sm *StorageManager) getResourceSummaryDetails(executionID string, filters 
 
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
-			"filters":      filters,
-			"milliseconds": searchResult.TookInMillis,
+			"filters": filters,
 		}).Error("error when trying to get summary details")
 
 		return totalSpent, resourceCount, err
@@ -246,7 +247,7 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 	// Second look for message which have the field ExecutionID
 	// Third Order the ExecutionID by EventTime Desc
 	searchResult, err := sm.client.Search().Aggregation("orderedExecutionID", elastic.NewFiltersAggregation().
-		Filters(elastic.NewBoolQuery().Filter(elastic.NewBoolQuery().Should(elastic.NewMatchQuery("EventType", "service_status")))).
+		Filters(elastic.NewBoolQuery().Filter(elastic.NewBoolQuery().Should(elastic.NewTermQuery("EventType", "service_status")))).
 		SubAggregation("ExecutionIDDesc", elastic.NewTermsAggregation().Field("ExecutionID").Size(queryLimit).Order("MaxEventTime", false).
 			SubAggregation("MaxEventTime", elastic.NewMaxAggregation().Field("EventTime")))).
 		Do(context.Background())
@@ -302,9 +303,9 @@ func (sm *StorageManager) GetResources(resourceType string, executionID string, 
 
 	var resources []map[string]interface{}
 	dynamicMatchQuery := sm.getDynamicMatchQuery(filters, "or")
-	componentQ := elastic.NewMatchQuery("EventType", "resource_detected")
-	deploymentQ := elastic.NewMatchQuery("ExecutionID", executionID)
-	ResourceNameQ := elastic.NewMatchQuery("ResourceName", resourceType)
+	componentQ := elastic.NewTermQuery("EventType", "resource_detected")
+	deploymentQ := elastic.NewTermQuery("ExecutionID", executionID)
+	ResourceNameQ := elastic.NewTermQuery("ResourceName", resourceType)
 	generalQ := elastic.NewBoolQuery()
 	generalQ = generalQ.Must(componentQ).Must(deploymentQ).Must(ResourceNameQ).Must(dynamicMatchQuery...)
 	searchResultTotalHits, err := sm.client.Search().
@@ -352,14 +353,14 @@ func (sm *StorageManager) GetResourceTrends(resourceType string, filters map[str
 
 	// Must
 	mustQuery := sm.getDynamicMatchQuery(filters, "and")
-	mustQuery = append(mustQuery, elastic.NewMatchQuery("ResourceName", resourceType).Operator("and"))
+	mustQuery = append(mustQuery, elastic.NewTermQuery("ResourceName", resourceType))
 
 	// Unsupported Types - MustNot
-	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("EventType", "service_status").Operator("and"))
-	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_iam_users").Operator("and"))
-	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_elastic_ip").Operator("and"))
-	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_lambda").Operator("and"))
-	mustNotQuery = append(mustNotQuery, elastic.NewMatchQuery("ResourceName", "aws_ec2_volume").Operator("and"))
+	mustNotQuery = append(mustNotQuery, elastic.NewTermQuery("EventType", "service_status"))
+	mustNotQuery = append(mustNotQuery, elastic.NewTermQuery("ResourceName", "aws_iam_users"))
+	mustNotQuery = append(mustNotQuery, elastic.NewTermQuery("ResourceName", "aws_elastic_ip"))
+	mustNotQuery = append(mustNotQuery, elastic.NewTermQuery("ResourceName", "aws_lambda"))
+	mustNotQuery = append(mustNotQuery, elastic.NewTermQuery("ResourceName", "aws_ec2_volume"))
 
 	queryBuilder := elastic.NewBoolQuery().MustNot(mustNotQuery...).Must(mustQuery...)
 	searchResult, err := sm.client.Search().
@@ -420,8 +421,8 @@ func (sm *StorageManager) GetResourceTrends(resourceType string, filters map[str
 func (sm *StorageManager) GetExecutionTags(executionID string) (map[string][]string, error) {
 
 	tags := map[string][]string{}
-	eventTypeMatchQuery := elastic.NewMatchQuery("EventType", "resource_detected")
-	executionIDMatchQuery := elastic.NewMatchQuery("ExecutionID", executionID)
+	eventTypeMatchQuery := elastic.NewTermQuery("EventType", "resource_detected")
+	executionIDMatchQuery := elastic.NewTermQuery("ExecutionID", executionID)
 	elasticQuery := elastic.Query(elastic.NewBoolQuery().Must(eventTypeMatchQuery, executionIDMatchQuery))
 
 	// First get the Query Size for all the hits

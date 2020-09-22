@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { ResourcesService } from "services/resources.service";
 import { SettingsService } from "services/settings.service";
-import { titleDirective } from "../directives";
+import { titleDirective } from "utils/Title";
 import { getHistory, setHistory } from "../utils/History";
 
 let fetchTimeoutRequest = false;

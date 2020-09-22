@@ -1,7 +1,8 @@
 import React, { Fragment } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import { titleDirective, MoneyDirective } from "../../directives";
+import { titleDirective } from "../../utils/Title";
+import { MoneyDirective } from "../../utils/Money";
 import {
   Box,
   Card,

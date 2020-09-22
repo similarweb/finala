@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import { titleDirective } from "../../directives";
+import { titleDirective } from "utils/Title";
 import { Box, LinearProgress, makeStyles } from "@material-ui/core";
 
 const useStyles = makeStyles(() => ({

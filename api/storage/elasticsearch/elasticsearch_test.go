@@ -104,7 +104,7 @@ func TestGetDynamicMatchQuery(t *testing.T) {
 			t.Fatalf("unexpected error, got %v expected nil", err)
 		}
 
-		expectedFilter := `{"match":{"test1":{"query":"foo"}}}`
+		expectedFilter := `{"match":{"test1":{"minimum_should_match":"100%","query":"foo"}}}`
 		if string(queryJSON) != expectedFilter {
 			t.Fatalf("unexpected query filter: got %s want %s", string(queryJSON), expectedFilter)
 		}
@@ -126,10 +126,9 @@ func TestGetDynamicMatchQuery(t *testing.T) {
 		queryJSON, err := json.Marshal(firstQuery)
 		if err != nil {
 			t.Fatalf("unexpected error, got %v expected nil", err)
-
 		}
 
-		expectedFilter := `{"match":{"test1":{"operator":"and","query":"foo"}}}`
+		expectedFilter := `{"match":{"test1":{"minimum_should_match":"100%","operator":"and","query":"foo"}}}`
 		if string(queryJSON) != expectedFilter {
 			t.Fatalf("unexpected query filter: got %s want %s", string(queryJSON), expectedFilter)
 		}
@@ -176,19 +175,19 @@ func TestGetExecutions(t *testing.T) {
 	mockClient.Router.HandleFunc("/_search", func(resp http.ResponseWriter, req *http.Request) {
 
 		switch testutils.GetPostParams(req) {
-		case `{"aggregations":{"orderedExecutionID":{"aggregations":{"ExecutionIDDesc":{"aggregations":{"MaxEventTime":{"max":{"field":"EventTime"}}},"terms":{"field":"ExecutionID","order":[{"MaxEventTime":"desc"}],"size":1}}},"filters":{"filters":[{"bool":{"filter":{"bool":{"should":{"match":{"EventType":{"query":"service_status"}}}}}}}]}}}}`:
+		case `{"aggregations":{"orderedExecutionID":{"aggregations":{"ExecutionIDDesc":{"aggregations":{"MaxEventTime":{"max":{"field":"EventTime"}}},"terms":{"field":"ExecutionID","order":[{"MaxEventTime":"desc"}],"size":1}}},"filters":{"filters":[{"bool":{"filter":{"bool":{"should":{"term":{"EventType":"service_status"}}}}}}]}}}}`:
 			testutils.JSONResponse(resp, http.StatusOK, elastic.SearchResult{Aggregations: map[string]json.RawMessage{
 				"orderedExecutionID": testutils.LoadResponse("executions/aggregations/default"),
 			}})
-		case `{"aggregations":{"orderedExecutionID":{"aggregations":{"ExecutionIDDesc":{"aggregations":{"MaxEventTime":{"max":{"field":"EventTime"}}},"terms":{"field":"ExecutionID","order":[{"MaxEventTime":"desc"}],"size":2}}},"filters":{"filters":[{"bool":{"filter":{"bool":{"should":{"match":{"EventType":{"query":"service_status"}}}}}}}]}}}}`:
+		case `{"aggregations":{"orderedExecutionID":{"aggregations":{"ExecutionIDDesc":{"aggregations":{"MaxEventTime":{"max":{"field":"EventTime"}}},"terms":{"field":"ExecutionID","order":[{"MaxEventTime":"desc"}],"size":2}}},"filters":{"filters":[{"bool":{"filter":{"bool":{"should":{"term":{"EventType":"service_status"}}}}}}]}}}}`:
 			testutils.JSONResponse(resp, http.StatusOK, elastic.SearchResult{Aggregations: map[string]json.RawMessage{
 				"invalid-key": testutils.LoadResponse("executions/aggregations/default"),
 			}})
-		case `{"aggregations":{"orderedExecutionID":{"aggregations":{"ExecutionIDDesc":{"aggregations":{"MaxEventTime":{"max":{"field":"EventTime"}}},"terms":{"field":"ExecutionID","order":[{"MaxEventTime":"desc"}],"size":3}}},"filters":{"filters":[{"bool":{"filter":{"bool":{"should":{"match":{"EventType":{"query":"service_status"}}}}}}}]}}}}`:
+		case `{"aggregations":{"orderedExecutionID":{"aggregations":{"ExecutionIDDesc":{"aggregations":{"MaxEventTime":{"max":{"field":"EventTime"}}},"terms":{"field":"ExecutionID","order":[{"MaxEventTime":"desc"}],"size":3}}},"filters":{"filters":[{"bool":{"filter":{"bool":{"should":{"term":{"EventType":"service_status"}}}}}}]}}}}`:
 			testutils.JSONResponse(resp, http.StatusOK, elastic.SearchResult{Aggregations: map[string]json.RawMessage{
 				"orderedExecutionID": testutils.LoadResponse("executions/aggregations/invalid-aggregations-key"),
 			}})
-		case `{"aggregations":{"orderedExecutionID":{"aggregations":{"ExecutionIDDesc":{"aggregations":{"MaxEventTime":{"max":{"field":"EventTime"}}},"terms":{"field":"ExecutionID","order":[{"MaxEventTime":"desc"}],"size":4}}},"filters":{"filters":[{"bool":{"filter":{"bool":{"should":{"match":{"EventType":{"query":"service_status"}}}}}}}]}}}}`:
+		case `{"aggregations":{"orderedExecutionID":{"aggregations":{"ExecutionIDDesc":{"aggregations":{"MaxEventTime":{"max":{"field":"EventTime"}}},"terms":{"field":"ExecutionID","order":[{"MaxEventTime":"desc"}],"size":4}}},"filters":{"filters":[{"bool":{"filter":{"bool":{"should":{"term":{"EventType":"service_status"}}}}}}]}}}}`:
 			testutils.JSONResponse(resp, http.StatusBadRequest, elastic.SearchResult{Aggregations: map[string]json.RawMessage{}})
 		default:
 			t.Fatalf("unexpected request params")
@@ -227,16 +226,16 @@ func TestGetSummary(t *testing.T) {
 		response := elastic.SearchResult{}
 
 		switch testutils.GetPostParams(req) {
-		case `{"query":{"bool":{"must":[{"match":{"EventType":{"query":"service_status"}}},{"match":{"ExecutionID":{"query":""}}}]}},"size":0}`:
+		case `{"query":{"bool":{"must":[{"term":{"EventType":"service_status"}},{"term":{"ExecutionID":""}}]}},"size":0}`:
 			response.Hits = &elastic.SearchHits{TotalHits: &elastic.TotalHits{Value: 1}}
-		case `{"query":{"bool":{"must":[{"match":{"EventType":{"query":"service_status"}}},{"match":{"ExecutionID":{"query":""}}}]}},"size":1}`:
+		case `{"query":{"bool":{"must":[{"term":{"EventType":"service_status"}},{"term":{"ExecutionID":""}}]}},"size":1}`:
 			response.Hits = &elastic.SearchHits{
 				TotalHits: &elastic.TotalHits{Value: 1},
 				Hits: []*elastic.SearchHit{
 					{Source: testutils.GetDummyDoc("aws_resource_name", nil)},
 				},
 			}
-		case `{"aggregations":{"sum":{"sum":{"field":"Data.PricePerMonth"}}},"query":{"bool":{"must":[{"match":{"ResourceName":{"query":"aws_resource_name"}}},{"match":{"ExecutionID":{"query":""}}},{"match":{"EventType":{"query":"resource_detected"}}}]}},"size":0}`:
+		case `{"aggregations":{"sum":{"sum":{"field":"Data.PricePerMonth"}}},"query":{"bool":{"must":[{"match":{"ResourceName":{"minimum_should_match":"100%","query":"aws_resource_name"}}},{"term":{"ExecutionID":""}},{"term":{"EventType":"resource_detected"}}]}},"size":0}`:
 			response.Aggregations = map[string]json.RawMessage{"sum": []byte(`{"value": 36.5}`)}
 			response.Hits = &elastic.SearchHits{TotalHits: &elastic.TotalHits{Value: 1}}
 		default:
@@ -294,11 +293,11 @@ func TestGetResources(t *testing.T) {
 		response := elastic.SearchResult{}
 
 		switch testutils.GetPostParams(req) {
-		case `{"query":{"bool":{"must":[{"match":{"EventType":{"query":"resource_detected"}}},{"match":{"ExecutionID":{"query":"1234"}}},{"match":{"ResourceName":{"query":"aws_resource_name"}}},{"match":{"foo":{"query":"bar"}}}]}},"size":0}`:
+		case `{"query":{"bool":{"must":[{"term":{"EventType":"resource_detected"}},{"term":{"ExecutionID":"1234"}},{"term":{"ResourceName":"aws_resource_name"}},{"match":{"foo":{"minimum_should_match":"100%","query":"bar"}}}]}},"size":0}`:
 			response.Hits = &elastic.SearchHits{
 				TotalHits: &elastic.TotalHits{Value: 2},
 			}
-		case `{"query":{"bool":{"must":[{"match":{"EventType":{"query":"resource_detected"}}},{"match":{"ExecutionID":{"query":"1234"}}},{"match":{"ResourceName":{"query":"aws_resource_name"}}},{"match":{"foo":{"query":"bar"}}}]}},"size":2}`:
+		case `{"query":{"bool":{"must":[{"term":{"EventType":"resource_detected"}},{"term":{"ExecutionID":"1234"}},{"term":{"ResourceName":"aws_resource_name"}},{"match":{"foo":{"minimum_should_match":"100%","query":"bar"}}}]}},"size":2}`:
 			response.Hits = &elastic.SearchHits{
 				TotalHits: &elastic.TotalHits{Value: 1},
 				Hits: []*elastic.SearchHit{
@@ -340,11 +339,11 @@ func TestGetResourceTrends(t *testing.T) {
 		response := elastic.SearchResult{}
 
 		switch testutils.GetPostParams(req) {
-		case `{"query":{"bool":{"must":[{"match":{"foo":{"operator":"and","query":"bar"}}},{"match":{"ResourceName":{"operator":"and","query":"resource-name"}}}],"must_not":[{"match":{"EventType":{"operator":"and","query":"service_status"}}},{"match":{"ResourceName":{"operator":"and","query":"aws_iam_users"}}},{"match":{"ResourceName":{"operator":"and","query":"aws_elastic_ip"}}},{"match":{"ResourceName":{"operator":"and","query":"aws_lambda"}}},{"match":{"ResourceName":{"operator":"and","query":"aws_ec2_volume"}}}]}},"size":0}`:
+		case `{"query":{"bool":{"must":[{"match":{"foo":{"minimum_should_match":"100%","operator":"and","query":"bar"}}},{"term":{"ResourceName":"resource-name"}}],"must_not":[{"term":{"EventType":"service_status"}},{"term":{"ResourceName":"aws_iam_users"}},{"term":{"ResourceName":"aws_elastic_ip"}},{"term":{"ResourceName":"aws_lambda"}},{"term":{"ResourceName":"aws_ec2_volume"}}]}},"size":0}`:
 			response.Hits = &elastic.SearchHits{
 				TotalHits: &elastic.TotalHits{Value: 2},
 			}
-		case `{"aggregations":{"executions":{"aggregations":{"monthly-cost":{"sum":{"field":"Data.PricePerMonth"}}},"terms":{"field":"ExecutionID","order":[{"_key":"desc"}]}}},"query":{"bool":{"must":[{"match":{"foo":{"operator":"and","query":"bar"}}},{"match":{"ResourceName":{"operator":"and","query":"resource-name"}}}],"must_not":[{"match":{"EventType":{"operator":"and","query":"service_status"}}},{"match":{"ResourceName":{"operator":"and","query":"aws_iam_users"}}},{"match":{"ResourceName":{"operator":"and","query":"aws_elastic_ip"}}},{"match":{"ResourceName":{"operator":"and","query":"aws_lambda"}}},{"match":{"ResourceName":{"operator":"and","query":"aws_ec2_volume"}}}]}},"size":2,"sort":[{"Timestamp":{"order":"desc"}}]}`:
+		case `{"aggregations":{"executions":{"aggregations":{"monthly-cost":{"sum":{"field":"Data.PricePerMonth"}}},"terms":{"field":"ExecutionID","order":[{"_key":"desc"}]}}},"query":{"bool":{"must":[{"match":{"foo":{"minimum_should_match":"100%","operator":"and","query":"bar"}}},{"term":{"ResourceName":"resource-name"}}],"must_not":[{"term":{"EventType":"service_status"}},{"term":{"ResourceName":"aws_iam_users"}},{"term":{"ResourceName":"aws_elastic_ip"}},{"term":{"ResourceName":"aws_lambda"}},{"term":{"ResourceName":"aws_ec2_volume"}}]}},"size":2,"sort":[{"Timestamp":{"order":"desc"}}]}`:
 			response.Aggregations = map[string]json.RawMessage{
 				"executions": testutils.LoadResponse("trends/buckets"),
 			}
@@ -381,9 +380,9 @@ func TestGetExecutionTags(t *testing.T) {
 		response := elastic.SearchResult{}
 
 		switch testutils.GetPostParams(req) {
-		case `{"query":{"bool":{"must":[{"match":{"EventType":{"query":"resource_detected"}}},{"match":{"ExecutionID":{"query":"execution_id"}}}]}},"size":0}`:
+		case `{"query":{"bool":{"must":[{"term":{"EventType":"resource_detected"}},{"term":{"ExecutionID":"execution_id"}}]}},"size":0}`:
 			response.Hits = &elastic.SearchHits{TotalHits: &elastic.TotalHits{Value: 10}}
-		case `{"query":{"bool":{"must":[{"match":{"EventType":{"query":"resource_detected"}}},{"match":{"ExecutionID":{"query":"execution_id"}}}]}},"size":10}`:
+		case `{"query":{"bool":{"must":[{"term":{"EventType":"resource_detected"}},{"term":{"ExecutionID":"execution_id"}}]}},"size":10}`:
 
 			response.Hits = &elastic.SearchHits{
 				TotalHits: &elastic.TotalHits{Value: 1},

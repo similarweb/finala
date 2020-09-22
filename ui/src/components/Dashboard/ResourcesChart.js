@@ -3,7 +3,8 @@ import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import colors from "./colors.json";
 import Chart from "react-apexcharts";
-import { titleDirective, MoneyDirective } from "../../directives";
+import { titleDirective } from "../../utils/Title";
+import { MoneyDirective } from "../../utils/Money";
 import { setHistory } from "../../utils/History";
 
 import {

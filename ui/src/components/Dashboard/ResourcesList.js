@@ -6,7 +6,8 @@ import { makeStyles } from "@material-ui/core/styles";
 import { setHistory } from "../../utils/History";
 
 import { Box, Chip } from "@material-ui/core";
-import { titleDirective, MoneyDirective } from "../../directives";
+import { titleDirective } from "../../utils/Title";
+import { MoneyDirective } from "../../utils/Money";
 
 const useStyles = makeStyles(() => ({
   title: {

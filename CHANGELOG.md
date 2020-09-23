@@ -4,8 +4,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v0.4.0 (Unreleased)
-- Revamp Finala User Interface
+## v0.4.0 (September 23,2020)
+### Added
+- Build Finala Notifier URL according to defined Tags [[PR-104](https://github.com/similarweb/finala/pull/104)]
+- Add AWS profile authentication [[PR-139](https://github.com/similarweb/finala/pull/139)]
+- Support direct table filter link [[PR-146](https://github.com/similarweb/finala/pull/146)]
+- Add tests for ElasticSearch storage [[PR-138](https://github.com/similarweb/finala/pull/138)]
+### Changed
+- Revamp Finala User Interface [[PR-126](https://github.com/similarweb/finala/pull/126)]
+- Change download csv file with the name of the resource [[PR-141](https://github.com/similarweb/finala/pull/141)]
+### Fixed
+- Make sure all Kinesis streams are retrieved [[PR-145](https://github.com/similarweb/finala/pull/145)]
+- Fix API exact match query [[PR-151](https://github.com/similarweb/finala/pull/151)]
+- Fix docker compose UI build [[PR-153](https://github.com/similarweb/finala/pull/153)]
+- Add storage for RDS total pricing [[PR-143](https://github.com/similarweb/finala/pull/143)]
 
 ## v0.3.5 (August 13,2020)
 ### Added

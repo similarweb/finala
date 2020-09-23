@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Change download csv file with the name of the resource [[PR-141](https://github.com/similarweb/finala/pull/141)]
 ### Fixed
 - Make sure all Kinesis streams are retrieved [[PR-145](https://github.com/similarweb/finala/pull/145)]
+- Fix API exact match query [[PR-151](https://github.com/similarweb/finala/pull/151)]
+- Fix docker compose UI build [[PR-153](https://github.com/similarweb/finala/pull/153)]
+- Add storage for RDS total pricing [[PR-143](https://github.com/similarweb/finala/pull/143)]
 
 ## v0.3.5 (August 13,2020)
 ### Added

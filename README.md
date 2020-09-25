@@ -25,10 +25,13 @@ With Finala you can achieve 2 main objectives: **Cost saving & Unused resources 
 
 ## Supported Services
 
+### Finala's Definitions
+
 * **Potential Cost Optimization** - is the price you can save for untilized resources in your infrastructure
 * **Unused Resource** - are resources which don't necessarily cost money and can be removed.
 
-AWS:
+### AWS
+
 Resource            | Potential Cost Optimization| Unused Resource         |
 --------------------| ---------------------------|-------------------------|
 API Gateway         | :heavy_minus_sign:         | :ballot_box_with_check:
@@ -48,6 +51,16 @@ Lambda              | :heavy_minus_sign:         | :ballot_box_with_check:
 Neptune             | :ballot_box_with_check:    | :heavy_minus_sign:
 RDS                 | :ballot_box_with_check:    | :heavy_minus_sign:
 RedShift            | :ballot_box_with_check:    | :heavy_minus_sign:
+
+## QuickStart
+
+Follow the [quick start](https://finala.io/docs/getting-started/quick-start) in our documentation to get familiar with Finala.
+
+
+## Web User Interface
+
+You can access Finala's user interface via http://localhost:8080/  (After you have finished with the quick start guide)
+![dashboard](https://raw.githubusercontent.com/similarweb/finala/master/docs/images/main-dashboard.png)
 
 ## Installation
 

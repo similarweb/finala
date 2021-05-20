@@ -1,12 +1,14 @@
 name: Security
 on: [push]
+env:
+  SPECTRAL_DSN: ${{ secrets.SPECTRAL_DSN }}
 jobs:
-  spectralops:
+  build:
     name: Spectral
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - name: Install
-        run: curl -L spectralops.io/next | sudo sh
+        run: curl -L "https://app.spectralops.io/latest/x/sh?dsn=$SPECTRAL_DSN" | sudo sh
       - name: Scan
-        run: spectral run
+        run: spectral scan

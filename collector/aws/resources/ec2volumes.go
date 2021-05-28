@@ -36,6 +36,7 @@ type DetectedAWSEC2Volume struct {
 	Size          int64
 	PricePerMonth float64
 	Tag           map[string]string
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -124,6 +125,10 @@ func (ev *EC2VolumeManager) Detect(metrics []config.MetricConfig) (interface{}, 
 			Size:          volumeSize,
 			PricePerMonth: ev.getCalculatedPrice(vol, price),
 			Tag:           tagsData,
+			AccountSpecifiedFields: collector.AccountSpecifiedFields{
+				AccountID:   *ev.awsManager.GetAccountIdentity().Account,
+				AccountName: ev.awsManager.GetAccountName(),
+			},
 		}
 
 		ev.awsManager.GetCollector().AddResource(collector.EventCollector{

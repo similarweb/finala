@@ -38,6 +38,7 @@ type DetectedELBV2 struct {
 	Region string
 	Type   string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 // loadBalancerConfig defines loadbalancer's configuration of metrics and pricing
@@ -218,6 +219,10 @@ func (el *ELBV2Manager) Detect(metrics []config.MetricConfig) (interface{}, erro
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *el.awsManager.GetAccountIdentity().Account,
+						AccountName: el.awsManager.GetAccountName(),
 					},
 				}
 

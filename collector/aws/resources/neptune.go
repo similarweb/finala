@@ -39,6 +39,7 @@ type DetectedAWSNeptune struct {
 	MultiAZ      bool
 	Engine       string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -162,6 +163,10 @@ func (np *NeptuneManager) Detect(metrics []config.MetricConfig) (interface{}, er
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *np.awsManager.GetAccountIdentity().Account,
+						AccountName: np.awsManager.GetAccountName(),
 					},
 				}
 

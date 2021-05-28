@@ -38,6 +38,7 @@ type DetectedRedShift struct {
 	NodeType      string
 	NumberOfNodes int64
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -158,6 +159,10 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 						PricePerHour:  clusterPrice,
 						PricePerMonth: clusterPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *rdm.awsManager.GetAccountIdentity().Account,
+						AccountName: rdm.awsManager.GetAccountName(),
 					},
 				}
 

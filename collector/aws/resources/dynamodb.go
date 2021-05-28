@@ -42,6 +42,7 @@ type DetectedAWSDynamoDB struct {
 	Metric string
 	Name   string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -198,6 +199,10 @@ func (dd *DynamoDBManager) Detect(metrics []config.MetricConfig) (interface{}, e
 						PricePerHour:  pricePerHour,
 						PricePerMonth: pricePerMonth,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *dd.awsManager.GetAccountIdentity().Account,
+						AccountName: dd.awsManager.GetAccountName(),
 					},
 				}
 

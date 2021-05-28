@@ -35,6 +35,7 @@ type DetectedElasticIP struct {
 	PricePerHour  float64
 	PricePerMonth float64
 	Tag           map[string]string
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -115,6 +116,10 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 				PricePerHour:  price,
 				PricePerMonth: price * collector.TotalMonthHours,
 				Tag:           tagsData,
+				AccountSpecifiedFields: collector.AccountSpecifiedFields{
+					AccountID:   *ei.awsManager.GetAccountIdentity().Account,
+					AccountName: ei.awsManager.GetAccountName(),
+				},
 			}
 
 			ei.awsManager.GetCollector().AddResource(collector.EventCollector{

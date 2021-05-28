@@ -38,6 +38,7 @@ type DetectedKinesis struct {
 	Metric string
 	Region string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -192,6 +193,10 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 						PricePerHour:  totalShardsPerHourPrice,
 						PricePerMonth: totalShardsPerHourPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *km.awsManager.GetAccountIdentity().Account,
+						AccountName: km.awsManager.GetAccountName(),
 					},
 				}
 

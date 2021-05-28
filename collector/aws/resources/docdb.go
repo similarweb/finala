@@ -39,6 +39,7 @@ type DetectedDocumentDB struct {
 	MultiAZ      bool
 	Engine       string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -161,6 +162,10 @@ func (dd *DocumentDBManager) Detect(metrics []config.MetricConfig) (interface{},
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *dd.awsManager.GetAccountIdentity().Account,
+						AccountName: dd.awsManager.GetAccountName(),
 					},
 				}
 

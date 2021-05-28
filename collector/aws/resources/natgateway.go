@@ -39,6 +39,7 @@ type DetectedNATGateway struct {
 	SubnetID string
 	VPCID    string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -177,6 +178,10 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *ngw.awsManager.GetAccountIdentity().Account,
+						AccountName: ngw.awsManager.GetAccountName(),
 					},
 				}
 

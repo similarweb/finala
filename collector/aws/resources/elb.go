@@ -37,6 +37,7 @@ type DetectedELB struct {
 	Metric string
 	Region string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -175,6 +176,10 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *el.awsManager.GetAccountIdentity().Account,
+						AccountName: el.awsManager.GetAccountName(),
 					},
 				}
 

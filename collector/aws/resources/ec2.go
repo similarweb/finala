@@ -38,6 +38,7 @@ type DetectedEC2 struct {
 	Name         string
 	InstanceType string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -163,6 +164,10 @@ func (ec *EC2Manager) Detect(metrics []config.MetricConfig) (interface{}, error)
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+						AccountName: ec.awsManager.GetAccountName(),
 					},
 				}
 

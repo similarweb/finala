@@ -34,6 +34,7 @@ type DetectedAWSLastActivity struct {
 	AccessKey    string
 	LastUsedDate time.Time
 	LastActivity string
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -133,6 +134,10 @@ func (im *IAMManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 					AccessKey:    *accessKeyData.AccessKeyId,
 					LastUsedDate: lastUsedDate,
 					LastActivity: lastActivity,
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *im.awsManager.GetAccountIdentity().Account,
+						AccountName: im.awsManager.GetAccountName(),
+					},
 				}
 
 				im.awsManager.GetCollector().AddResource(collector.EventCollector{

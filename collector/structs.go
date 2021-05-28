@@ -36,6 +36,12 @@ type PriceDetectedFields struct {
 	Tag           map[string]string
 }
 
+// AccountSpecifiedFields describe account data of an resource
+type AccountSpecifiedFields struct {
+	AccountID   string
+	AccountName string
+}
+
 // EventCollector collector event data structure
 type EventCollector struct {
 	EventType    string

@@ -43,6 +43,7 @@ type DetectedAWSRDS struct {
 	MultiAZ      bool
 	Engine       string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 // RDSVolumeType will hold the available volume types for RDS types
@@ -205,6 +206,10 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 						PricePerHour:  totalHourlyPrice,
 						PricePerMonth: totalHourlyPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *r.awsManager.GetAccountIdentity().Account,
+						AccountName: r.awsManager.GetAccountName(),
 					},
 				}
 

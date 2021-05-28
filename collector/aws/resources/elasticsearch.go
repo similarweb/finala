@@ -46,6 +46,7 @@ type DetectedElasticSearch struct {
 	InstanceType  string
 	InstanceCount int64
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 // elasticSearchVolumeType will hold the available volume types for ESCluster EBS
@@ -219,6 +220,10 @@ func (esm *ElasticSearchManager) Detect(metrics []config.MetricConfig) (interfac
 						PricePerHour:  hourlyClusterPrice,
 						PricePerMonth: hourlyClusterPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *esm.awsManager.GetAccountIdentity().Account,
+						AccountName: esm.awsManager.GetAccountName(),
 					},
 				}
 

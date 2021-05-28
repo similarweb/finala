@@ -39,6 +39,7 @@ type DetectedElasticache struct {
 	CacheNodeType string
 	CacheNodes    int
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -162,6 +163,10 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+						AccountName: ec.awsManager.GetAccountName(),
 					},
 				}
 

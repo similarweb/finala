@@ -36,6 +36,7 @@ type DetectedAWSLambda struct {
 	ResourceID string
 	Name       string
 	Tag        map[string]string
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -149,6 +150,10 @@ func (lm *LambdaManager) Detect(metrics []config.MetricConfig) (interface{}, err
 					ResourceID: *fun.FunctionArn,
 					Name:       *fun.FunctionName,
 					Tag:        tagsData,
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *lm.awsManager.GetAccountIdentity().Account,
+						AccountName: lm.awsManager.GetAccountName(),
+					},
 				}
 
 				lm.awsManager.GetCollector().AddResource(collector.EventCollector{

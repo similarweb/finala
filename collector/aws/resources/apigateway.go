@@ -36,6 +36,7 @@ type DetectedAPIGateway struct {
 	Name       string
 	LaunchTime time.Time
 	Tag        map[string]string
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -147,6 +148,10 @@ func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{},
 					Name:       *api.Name,
 					LaunchTime: *api.CreatedDate,
 					Tag:        tagsData,
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *ag.awsManager.GetAccountIdentity().Account,
+						AccountName: ag.awsManager.GetAccountName(),
+					},
 				}
 
 				ag.awsManager.GetCollector().AddResource(collector.EventCollector{

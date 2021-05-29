@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	elastic "github.com/olivere/elastic/v7"
@@ -110,14 +111,24 @@ func (sm *StorageManager) getDynamicMatchQuery(filters map[string]string, operat
 	dynamicMatchQuery := []elastic.Query{}
 	var mq *elastic.MatchQuery
 	for name, value := range filters {
-		mq = elastic.NewMatchQuery(name, value)
-		// Minimum number of clauses that must match for a document to be returned
-		mq.MinimumShouldMatch("100%")
-		if operator == "and" {
-			mq = mq.Operator("and")
+		if name == "Data.AccountID" {
+			var accountIds = strings.Split(value, ",")
+			var accountBoolQuery = elastic.NewBoolQuery()
+			for _, accountId := range accountIds {
+				accountBoolQuery.Should(elastic.NewMatchQuery(name, accountId))
+			}
+			accountBoolQuery.MinimumShouldMatch("1")
+			dynamicMatchQuery = append(dynamicMatchQuery, accountBoolQuery)
+		} else {
+			mq = elastic.NewMatchQuery(name, value)
+			// Minimum number of clauses that must match for a document to be returned
+			mq.MinimumShouldMatch("100%")
+			if operator == "and" {
+				mq = mq.Operator("and")
+			}
+			log.Info("Query ", mq)
+			dynamicMatchQuery = append(dynamicMatchQuery, mq)
 		}
-
-		dynamicMatchQuery = append(dynamicMatchQuery, mq)
 	}
 	return dynamicMatchQuery
 }

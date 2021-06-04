@@ -309,6 +309,38 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 	return executions, nil
 }
 
+func (sm *StorageManager) GetAccounts(querylimit int) ([]storage.Accounts, error) {
+	accounts := []storage.Accounts{}
+
+	searchResult, err := sm.client.Search().Aggregation("Accounts", elastic.NewTermsAggregation().Field("Data.AccountInformation.keyword")).
+		Do(context.Background())
+
+	if err != nil {
+		log.WithError(err).Error("error when trying to get AccountIDs")
+		return accounts, ErrInvalidQuery
+	}
+
+	resp, ok := searchResult.Aggregations.Terms("Accounts")
+	if !ok {
+		log.Error("accounts field term does not exist")
+		return accounts, ErrAggregationTermNotFound
+	}
+
+	for _, accountsBucket := range resp.Buckets {
+		account := accountsBucket.Key.(string)
+		name, id, err := interpolation.ExtractAccountInformation(account)
+		if err != nil {
+			log.WithError(err).WithField("account", account).Error("could not extract account information")
+			continue
+		}
+		accounts = append(accounts, storage.Accounts{
+			ID:   id,
+			Name: name,
+		})
+	}
+	return accounts, nil
+}
+
 // GetResources return resource data
 func (sm *StorageManager) GetResources(resourceType string, executionID string, filters map[string]string) ([]map[string]interface{}, error) {
 

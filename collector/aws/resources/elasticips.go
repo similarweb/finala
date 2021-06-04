@@ -73,7 +73,10 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 		"resource": "elastic ips",
 	}).Info("starting to analyze resource")
 
-	ei.awsManager.GetCollector().CollectStart(ei.Name)
+	ei.awsManager.GetCollector().CollectStart(ei.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ei.awsManager.GetAccountIdentity().Account,
+		AccountName: ei.awsManager.GetAccountName(),
+	})
 
 	elasticIPs := []DetectedElasticIP{}
 
@@ -132,7 +135,10 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 		}
 	}
 
-	ei.awsManager.GetCollector().CollectFinish(ei.Name)
+	ei.awsManager.GetCollector().CollectFinish(ei.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ei.awsManager.GetAccountIdentity().Account,
+		AccountName: ei.awsManager.GetAccountName(),
+	})
 
 	return elasticIPs, nil
 

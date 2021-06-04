@@ -81,6 +81,7 @@ func (server *Server) BindEndpoints() {
 
 	server.router.HandleFunc("/api/v1/summary/{executionID}", server.GetSummary).Methods("GET")
 	server.router.HandleFunc("/api/v1/executions", server.GetExecutions).Methods("GET")
+	server.router.HandleFunc("/api/v1/accounts", server.GetAccounts).Methods(("GET"))
 	server.router.HandleFunc("/api/v1/resources/{type}", server.GetResourceData).Methods("GET")
 	server.router.HandleFunc("/api/v1/trends/{type}", server.GetResourceTrends).Methods("GET")
 	server.router.HandleFunc("/api/v1/tags/{executionID}", server.GetExecutionTags).Methods("GET")

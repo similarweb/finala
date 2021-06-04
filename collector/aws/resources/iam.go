@@ -76,7 +76,10 @@ func (im *IAMManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		"resource": "iam",
 	}).Info("starting to analyze resource")
 
-	im.awsManager.GetCollector().CollectStart(im.Name)
+	im.awsManager.GetCollector().CollectStart(im.Name, collector.AccountSpecifiedFields{
+		AccountID:   *im.awsManager.GetAccountIdentity().Account,
+		AccountName: im.awsManager.GetAccountName(),
+	})
 
 	detected := []DetectedAWSLastActivity{}
 
@@ -151,7 +154,10 @@ func (im *IAMManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		}
 	}
 
-	im.awsManager.GetCollector().CollectFinish(im.Name)
+	im.awsManager.GetCollector().CollectFinish(im.Name, collector.AccountSpecifiedFields{
+		AccountID:   *im.awsManager.GetAccountIdentity().Account,
+		AccountName: im.awsManager.GetAccountName(),
+	})
 
 	return detected, nil
 }

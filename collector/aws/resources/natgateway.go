@@ -75,7 +75,10 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 		"resource": "natgateway",
 	}).Info("analyzing resource")
 
-	ngw.awsManager.GetCollector().CollectStart(ngw.Name)
+	ngw.awsManager.GetCollector().CollectStart(ngw.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ngw.awsManager.GetAccountIdentity().Account,
+		AccountName: ngw.awsManager.GetAccountName(),
+	})
 
 	DetectedNATGateways := []DetectedNATGateway{}
 
@@ -195,7 +198,10 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 		}
 	}
 
-	ngw.awsManager.GetCollector().CollectFinish(ngw.Name)
+	ngw.awsManager.GetCollector().CollectFinish(ngw.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ngw.awsManager.GetAccountIdentity().Account,
+		AccountName: ngw.awsManager.GetAccountName(),
+	})
 
 	return DetectedNATGateways, nil
 }

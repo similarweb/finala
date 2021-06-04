@@ -76,7 +76,10 @@ func (ev *EC2VolumeManager) Detect(metrics []config.MetricConfig) (interface{}, 
 		"resource": "ec2_volume",
 	}).Info("starting to analyze resource")
 
-	ev.awsManager.GetCollector().CollectStart(ev.Name)
+	ev.awsManager.GetCollector().CollectStart(ev.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ev.awsManager.GetAccountIdentity().Account,
+		AccountName: ev.awsManager.GetAccountName(),
+	})
 
 	detected := []DetectedAWSEC2Volume{}
 	volumes, err := ev.describe(nil, nil)
@@ -140,7 +143,10 @@ func (ev *EC2VolumeManager) Detect(metrics []config.MetricConfig) (interface{}, 
 
 	}
 
-	ev.awsManager.GetCollector().CollectFinish(ev.Name)
+	ev.awsManager.GetCollector().CollectFinish(ev.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ev.awsManager.GetAccountIdentity().Account,
+		AccountName: ev.awsManager.GetAccountName(),
+	})
 
 	return detected, nil
 

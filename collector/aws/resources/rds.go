@@ -87,7 +87,10 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 		"resource": "rds",
 	}).Info("starting to analyze resource")
 
-	r.awsManager.GetCollector().CollectStart(r.Name)
+	r.awsManager.GetCollector().CollectStart(r.Name, collector.AccountSpecifiedFields{
+		AccountID:   *r.awsManager.GetAccountIdentity().Account,
+		AccountName: r.awsManager.GetAccountName(),
+	})
 
 	detected := []DetectedAWSRDS{}
 
@@ -224,7 +227,10 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 
 	}
 
-	r.awsManager.GetCollector().CollectFinish(r.Name)
+	r.awsManager.GetCollector().CollectFinish(r.Name, collector.AccountSpecifiedFields{
+		AccountID:   *r.awsManager.GetAccountIdentity().Account,
+		AccountName: r.awsManager.GetAccountName(),
+	})
 
 	return detected, nil
 

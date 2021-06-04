@@ -75,7 +75,10 @@ func (np *NeptuneManager) Detect(metrics []config.MetricConfig) (interface{}, er
 		"resource": "neptune",
 	}).Info("starting to analyze resource")
 
-	np.awsManager.GetCollector().CollectStart(np.Name)
+	np.awsManager.GetCollector().CollectStart(np.Name, collector.AccountSpecifiedFields{
+		AccountID:   *np.awsManager.GetAccountIdentity().Account,
+		AccountName: np.awsManager.GetAccountName(),
+	})
 
 	detected := []DetectedAWSNeptune{}
 	instances, err := np.describeInstances(nil, nil)
@@ -178,7 +181,10 @@ func (np *NeptuneManager) Detect(metrics []config.MetricConfig) (interface{}, er
 			}
 		}
 	}
-	np.awsManager.GetCollector().CollectFinish(np.Name)
+	np.awsManager.GetCollector().CollectFinish(np.Name, collector.AccountSpecifiedFields{
+		AccountID:   *np.awsManager.GetAccountIdentity().Account,
+		AccountName: np.awsManager.GetAccountName(),
+	})
 	return detected, nil
 
 }

@@ -73,7 +73,10 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		"resource": "elb",
 	}).Info("starting to analyze resource")
 
-	el.awsManager.GetCollector().CollectStart(el.Name)
+	el.awsManager.GetCollector().CollectStart(el.Name, collector.AccountSpecifiedFields{
+		AccountID:   *el.awsManager.GetAccountIdentity().Account,
+		AccountName: el.awsManager.GetAccountName(),
+	})
 
 	detectedELB := []DetectedELB{}
 
@@ -195,7 +198,10 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		}
 	}
 
-	el.awsManager.GetCollector().CollectFinish(el.Name)
+	el.awsManager.GetCollector().CollectFinish(el.Name, collector.AccountSpecifiedFields{
+		AccountID:   *el.awsManager.GetAccountIdentity().Account,
+		AccountName: el.awsManager.GetAccountName(),
+	})
 
 	return detectedELB, nil
 

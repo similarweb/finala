@@ -104,7 +104,10 @@ func (el *ELBV2Manager) Detect(metrics []config.MetricConfig) (interface{}, erro
 		"resource": "elb_v2",
 	}).Info("starting to analyze resource")
 
-	el.awsManager.GetCollector().CollectStart(el.Name)
+	el.awsManager.GetCollector().CollectStart(el.Name, collector.AccountSpecifiedFields{
+		AccountID:   *el.awsManager.GetAccountIdentity().Account,
+		AccountName: el.awsManager.GetAccountName(),
+	})
 
 	detectedELBV2 := []DetectedELBV2{}
 
@@ -236,7 +239,10 @@ func (el *ELBV2Manager) Detect(metrics []config.MetricConfig) (interface{}, erro
 		}
 	}
 
-	el.awsManager.GetCollector().CollectFinish(el.Name)
+	el.awsManager.GetCollector().CollectFinish(el.Name, collector.AccountSpecifiedFields{
+		AccountID:   *el.awsManager.GetAccountIdentity().Account,
+		AccountName: el.awsManager.GetAccountName(),
+	})
 
 	return detectedELBV2, nil
 

@@ -72,7 +72,10 @@ func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{},
 		"resource": "apigateway",
 	}).Info("starting to analyze resource")
 
-	ag.awsManager.GetCollector().CollectStart(ag.Name)
+	ag.awsManager.GetCollector().CollectStart(ag.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ag.awsManager.GetAccountIdentity().Account,
+		AccountName: ag.awsManager.GetAccountName(),
+	})
 	detectAPIGateway := []DetectedAPIGateway{}
 
 	apigateways, err := ag.getRestApis(nil, nil)
@@ -165,7 +168,10 @@ func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{},
 		}
 	}
 
-	ag.awsManager.GetCollector().CollectFinish(ag.Name)
+	ag.awsManager.GetCollector().CollectFinish(ag.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ag.awsManager.GetAccountIdentity().Account,
+		AccountName: ag.awsManager.GetAccountName(),
+	})
 
 	return detectAPIGateway, nil
 }

@@ -312,7 +312,8 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 func (sm *StorageManager) GetAccounts(querylimit int) ([]storage.Accounts, error) {
 	accounts := []storage.Accounts{}
 
-	searchResult, err := sm.client.Search().Aggregation("Accounts", elastic.NewTermsAggregation().Field("Data.AccountInformation.keyword")).
+	searchResult, err := sm.client.Search().Aggregation("Accounts", elastic.NewTermsAggregation().
+		Field("Data.AccountInformation.keyword").Size(querylimit)).
 		Do(context.Background())
 
 	if err != nil {
@@ -327,7 +328,11 @@ func (sm *StorageManager) GetAccounts(querylimit int) ([]storage.Accounts, error
 	}
 
 	for _, accountsBucket := range resp.Buckets {
-		account := accountsBucket.Key.(string)
+		account, ok := accountsBucket.Key.(string)
+		if !ok {
+			log.Error("type assertion to string failed")
+			continue
+		}
 		name, id, err := interpolation.ExtractAccountInformation(account)
 		if err != nil {
 			log.WithError(err).WithField("account", account).Error("could not extract account information")

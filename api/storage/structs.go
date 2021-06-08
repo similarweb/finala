@@ -13,7 +13,7 @@ type StorageDescriber interface {
 	Save(data string) bool
 	GetSummary(executionID string, filters map[string]string) (map[string]CollectorsSummary, error)
 	GetExecutions(querylimit int) ([]Executions, error)
-	GetAccounts(querylimit int) ([]Accounts, error)
+	GetAccounts(executionID string, querylimit int) ([]Accounts, error)
 	GetResources(resourceType string, executionID string, filters map[string]string) ([]map[string]interface{}, error)
 	GetResourceTrends(resourceType string, filters map[string]string, limit int) ([]ExecutionCost, error)
 	GetExecutionTags(executionID string) (map[string][]string, error)

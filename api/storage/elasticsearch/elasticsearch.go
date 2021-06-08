@@ -309,11 +309,12 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 	return executions, nil
 }
 
-func (sm *StorageManager) GetAccounts(querylimit int) ([]storage.Accounts, error) {
+func (sm *StorageManager) GetAccounts(executionID string, querylimit int) ([]storage.Accounts, error) {
 	accounts := []storage.Accounts{}
 
-	searchResult, err := sm.client.Search().Aggregation("Accounts", elastic.NewTermsAggregation().
-		Field("Data.AccountInformation.keyword").Size(querylimit)).
+	searchResult, err := sm.client.Search().Query(elastic.NewMatchQuery("ExecutionID", executionID)).
+		Aggregation("Accounts", elastic.NewTermsAggregation().
+			Field("Data.AccountInformation.keyword").Size(querylimit)).
 		Do(context.Background())
 
 	if err != nil {

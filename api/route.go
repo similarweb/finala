@@ -57,7 +57,10 @@ func (server *Server) GetExecutions(resp http.ResponseWriter, req *http.Request)
 
 func (server *Server) GetAccounts(resp http.ResponseWriter, req *http.Request) {
 	queryLimit, _ := strconv.Atoi(httpparameters.QueryParamWithDefault(req, "querylimit", storage.GetExecutionsQueryLimit))
-	accounts, err := server.storage.GetAccounts(queryLimit)
+	params := mux.Vars(req)
+	executionID := params["executionID"]
+	accounts, err := server.storage.GetAccounts(executionID, queryLimit)
+
 	if err != nil {
 		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
 		return

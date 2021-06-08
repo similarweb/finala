@@ -66,6 +66,9 @@ func (ms *MockStorage) GetExecutions(queryLimit int) ([]storage.Executions, erro
 }
 
 func (ms *MockStorage) GetAccounts(executionID string, querylimit int) ([]storage.Accounts, error) {
+	if executionID == "err" {
+		return nil, errors.New("error")
+	}
 	response := []storage.Accounts{
 		{
 			ID:   "1234567890",

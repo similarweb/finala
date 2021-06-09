@@ -7,6 +7,7 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -144,10 +145,18 @@ func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{},
 					}
 				}
 
+				Arn := "arn:aws:apigateway:" + ag.awsManager.GetRegion() + "::/restapis/" + *api.Id
+
+				if !arn.IsARN(Arn) {
+					log.WithFields(log.Fields{
+						"arn": Arn,
+					}).Error("is not an arn")
+				}
+
 				detect := DetectedAPIGateway{
 					Region:     ag.awsManager.GetRegion(),
 					Metric:     metric.Description,
-					ResourceID: *api.Id,
+					ResourceID: Arn,
 					Name:       *api.Name,
 					LaunchTime: *api.CreatedDate,
 					Tag:        tagsData,

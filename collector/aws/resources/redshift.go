@@ -7,6 +7,7 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -151,6 +152,14 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 					}
 				}
 
+				Arn := "arn:aws:redshift:" + rdm.awsManager.GetRegion() + ":" + *rdm.awsManager.GetAccountIdentity().Account + ":cluster:" + *cluster.ClusterIdentifier
+
+				if !arn.IsARN(Arn) {
+					log.WithFields(log.Fields{
+						"arn": Arn,
+					}).Error("is not an arn")
+				}
+
 				redshift := DetectedRedShift{
 					Region:        rdm.awsManager.GetRegion(),
 					Metric:        metric.Description,
@@ -158,7 +167,7 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 					NumberOfNodes: *cluster.NumberOfNodes,
 					PriceDetectedFields: collector.PriceDetectedFields{
 						LaunchTime:    *cluster.ClusterCreateTime,
-						ResourceID:    *cluster.ClusterIdentifier,
+						ResourceID:    Arn,
 						PricePerHour:  clusterPrice,
 						PricePerMonth: clusterPrice * collector.TotalMonthHours,
 						Tag:           tagsData,

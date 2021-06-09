@@ -6,6 +6,7 @@ import (
 	"finala/collector/aws/common"
 	"finala/collector/aws/register"
 	"finala/collector/config"
+	"github.com/aws/aws-sdk-go/aws/arn"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -29,12 +30,10 @@ type ElasticIPManager struct {
 
 // DetectedElasticIP defines the detected AWS elastic ip
 type DetectedElasticIP struct {
-	Region        string
-	Metric        string
-	IP            string
-	PricePerHour  float64
-	PricePerMonth float64
-	Tag           map[string]string
+	Region string
+	Metric string
+	IP     string
+	collector.PriceDetectedFields
 	collector.AccountSpecifiedFields
 }
 
@@ -112,13 +111,24 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 				}
 			}
 
+			Arn := "arn:aws:ec2:" + ei.awsManager.GetRegion() + ":" + *ei.awsManager.GetAccountIdentity().Account + ":elastic-ip/" + *ip.AllocationId
+
+			if !arn.IsARN(Arn) {
+				log.WithFields(log.Fields{
+					"arn": Arn,
+				}).Error("is not an arn")
+			}
+
 			eIP := DetectedElasticIP{
-				Region:        ei.awsManager.GetRegion(),
-				Metric:        metric.Description,
-				IP:            *ip.PublicIp,
-				PricePerHour:  price,
-				PricePerMonth: price * collector.TotalMonthHours,
-				Tag:           tagsData,
+				Region: ei.awsManager.GetRegion(),
+				Metric: metric.Description,
+				IP:     *ip.PublicIp,
+				PriceDetectedFields: collector.PriceDetectedFields{
+					ResourceID:    Arn,
+					PricePerHour:  price,
+					PricePerMonth: price * collector.TotalMonthHours,
+					Tag:           tagsData,
+				},
 				AccountSpecifiedFields: collector.AccountSpecifiedFields{
 					AccountID:   *ei.awsManager.GetAccountIdentity().Account,
 					AccountName: ei.awsManager.GetAccountName(),

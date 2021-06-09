@@ -8,6 +8,7 @@ import (
 	"finala/collector/config"
 	"finala/expression"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -170,6 +171,14 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 					}
 				}
 
+				Arn := "arn:aws:ec2:" + ngw.awsManager.GetRegion() + ":" + *ngw.awsManager.GetAccountIdentity().Account + ":natgateway/" + *natgateway.NatGatewayId
+
+				if !arn.IsARN(Arn) {
+					log.WithFields(log.Fields{
+						"arn": Arn,
+					}).Error("is not an arn")
+				}
+
 				natGateway := DetectedNATGateway{
 					Region:   ngw.awsManager.GetRegion(),
 					Metric:   metric.Description,
@@ -177,7 +186,7 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 					VPCID:    *natgateway.VpcId,
 					PriceDetectedFields: collector.PriceDetectedFields{
 						LaunchTime:    *natgateway.CreateTime,
-						ResourceID:    *natgateway.NatGatewayId,
+						ResourceID:    Arn,
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,

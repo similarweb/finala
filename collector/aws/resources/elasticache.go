@@ -7,6 +7,7 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -154,6 +155,14 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 					}
 				}
 
+				Arn := "arn:aws:elasticache:" + ec.awsManager.GetRegion() + ":" + *ec.awsManager.GetAccountIdentity().Account + ":cluster:" + *instance.CacheClusterId
+
+				if !arn.IsARN(Arn) {
+					log.WithFields(log.Fields{
+						"arn": Arn,
+					}).Error("is not an arn")
+				}
+
 				es := DetectedElasticache{
 					Region:        ec.awsManager.GetRegion(),
 					Metric:        metric.Description,
@@ -162,7 +171,7 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 					CacheNodes:    len(instance.CacheNodes),
 					PriceDetectedFields: collector.PriceDetectedFields{
 						LaunchTime:    *instance.CacheClusterCreateTime,
-						ResourceID:    *instance.CacheClusterId,
+						ResourceID:    Arn,
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,

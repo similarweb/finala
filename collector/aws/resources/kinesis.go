@@ -191,7 +191,7 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 					Region: km.awsManager.GetRegion(),
 					Metric: metric.Description,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID:    *stream.StreamName,
+						ResourceID:    *stream.StreamARN,
 						LaunchTime:    *stream.StreamCreationTimestamp,
 						PricePerHour:  totalShardsPerHourPrice,
 						PricePerMonth: totalShardsPerHourPrice * collector.TotalMonthHours,

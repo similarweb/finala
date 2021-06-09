@@ -217,7 +217,7 @@ func (el *ELBV2Manager) Detect(metrics []config.MetricConfig) (interface{}, erro
 					Metric: metric.Description,
 					Type:   *instance.Type,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID:    *instance.LoadBalancerName,
+						ResourceID:    *instance.LoadBalancerArn,
 						LaunchTime:    *instance.CreatedTime,
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,

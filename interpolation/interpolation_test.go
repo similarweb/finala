@@ -78,7 +78,7 @@ func TestExtractAccountInformation(t *testing.T) {
 	accountInfo := fmt.Sprintf("%s_%s", name, id)
 	extractedName, extractedId, err := interpolation.ExtractAccountInformation(accountInfo)
 	if err != nil {
-		t.Fatalf("error occured while running extractExecutionName e: %s\n", err)
+		t.Fatalf("error occured while running ExtractAccountInformation e: %s\n", err)
 	}
 
 	if extractedName != name {
@@ -93,6 +93,6 @@ func TestExtractAccountInformation(t *testing.T) {
 	const wrong = "noUnderScore"
 	_, _, err = interpolation.ExtractAccountInformation(wrong)
 	if err == nil {
-		t.Errorf("function returns no error for input without underscore: %s", wrong)
+		t.Errorf("ExtractAccountInformation returns no error for input without underscore: %s", wrong)
 	}
 }

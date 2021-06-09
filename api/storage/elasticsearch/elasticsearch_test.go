@@ -217,6 +217,64 @@ func TestGetExecutions(t *testing.T) {
 	}
 }
 
+func TestGetAccounts(t *testing.T) {
+
+	// each different queryLimit will result in a different elasticsearch response.
+	// 1 - returns valid account data response
+	// 2 - returns invalid aggregation term query response
+	// 4 - returns invalid statuscode response
+	testCases := []struct {
+		name          string
+		queryLimit    int
+		responseCount int
+		ErrorMessage  error
+	}{
+		{"valid response", 1, 2, nil},
+		{"invalid terms", 2, 0, ErrAggregationTermNotFound},
+		{"invalid es response", 3, 0, ErrInvalidQuery},
+	}
+
+	mockClient, config := testutils.NewESMock(prefixIndexName, true)
+
+	mockClient.Router.HandleFunc("/_search", func(resp http.ResponseWriter, req *http.Request) {
+		switch testutils.GetPostParams(req) {
+		case `{"aggregations":{"Accounts":{"terms":{"field":"Data.AccountInformation.keyword","size":1}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
+			testutils.JSONResponse(resp, http.StatusOK, elastic.SearchResult{Aggregations: map[string]json.RawMessage{
+				"Accounts": testutils.LoadResponse("accounts/aggregations/default"),
+			}})
+		case `{"aggregations":{"Accounts":{"terms":{"field":"Data.AccountInformation.keyword","size":2}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
+			testutils.JSONResponse(resp, http.StatusOK, elastic.SearchResult{Aggregations: map[string]json.RawMessage{
+				"invalid-key": testutils.LoadResponse("accounts/aggregations/default"),
+			}})
+		case `{"aggregations":{"Accounts":{"terms":{"field":"Data.AccountInformation.keyword","size":3}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
+			testutils.JSONResponse(resp, http.StatusBadRequest, elastic.SearchResult{Aggregations: map[string]json.RawMessage{}})
+		default:
+			t.Fatalf("unexpected request params")
+		}
+	})
+
+	es, err := NewStorageManager(config)
+	if err != nil {
+		t.Fatalf("unexpected error, got %v expected nil", err)
+	}
+
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+
+			response, err := es.GetAccounts("1", test.queryLimit)
+
+			if err != test.ErrorMessage {
+				t.Fatalf("unexpected error, got %v expected %v", err, test.ErrorMessage)
+			}
+
+			if len(response) != test.responseCount {
+				t.Fatalf("handler query response: got %d want %d", len(response), test.responseCount)
+			}
+
+		})
+	}
+}
+
 func TestGetSummary(t *testing.T) {
 
 	mockClient, config := testutils.NewESMock(prefixIndexName, true)

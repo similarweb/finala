@@ -279,7 +279,7 @@ func TestGetAccounts(t *testing.T) {
 				}
 
 				if len(accountsData) != test.Count {
-					t.Fatalf("unexpected resources summary response, got %d expected %d", len(accountsData), test.Count)
+					t.Fatalf("unexpected accounts data response, got %d expected %d", len(accountsData), test.Count)
 				}
 			}
 		})

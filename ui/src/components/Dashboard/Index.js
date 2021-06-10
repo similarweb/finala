@@ -4,6 +4,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import { setHistory } from "../../utils/History";
 
 import PropTypes from "prop-types";
+import AccountsList from "./AccountsList";
 import FilterBar from "./FilterBar";
 import StatisticsBar from "./StatisticsBar";
 import ResourceScanning from "./ResourceScanning";
@@ -71,6 +72,7 @@ const DashboardIndex = ({
 
       <FilterBar />
       <StatisticsBar />
+      <AccountsList />
       <ResourcesList />
       {currentResource ? <ResourceTable /> : <ResourcesChart />}
     </Fragment>

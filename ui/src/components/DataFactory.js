@@ -5,6 +5,7 @@ import { ResourcesService } from "services/resources.service";
 import { SettingsService } from "services/settings.service";
 import { titleDirective } from "utils/Title";
 import { getHistory, setHistory } from "../utils/History";
+import { AccsService } from "../services/accs.service";
 
 let fetchTimeoutRequest = false;
 let fetchTableTimeoutRequest = false;
@@ -38,6 +39,7 @@ const DataFacotry = ({
   setCurrentExecution,
 
   currentResource,
+  setAccounts,
   setResources,
   setCurrentResourceData,
   setIsResourceListLoading,
@@ -114,6 +116,7 @@ const DataFacotry = ({
     clearTimeout(fetchTimeoutRequest);
     setIsResourceListLoading(true);
     await getResources(currentExecution, filters);
+    await getAccounts(currentExecution);
     setIsResourceListLoading(false);
 
     if (currentResource) {
@@ -138,6 +141,20 @@ const DataFacotry = ({
     setIsResourceTableLoading(true);
     await getResourceTable(currentResource, currentExecution, filters);
     setIsResourceTableLoading(false);
+  };
+
+  const getAccounts = async (currentExecution) => {
+    const AccountsArray = await AccsService.list(currentExecution).catch(
+      () => false
+    );
+
+    const accounts = {};
+    AccountsArray.forEach((value) => {
+      accounts[value.ID] = value;
+    });
+
+    setAccounts(accounts);
+    return true;
   };
 
   /**
@@ -258,11 +275,13 @@ DataFacotry.propTypes = {
   setIsResourceListLoading: PropTypes.func,
   setIsResourceTableLoading: PropTypes.func,
   setIsScanning: PropTypes.func,
+  setAccounts: PropTypes.func,
   setResources: PropTypes.func,
   setCurrentResourceData: PropTypes.func,
   setCurrentExecution: PropTypes.func,
 
   currentResource: PropTypes.string,
+  accounts: PropTypes.object,
   resources: PropTypes.object,
   filters: PropTypes.array,
   currentExecution: PropTypes.string,
@@ -273,6 +292,7 @@ DataFacotry.propTypes = {
 };
 
 const mapStateToProps = (state) => ({
+  accounts: state.accounts.accounts,
   resources: state.resources.resources,
   currentResource: state.resources.currentResource,
   currentExecution: state.executions.current,
@@ -289,6 +309,7 @@ const mapDispatchToProps = (dispatch) => ({
   setIsResourceTableLoading: (isLoading) =>
     dispatch({ type: "IS_RESOURCE_TABLE_LOADING", isLoading }),
   setIsScanning: (isScanning) => dispatch({ type: "IS_SCANNING", isScanning }),
+  setAccounts: (data) => dispatch({ type: "ACCOUNT_LIST", data }),
   setResources: (data) => dispatch({ type: "RESOURCE_LIST", data }),
   setCurrentExecution: (id) => dispatch({ type: "EXECUTION_SELECTED", id }),
   setCurrentResourceData: (data) =>

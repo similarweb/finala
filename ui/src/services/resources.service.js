@@ -15,12 +15,17 @@ const getTransformedFilters = (filters) => {
   console.log(filters);
   const params = {};
   filters.forEach((filter) => {
-    if (filter.id.substr(0, 8) === "resource") {
+    if (filter.type === "resource") {
       return;
     }
     const [key, value] = filter.id.split(":");
+    let paramKey;
+    if (value && filter.type === "account") {
+      paramKey = `filter_Data.AccountID`;
+    } else {
+      paramKey = `filter_Data.Tag.${key}`;
+    }
     if (value) {
-      const paramKey = `filter_Data.Tag.${key}`;
       if (params[paramKey]) {
         params[paramKey] += `,${value}`;
       } else {

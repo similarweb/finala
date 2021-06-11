@@ -20,6 +20,7 @@ let lastFiltersSearched = "[]";
  * @param  {func} setCurrentExecution Update Current Execution
  *
  * @param  {string} currentResource Current selected resource
+ * @param  {func} setAccounts Update Accounts List
  * @param  {func} setResources Update Resources List
  * @param  {func} setCurrentResourceData Update current resource data
  * @param  {func} setIsResourceListLoading  update isLoading state for resources
@@ -143,6 +144,10 @@ const DataFacotry = ({
     setIsResourceTableLoading(false);
   };
 
+  /**
+   * Will fetch account list from server
+   * @param {string} currentExecution current Selected Execution
+   */
   const getAccounts = async (currentExecution) => {
     const AccountsArray = await AccsService.list(currentExecution).catch(
       () => false

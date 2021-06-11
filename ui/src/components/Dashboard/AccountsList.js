@@ -21,6 +21,11 @@ const useStyles = makeStyles(() => ({
   },
 }));
 
+/**
+ * @param  {array} accounts  Accounts List
+ * @param  {array} filters  Filters List
+ * @param  {func} addFilter Add filter to  filters list
+ */
 const AccountsList = ({ accounts, filters, addFilter }) => {
   const classes = useStyles();
 
@@ -29,6 +34,10 @@ const AccountsList = ({ accounts, filters, addFilter }) => {
     return account;
   });
 
+  /**
+   *
+   * @param {object} account add selected account
+   */
   const setSelectedAccount = (account) => {
     const filter = {
       title: `Account:${account.title}`,

@@ -9,6 +9,7 @@ import FilterBar from "./FilterBar";
 import StatisticsBar from "./StatisticsBar";
 import ResourceScanning from "./ResourceScanning";
 import ResourcesChart from "./ResourcesChart";
+import ResourcesCharts from "./ResourcesCharts";
 import ResourcesList from "./ResourcesList";
 import ResourceTable from "./ResourceTable";
 import ExecutionIndex from "../Executions/Index";
@@ -74,7 +75,7 @@ const DashboardIndex = ({
       <StatisticsBar />
       <AccountsList />
       <ResourcesList />
-      {currentResource ? <ResourceTable /> : <ResourcesChart />}
+      {currentResource ? <ResourceTable /> : <ResourcesCharts />}
     </Fragment>
   );
 };

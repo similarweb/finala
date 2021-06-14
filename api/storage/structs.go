@@ -39,12 +39,13 @@ type Accounts struct {
 
 // CollectorsSummary defines unused resource summary
 type CollectorsSummary struct {
-	ResourceName  string  `json:"ResourceName"`
-	ResourceCount int64   `json:"ResourceCount"`
-	TotalSpent    float64 `json:"TotalSpent"`
-	Status        int     `json:"Status"`
-	ErrorMessage  string  `json:"ErrorMessage"`
-	EventTime     int64   `json:"-"`
+	ResourceName  string             `json:"ResourceName"`
+	ResourceCount int64              `json:"ResourceCount"`
+	TotalSpent    float64            `json:"TotalSpent"`
+	Status        int                `json:"Status"`
+	ErrorMessage  string             `json:"ErrorMessage"`
+	EventTime     int64              `json:"-"`
+	SpentAccounts map[string]float64 `json:"SpentAccounts"`
 }
 
 type SummaryData struct {

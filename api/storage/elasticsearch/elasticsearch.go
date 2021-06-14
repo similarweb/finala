@@ -194,7 +194,7 @@ func (sm *StorageManager) GetSummary(executionID string, filters map[string]stri
 	for resourceName, resourceData := range summary {
 		filters["ResourceName"] = resourceName
 		log.WithField("filters", filters).Debug("Going to get resources summary details with the following filters")
-		totalSpent, resourceCount, err := sm.getResourceSummaryDetails(executionID, filters)
+		totalSpent, resourceCount, spentAccounts, err := sm.getResourceSummaryDetails(executionID, filters)
 
 		if err != nil {
 			continue
@@ -202,8 +202,8 @@ func (sm *StorageManager) GetSummary(executionID string, filters map[string]stri
 		newResourceData := resourceData
 		newResourceData.TotalSpent = totalSpent
 		newResourceData.ResourceCount = resourceCount
+		newResourceData.SpentAccounts = spentAccounts
 		summary[resourceName] = newResourceData
-
 	}
 
 	return summary, nil
@@ -211,43 +211,52 @@ func (sm *StorageManager) GetSummary(executionID string, filters map[string]stri
 }
 
 // getResourceSummaryDetails returns total resource spent and total resources detected
-func (sm *StorageManager) getResourceSummaryDetails(executionID string, filters map[string]string) (float64, int64, error) {
+func (sm *StorageManager) getResourceSummaryDetails(executionID string, filters map[string]string) (float64, int64, map[string]float64, error) {
 
 	var totalSpent float64
 	var resourceCount int64
+	var spentAccounts = make(map[string]float64)
 
 	dynamicMatchQuery := sm.getDynamicMatchQuery(filters, "or")
 	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewTermQuery("ExecutionID", executionID))
 	dynamicMatchQuery = append(dynamicMatchQuery, elastic.NewTermQuery("EventType", "resource_detected"))
 
-	searchResult, err := sm.client.Search().
+	searchResultAccount, err := sm.client.Search().
 		Query(elastic.NewBoolQuery().Must(dynamicMatchQuery...)).
-		Aggregation("sum", elastic.NewSumAggregation().Field("Data.PricePerMonth")).
+		Aggregation("accounts", elastic.NewTermsAggregation().Field("Data.AccountID.keyword").
+			SubAggregation("accountSum", elastic.NewSumAggregation().Field("Data.PricePerMonth"))).
 		Size(0).Do(context.Background())
 
 	if err != nil {
-		log.WithError(err).WithFields(log.Fields{
-			"filters": filters,
-		}).Error("error when trying to get summary details")
-
-		return totalSpent, resourceCount, err
+		log.WithError(err).Error("error when trying to get executions collectors")
+		return totalSpent, resourceCount, spentAccounts, ErrInvalidQuery
 	}
 
-	log.WithFields(log.Fields{
-		"filters":      filters,
-		"milliseconds": searchResult.TookInMillis,
-	}).Debug("get execution details")
+	respAccount, ok := searchResultAccount.Aggregations.Terms("accounts")
+	if !ok {
+		log.Error("accounts field term does not exist")
+		return totalSpent, resourceCount, spentAccounts, ErrAggregationTermNotFound
+	}
 
-	resp, ok := searchResult.Aggregations.Terms("sum")
-	if ok {
-		if val, ok := resp.Aggregations["value"]; ok {
+	for _, AccountIdBucket := range respAccount.Buckets {
 
-			totalSpent, _ = strconv.ParseFloat(string(val), 64)
-			resourceCount = searchResult.Hits.TotalHits.Value
+		spent, ok := AccountIdBucket.Aggregations.Terms("accountSum")
+		if ok {
+			if val, ok := spent.Aggregations["value"]; ok {
+				accountID, ok := AccountIdBucket.Key.(string)
+				if !ok {
+					log.Error("type assertion to string failed")
+					continue
+				}
+				spentAccounts[accountID], _ = strconv.ParseFloat(string(val), 64)
+
+				totalSpent += spentAccounts[accountID]
+				resourceCount += AccountIdBucket.DocCount
+			}
 		}
 	}
 
-	return totalSpent, resourceCount, nil
+	return totalSpent, resourceCount, spentAccounts, nil
 }
 
 // GetExecutions returns collector executions

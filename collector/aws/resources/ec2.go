@@ -7,6 +7,7 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"strings"
 	"time"
 
@@ -38,6 +39,7 @@ type DetectedEC2 struct {
 	Name         string
 	InstanceType string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -73,7 +75,10 @@ func (ec *EC2Manager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		"resource": "ec2_instances",
 	}).Info("starting to analyze resource")
 
-	ec.awsManager.GetCollector().CollectStart(ec.Name)
+	ec.awsManager.GetCollector().CollectStart(ec.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+		AccountName: ec.awsManager.GetAccountName(),
+	})
 
 	detectedEC2 := []DetectedEC2{}
 
@@ -152,17 +157,29 @@ func (ec *EC2Manager) Detect(metrics []config.MetricConfig) (interface{}, error)
 					}
 				}
 
+				Arn := "arn:aws:ec2:" + ec.awsManager.GetRegion() + ":" + *ec.awsManager.GetAccountIdentity().Account + ":instance/" + *instance.InstanceId
+
+				if !arn.IsARN(Arn) {
+					log.WithFields(log.Fields{
+						"arn": Arn,
+					}).Error("is not an arn")
+				}
+
 				ec2 := DetectedEC2{
 					Region:       ec.awsManager.GetRegion(),
 					Metric:       metric.Description,
 					Name:         name,
 					InstanceType: *instance.InstanceType,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID:    *instance.InstanceId,
+						ResourceID:    Arn,
 						LaunchTime:    *instance.LaunchTime,
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+						AccountName: ec.awsManager.GetAccountName(),
 					},
 				}
 
@@ -178,7 +195,10 @@ func (ec *EC2Manager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		}
 	}
 
-	ec.awsManager.GetCollector().CollectFinish(ec.Name)
+	ec.awsManager.GetCollector().CollectFinish(ec.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+		AccountName: ec.awsManager.GetAccountName(),
+	})
 
 	return detectedEC2, nil
 

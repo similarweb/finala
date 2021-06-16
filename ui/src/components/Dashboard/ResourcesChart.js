@@ -17,6 +17,9 @@ import {
 import ReportProblemIcon from "@material-ui/icons/ReportProblem";
 
 const useStyles = makeStyles(() => ({
+  title: {
+    fontFamily: "MuseoModerno",
+  },
   noDataTitle: {
     textAlign: "center",
     fontWeight: "bold",
@@ -38,6 +41,8 @@ const useStyles = makeStyles(() => ({
  * @param  {bool} isResourceListLoading  isLoading state for resources
  * @param  {func} addFilter Add filter to  filters list
  * @param  {func} setResource Update Selected Resource}
+ * @param  {string} account Account ID for account specific summary
+ * @param  {object} accounts Accounts of current execution
  */
 const ResourcesChart = ({
   resources,
@@ -45,12 +50,25 @@ const ResourcesChart = ({
   isResourceListLoading,
   addFilter,
   setResource,
+  account,
+  accounts,
 }) => {
   const classes = useStyles();
   const colorList = colors.map((color) => color.hex);
-  const sortedResources = Object.values(resources)
-    .filter((row) => row.TotalSpent > 0)
-    .sort((a, b) => (a.TotalSpent >= b.TotalSpent ? -1 : 1));
+  let sortedResources;
+  if (account) {
+    sortedResources = Object.values(resources)
+      .filter(
+        (row) => row.SpentAccounts[account] && row.SpentAccounts[account] > 0
+      )
+      .sort((a, b) =>
+        a.SpentAccounts[account] >= b.SpentAccounts[account] ? -1 : 1
+      );
+  } else {
+    sortedResources = Object.values(resources)
+      .filter((row) => row.TotalSpent > 0)
+      .sort((a, b) => (a.TotalSpent >= b.TotalSpent ? -1 : 1));
+  }
 
   const chartOptions = {
     options: {
@@ -148,12 +166,16 @@ const ResourcesChart = ({
    */
   sortedResources.forEach((resource) => {
     const title = titleDirective(resource.ResourceName);
-    const amount = MoneyDirective(resource.TotalSpent);
+    const amount = MoneyDirective(
+      account ? resource.SpentAccounts[account] : resource.TotalSpent
+    );
     resource.title = `${title} (${amount})`;
     resource.display_title = `${title}`;
 
     chartOptions.options.xaxis.categories.push(resource.title);
-    chartOptions.series[0].data.push(resource.TotalSpent);
+    chartOptions.series[0].data.push(
+      account ? resource.SpentAccounts[account] : resource.TotalSpent
+    );
     return resource;
   });
 
@@ -163,13 +185,20 @@ const ResourcesChart = ({
         <Card>
           <CardContent style={{ minHeight: getCardHeight() }}>
             {!isResourceListLoading && sortedResources.length > 0 && (
-              <Chart
-                id="MainChart"
-                height={getChartHeight()}
-                options={chartOptions.options}
-                series={chartOptions.series}
-                type="bar"
-              />
+              <Fragment>
+                <h4 className={classes.title}>
+                  {account
+                    ? `${accounts[account].Name} (${accounts[account].ID}):`
+                    : "Summary:"}
+                </h4>
+                <Chart
+                  id="MainChart"
+                  height={getChartHeight()}
+                  options={chartOptions.options}
+                  series={chartOptions.series}
+                  type="bar"
+                />
+              </Fragment>
             )}
             {isResourceListLoading && (
               <LinearProgress className={classes.progress} />
@@ -194,12 +223,15 @@ ResourcesChart.propTypes = {
   isResourceListLoading: PropTypes.bool,
   addFilter: PropTypes.func,
   setResource: PropTypes.func,
+  account: PropTypes.string,
+  accounts: PropTypes.object,
 };
 
 const mapStateToProps = (state) => ({
   resources: state.resources.resources,
   isResourceListLoading: state.resources.isResourceListLoading,
   filters: state.filters.filters,
+  accounts: state.accounts.accounts,
 });
 
 const mapDispatchToProps = (dispatch) => ({

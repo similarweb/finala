@@ -46,6 +46,7 @@ type DetectedElasticSearch struct {
 	InstanceType  string
 	InstanceCount int64
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 // elasticSearchVolumeType will hold the available volume types for ESCluster EBS
@@ -88,7 +89,10 @@ func (esm *ElasticSearchManager) Detect(metrics []config.MetricConfig) (interfac
 		"resource": "elasticsearch",
 	}).Info("analyzing resource")
 
-	esm.awsManager.GetCollector().CollectStart(esm.Name)
+	esm.awsManager.GetCollector().CollectStart(esm.Name, collector.AccountSpecifiedFields{
+		AccountID:   *esm.awsManager.GetAccountIdentity().Account,
+		AccountName: esm.awsManager.GetAccountName(),
+	})
 
 	detectedElasticSearchClusters := []DetectedElasticSearch{}
 
@@ -220,6 +224,10 @@ func (esm *ElasticSearchManager) Detect(metrics []config.MetricConfig) (interfac
 						PricePerMonth: hourlyClusterPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
 					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *esm.awsManager.GetAccountIdentity().Account,
+						AccountName: esm.awsManager.GetAccountName(),
+					},
 				}
 
 				esm.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -232,7 +240,10 @@ func (esm *ElasticSearchManager) Detect(metrics []config.MetricConfig) (interfac
 		}
 	}
 
-	esm.awsManager.GetCollector().CollectFinish(esm.Name)
+	esm.awsManager.GetCollector().CollectFinish(esm.Name, collector.AccountSpecifiedFields{
+		AccountID:   *esm.awsManager.GetAccountIdentity().Account,
+		AccountName: esm.awsManager.GetAccountName(),
+	})
 
 	return detectedElasticSearchClusters, nil
 }

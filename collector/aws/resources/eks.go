@@ -7,6 +7,7 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
+	"fmt"
 	awsClient "github.com/aws/aws-sdk-go/aws"
 	awsCloudwatch "github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -78,6 +79,15 @@ func (ek *EKSManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 
 	detectedEKSClusters := []DetectedEKS{}
 
+	pricingRegionPrefix, err := ek.awsManager.GetPricingClient().GetRegionPrefix(ek.awsManager.GetRegion())
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"region": ek.awsManager.GetRegion(),
+		}).Error("Could not get pricing region prefix")
+		ek.awsManager.GetCollector().CollectError(ek.Name, err)
+		return detectedEKSClusters, err
+	}
+
 	clusters, err := ek.describeCluster(nil, nil)
 	if err != nil {
 		ek.awsManager.GetCollector().CollectError(ek.Name, err)
@@ -89,7 +99,13 @@ func (ek *EKSManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 	for _, cluster := range clusters {
 		log.WithField("name", *cluster.Name).Debug("checking eks")
 
-		price, _ := ek.awsManager.GetPricingClient().GetPrice(ek.getPricingFilterInput(), "", ek.awsManager.GetRegion())
+		price, _ := ek.awsManager.GetPricingClient().GetPrice(ek.getPricingFilterInput([]*pricing.Filter{
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("usagetype"),
+				Value: awsClient.String(fmt.Sprintf("%sAmazonEKS-Hours:perCluster", pricingRegionPrefix)),
+			},
+		}), "", ek.awsManager.GetRegion())
 
 		for _, metric := range metrics {
 			log.WithFields(log.Fields{
@@ -175,29 +191,34 @@ func (ek *EKSManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 	return detectedEKSClusters, nil
 }
 
-func (ek *EKSManager) getPricingFilterInput() pricing.GetProductsInput {
+func (ek *EKSManager) getPricingFilterInput(extraFilters []*pricing.Filter) pricing.GetProductsInput {
 
-	return pricing.GetProductsInput{
-		ServiceCode: &ek.servicePricingCode,
-		Filters: []*pricing.Filter{
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("termType"),
-				Value: awsClient.String("OnDemand"),
-			},
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("tenancy"),
-				Value: awsClient.String("Shared"),
-			},
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("serviceCode"),
-				Value: awsClient.String("AmazonEKS"),
-			},
+	filters := []*pricing.Filter{
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("termType"),
+			Value: awsClient.String("OnDemand"),
+		},
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("tenancy"),
+			Value: awsClient.String("Shared"),
+		},
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("serviceCode"),
+			Value: awsClient.String("AmazonEKS"),
 		},
 	}
 
+	if extraFilters != nil {
+		filters = append(filters, extraFilters...)
+	}
+
+	return pricing.GetProductsInput{
+		ServiceCode: &ek.servicePricingCode,
+		Filters:     filters,
+	}
 }
 
 // describeCluster returns a list of eks cluster

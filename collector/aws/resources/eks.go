@@ -89,7 +89,7 @@ func (ek *EKSManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 	for _, cluster := range clusters {
 		log.WithField("name", *cluster.Name).Debug("checking eks")
 
-		price, _ := ek.awsManager.GetPricingClient().GetPrice(ek.getPricingFilterInput(cluster), "", ek.awsManager.GetRegion())
+		price, _ := ek.awsManager.GetPricingClient().GetPrice(ek.getPricingFilterInput(), "", ek.awsManager.GetRegion())
 
 		for _, metric := range metrics {
 			log.WithFields(log.Fields{
@@ -175,15 +175,25 @@ func (ek *EKSManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 	return detectedEKSClusters, nil
 }
 
-func (ek *EKSManager) getPricingFilterInput(cluster *eks.Cluster) pricing.GetProductsInput {
+func (ek *EKSManager) getPricingFilterInput() pricing.GetProductsInput {
 
 	return pricing.GetProductsInput{
 		ServiceCode: &ek.servicePricingCode,
 		Filters: []*pricing.Filter{
 			{
 				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("clusterName"),
-				Value: cluster.Name,
+				Field: awsClient.String("termType"),
+				Value: awsClient.String("OnDemand"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("tenancy"),
+				Value: awsClient.String("Shared"),
+			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("serviceCode"),
+				Value: awsClient.String("AmazonEKS"),
 			},
 		},
 	}

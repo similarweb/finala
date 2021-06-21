@@ -7,7 +7,6 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
-	"fmt"
 	awsClient "github.com/aws/aws-sdk-go/aws"
 	awsCloudwatch "github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/eks"
@@ -79,15 +78,6 @@ func (ek *EKSManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 
 	detectedEKSClusters := []DetectedEKS{}
 
-	pricingRegionPrefix, err := ek.awsManager.GetPricingClient().GetRegionPrefix(ek.awsManager.GetRegion())
-	if err != nil {
-		log.WithError(err).WithFields(log.Fields{
-			"region": ek.awsManager.GetRegion(),
-		}).Error("Could not get pricing region prefix")
-		ek.awsManager.GetCollector().CollectError(ek.Name, err)
-		return detectedEKSClusters, err
-	}
-
 	clusters, err := ek.describeCluster(nil, nil)
 	if err != nil {
 		ek.awsManager.GetCollector().CollectError(ek.Name, err)
@@ -103,7 +93,7 @@ func (ek *EKSManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 			{
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("usagetype"),
-				Value: awsClient.String(fmt.Sprintf("%sAmazonEKS-Hours:perCluster", pricingRegionPrefix)),
+				Value: awsClient.String("USW2-AmazonEKS-Hours:perCluster"),
 			},
 		}), "", ek.awsManager.GetRegion())
 
@@ -198,16 +188,6 @@ func (ek *EKSManager) getPricingFilterInput(extraFilters []*pricing.Filter) pric
 			Type:  awsClient.String("TERM_MATCH"),
 			Field: awsClient.String("termType"),
 			Value: awsClient.String("OnDemand"),
-		},
-		{
-			Type:  awsClient.String("TERM_MATCH"),
-			Field: awsClient.String("tenancy"),
-			Value: awsClient.String("Shared"),
-		},
-		{
-			Type:  awsClient.String("TERM_MATCH"),
-			Field: awsClient.String("serviceCode"),
-			Value: awsClient.String("AmazonEKS"),
 		},
 	}
 

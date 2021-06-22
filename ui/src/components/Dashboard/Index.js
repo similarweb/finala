@@ -7,6 +7,7 @@ import PropTypes from "prop-types";
 import AccountsList from "./AccountsList";
 import FilterBar from "./FilterBar";
 import StatisticsBar from "./StatisticsBar";
+import CSVDownloadButton from "./CSVDownloadButton";
 import ResourceScanning from "./ResourceScanning";
 import ResourcesChart from "./ResourcesChart";
 import ResourcesCharts from "./ResourcesCharts";
@@ -64,6 +65,7 @@ const DashboardIndex = ({
               <Logo />
             </a>
             <ResourceScanning />
+            <CSVDownloadButton />
           </Grid>
           <Grid item sm={4} xs={12} className={classes.selectorGrid}>
             <ExecutionIndex />

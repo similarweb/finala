@@ -88,6 +88,7 @@ func (server *Server) BindEndpoints() {
 	server.router.HandleFunc("/api/v1/detect-events/{executionID}", server.DetectEvents).Methods("POST")
 	server.router.HandleFunc("/api/v1/version", server.VersionHandler).Methods("GET")
 	server.router.HandleFunc("/api/v1/health", server.HealthCheckHandler).Methods("GET")
+	server.router.HandleFunc("/api/v1/getReport/{executionID}", server.GetReport).Methods("GET")
 	server.router.NotFoundHandler = http.HandlerFunc(server.NotFoundRoute)
 
 }

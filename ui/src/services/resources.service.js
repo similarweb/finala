@@ -4,6 +4,7 @@ export const ResourcesService = {
   GetExecutions,
   Summary,
   GetContent,
+  GetReport,
 };
 
 /**
@@ -84,6 +85,21 @@ function GetContent(name, executionID, filters = []) {
 
   return http
     .send(`api/v1/resources/${name}?${searchParams}`, `get`)
+    .then(this.handleResponse)
+    .then((response) => {
+      return response;
+    });
+}
+
+function GetReport(executionId, filters) {
+  const params = {
+    ...getTransformedFilters(filters),
+  };
+  const searchParams = decodeURIComponent(
+    new window.URLSearchParams(params).toString()
+  );
+  return http
+    .send(`api/v1/getReport/${executionId}?${searchParams}`, `get`)
     .then(this.handleResponse)
     .then((response) => {
       return response;

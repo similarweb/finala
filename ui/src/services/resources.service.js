@@ -13,7 +13,6 @@ export const ResourcesService = {
  * @returns filters params for request
  */
 const getTransformedFilters = (filters) => {
-  console.log(filters);
   const params = {};
   filters.forEach((filter) => {
     if (filter.type === "resource") {
@@ -91,7 +90,7 @@ function GetContent(name, executionID, filters = []) {
     });
 }
 
-function GetReport(executionId, filters) {
+function GetReport(executionID, filters = []) {
   const params = {
     ...getTransformedFilters(filters),
   };
@@ -99,7 +98,7 @@ function GetReport(executionId, filters) {
     new window.URLSearchParams(params).toString()
   );
   return http
-    .send(`api/v1/getReport/${executionId}?${searchParams}`, `get`)
+    .send(`api/v1/report/${executionID}?${searchParams}`, `get`)
     .then(this.handleResponse)
     .then((response) => {
       return response;

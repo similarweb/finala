@@ -209,7 +209,16 @@ func (server *Server) GetReport(resp http.ResponseWriter, req *http.Request) {
 	executionID := params["executionID"]
 	filters := httpparameters.GetFilterQueryParamWithOutPrefix(queryParamFilterPrefix, queryParams)
 
-	response, err := server.storage.GetSummary(executionID, filters)
+	log.WithFields(log.Fields{
+		"filter": filters,
+	}).Info("filter")
+
+	filterForSummary := make(map[string]string)
+	for filterKey, filterValue := range filters {
+		filterForSummary[filterKey] = filterValue
+	}
+
+	response, err := server.storage.GetSummary(executionID, filterForSummary)
 	if err != nil {
 		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
 		return
@@ -229,12 +238,21 @@ func (server *Server) GetReport(resp http.ResponseWriter, req *http.Request) {
 				continue
 			}
 
+			log.WithFields(log.Fields{
+				"name":        resourceName,
+				"executionID": executionID,
+				"filter":      filters,
+			}).Info(resourcesList)
+
 			data, ok := resourcesList[0]["Data"].(map[string]interface{})
 			if !ok {
 				//screw your log
 				continue
 			}
 			for key := range data {
+				if key == "Tag" {
+					continue
+				}
 				exists := false
 				for index := range attributeList {
 					if attributeList[index] == key {
@@ -264,10 +282,12 @@ func (server *Server) GetReport(resp http.ResponseWriter, req *http.Request) {
 					continue
 				}
 
+				delete(data, "Tag")
+
 				for _, attrName := range attributeList {
 					_, ok := data[attrName]
 					if !ok {
-						data[attrName] = ""
+						data[attrName] = nil
 					}
 				}
 				result = append(result, data)

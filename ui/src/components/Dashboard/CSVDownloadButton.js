@@ -1,31 +1,27 @@
-import React from "react";
+import React, { useState } from "react";
 import { CSVLink } from "react-csv";
 import { ResourcesService } from "services/resources.service";
 import { connect } from "react-redux";
-import { PropTypes } from "@material-ui/core";
-import { useState } from "react";
+import PropTypes from "prop-types";
 
-const CSVDownloadButton = ({ executionId, filters }) => {
+const CSVDownloadButton = ({ currentExecution, filters }) => {
   const [data, setData] = useState([]);
-  //Testdata to Be ignored
-  const headers = [
-    { label: "First Name", key: "firstName" },
-    { label: "Last Name", key: "lastName" },
-    { label: "Email", key: "email" },
-    { label: "Age", key: "age" },
-  ];
-
-  const csvReport = {
-    data: data,
-    headers: headers,
-    filename: "Clue_Mediator_Report.csv",
-  };
+  const [csvLinkEl, setCsvLinkEl] = useState(React.createRef());
 
   //Testdata to Be ignored
 
   const downloadReport = async () => {
-    setData(await ResourcesService.GetReport(executionId, filters)); //tobefixed
+    const tempData = await ResourcesService.GetReport(
+      currentExecution,
+      filters
+    ).catch(() => false);
+
+    if (tempData) {
+      setData(tempData);
+    }
+    csvLinkEl.current.link.click();
   };
+
   return (
     <div>
       <input
@@ -35,23 +31,21 @@ const CSVDownloadButton = ({ executionId, filters }) => {
       />
       <CSVLink
         data={data}
-        headers={headers}
         filename={"WIP Put ExecutionId here.csv"}
+        ref={csvLinkEl}
       />
     </div>
   );
 };
 
-//Todo
-// -> Get the Execution ID and pass it do downloadReport
-
+CSVDownloadButton.defaultProps = {};
 CSVDownloadButton.propTypes = {
-  executionId: PropTypes.string,
+  currentExecution: PropTypes.string,
   filters: PropTypes.array,
 };
 
 const mapStateToProps = (state) => ({
-  executionId: state.executions.current,
+  currentExecution: state.executions.current,
   filters: state.filters.filters,
 });
 

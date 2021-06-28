@@ -232,7 +232,6 @@ func (server *Server) GetReport(resp http.ResponseWriter, req *http.Request) {
 		fmt.Println(resourceName, resourceSummary) //sanity test
 		if resourceSummary.ResourceCount > 0 {
 			resourcesList, err := server.storage.GetResources(resourceName, executionID, filters)
-
 			if err != nil {
 				server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
 				continue
@@ -244,6 +243,11 @@ func (server *Server) GetReport(resp http.ResponseWriter, req *http.Request) {
 				"filter":      filters,
 			}).Info(resourcesList)
 
+			//can still fail for some odd reason so we check if the resource is actually there
+			if resourcesList[0] == nil {
+				server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
+				return
+			}
 			data, ok := resourcesList[0]["Data"].(map[string]interface{})
 			if !ok {
 				//screw your log

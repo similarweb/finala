@@ -7,6 +7,7 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
+	"fmt"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -98,6 +99,16 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 		log.WithError(err).Error("Could not get shard price")
 		return detectedStreams, err
 	}
+
+	pricingRegionPrefix, err := km.awsManager.GetPricingClient().GetRegionPrefix(km.awsManager.GetRegion())
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"region": km.awsManager.GetRegion(),
+		}).Error("Could not get pricing region prefix")
+		km.awsManager.GetCollector().CollectError(km.Name, err)
+		return detectedStreams, err
+	}
+
 	// Get Price for extended Shard Hour retention
 	extendedRetentionPrice, err := km.awsManager.GetPricingClient().GetPrice(
 		km.getPricingFilterInput([]*pricing.Filter{
@@ -105,6 +116,10 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("group"),
 				Value: awsClient.String("Addon shard hour"),
+			}, {
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("usageType"),
+				Value: awsClient.String(fmt.Sprintf("%sLoadBalancerUsage", pricingRegionPrefix)),
 			}}), "", km.awsManager.GetRegion())
 	if err != nil {
 		log.WithError(err).Error("Could not get shard extended retention price")

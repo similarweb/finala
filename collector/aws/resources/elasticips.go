@@ -183,11 +183,6 @@ func (ei *ElasticIPManager) getPricingFilterInput(extraFilters []*pricing.Filter
 			Field: awsClient.String("productFamily"),
 			Value: awsClient.String("IP Address"),
 		},
-		{
-			Type:  awsClient.String("TERM_MATCH"),
-			Field: awsClient.String("group"),
-			Value: awsClient.String("ElasticIP:Address"),
-		},
 	}
 
 	if extraFilters != nil {

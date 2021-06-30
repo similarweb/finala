@@ -119,7 +119,7 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 			}, {
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("usageType"),
-				Value: awsClient.String(fmt.Sprintf("%sStorage-ShardHour", pricingRegionPrefix)),
+				Value: awsClient.String(fmt.Sprintf("%sExtended-ShardHour", pricingRegionPrefix)),
 			}}), "", km.awsManager.GetRegion())
 	if err != nil {
 		log.WithError(err).Error("Could not get shard extended retention price")

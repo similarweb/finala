@@ -3,16 +3,27 @@ import { CSVLink } from "react-csv";
 import { ResourcesService } from "services/resources.service";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
+import { makeStyles } from "@material-ui/core/styles";
+
+const useStyles = makeStyles(() => ({
+  myButton: {
+    backgroundColor: "#d5dee6",
+    borderColor: "#d5dee6",
+    color: "rgba(0, 0, 0, 0.87)",
+    border: "0",
+    textAlign: "center",
+    fontWeight: "bold",
+    width: "100%",
+    maxWidth: "320px",
+    float: "right",
+    borderRadius: "4px",
+  },
+}));
 
 const CSVDownloadButton = ({ currentExecution, filters }) => {
   const [data, setData] = useState([]);
   const [csvLinkEl, setCsvLinkEl] = useState(React.createRef());
-
-  //Todo
-  // Button muss in summary chart bereich und nur wenn daten (resourcechart.js) erkennbar wenn && !accountid gesetzt DONE
-  // ArrayIndexOutofBounds Fehler fixen / bzw schauen ob er noch passieren kann (zweites if arr[0] leer dann abfangen)
-  // Style optional anpassen
-  // Veraenderungen in richtigen branch setzen (merge)
+  const classes = useStyles();
 
   const downloadReport = async () => {
     const tempData = await ResourcesService.GetReport(
@@ -29,13 +40,14 @@ const CSVDownloadButton = ({ currentExecution, filters }) => {
   return (
     <div>
       <input
+        className={classes.myButton}
         type="button"
         value="Download Current Data as CSV Report"
         onClick={downloadReport}
       />
       <CSVLink
         data={data}
-        filename={"WIP Put ExecutionId here.csv"}
+        filename={currentExecution + ".csv"}
         ref={csvLinkEl}
       />
     </div>

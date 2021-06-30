@@ -187,12 +187,12 @@ const ResourcesChart = ({
           <CardContent style={{ minHeight: getCardHeight() }}>
             {!isResourceListLoading && sortedResources.length > 0 && (
               <Fragment>
-                {!account && <CSVDownloadButton />}
                 <h4 className={classes.title}>
                   {account
                     ? `${accounts[account].Name} (${accounts[account].ID}):`
                     : "Summary:"}
                 </h4>
+                {!account && <CSVDownloadButton />}
                 <Chart
                   id="MainChart"
                   height={getChartHeight()}

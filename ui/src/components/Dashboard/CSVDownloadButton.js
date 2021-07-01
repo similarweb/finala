@@ -4,7 +4,6 @@ import { ResourcesService } from "services/resources.service";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
-import { Button } from "@material-ui/core/Button"
 
 const useStyles = makeStyles(() => ({
   myButton: {
@@ -43,12 +42,6 @@ const CSVDownloadButton = ({ currentExecution, filters }) => {
       <input
         className={classes.myButton}
         type="button"
-        value="Download Current Data as CSV Report"
-        onClick={downloadReport}
-      />
-      <Button
-        variant="contained"
-        size="small"
         value="Download Current Data as CSV Report"
         onClick={downloadReport}
       />

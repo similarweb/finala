@@ -209,6 +209,11 @@ func (dd *DocumentDBManager) getPricingFilterInput(instance *docdb.DBInstance) p
 				Field: awsClient.String("instanceType"),
 				Value: instance.DBInstanceClass,
 			},
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("productFamily"),
+				Value: awsClient.String("Database Instance"),
+			},
 		},
 	}
 }
@@ -218,12 +223,6 @@ func (dd *DocumentDBManager) describeInstances(marker *string, instances []*docd
 
 	input := &docdb.DescribeDBInstancesInput{
 		Marker: marker,
-		Filters: []*docdb.Filter{
-			{
-				Name:   awsClient.String("engine"),
-				Values: []*string{awsClient.String("docdb")},
-			},
-		},
 	}
 
 	resp, err := dd.client.DescribeDBInstances(input)

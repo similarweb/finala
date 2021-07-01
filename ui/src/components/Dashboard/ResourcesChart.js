@@ -6,6 +6,7 @@ import Chart from "react-apexcharts";
 import { titleDirective } from "../../utils/Title";
 import { MoneyDirective } from "../../utils/Money";
 import { setHistory } from "../../utils/History";
+import CSVDownloadButton from "./CSVDownloadButton";
 
 import {
   Box,
@@ -186,6 +187,7 @@ const ResourcesChart = ({
           <CardContent style={{ minHeight: getCardHeight() }}>
             {!isResourceListLoading && sortedResources.length > 0 && (
               <Fragment>
+                {!account && <CSVDownloadButton />}
                 <h4 className={classes.title}>
                   {account
                     ? `${accounts[account].Name} (${accounts[account].ID}):`

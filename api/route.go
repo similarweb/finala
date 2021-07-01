@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"finala/api/httpparameters"
 	"finala/api/storage"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -199,4 +200,105 @@ func (server *Server) VersionHandler(resp http.ResponseWriter, req *http.Request
 		return
 	}
 	server.JSONWrite(resp, http.StatusOK, version)
+}
+
+//Returns json thingy wingy dingy i dont know how
+func (server *Server) GetReport(resp http.ResponseWriter, req *http.Request) {
+	queryParams := req.URL.Query()
+	params := mux.Vars(req)
+	executionID := params["executionID"]
+	filters := httpparameters.GetFilterQueryParamWithOutPrefix(queryParamFilterPrefix, queryParams)
+
+	log.WithFields(log.Fields{
+		"filter": filters,
+	}).Info("filter")
+
+	filterForSummary := make(map[string]string)
+	for filterKey, filterValue := range filters {
+		filterForSummary[filterKey] = filterValue
+	}
+
+	response, err := server.storage.GetSummary(executionID, filterForSummary)
+	if err != nil {
+		server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
+		return
+
+	}
+
+	var result []map[string]interface{}
+	var attributeList []string
+
+	for resourceName, resourceSummary := range response {
+		fmt.Println(resourceName, resourceSummary) //sanity test
+		if resourceSummary.ResourceCount > 0 {
+			resourcesList, err := server.storage.GetResources(resourceName, executionID, filters)
+			if err != nil {
+				server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
+				continue
+			}
+
+			log.WithFields(log.Fields{
+				"name":        resourceName,
+				"executionID": executionID,
+				"filter":      filters,
+			}).Info(resourcesList)
+
+			//can still fail for some odd reason so we check if the resource is actually there
+			if resourcesList[0] == nil {
+				server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
+				return
+			}
+			data, ok := resourcesList[0]["Data"].(map[string]interface{})
+			if !ok {
+				//screw your log
+				continue
+			}
+			for key := range data {
+				if key == "Tag" {
+					continue
+				}
+				exists := false
+				for index := range attributeList {
+					if attributeList[index] == key {
+						exists = true
+					}
+				}
+				if !exists {
+					attributeList = append(attributeList, key)
+				}
+			}
+
+		}
+	}
+
+	for resourceName, resourceSummary := range response {
+		fmt.Println(resourceName, resourceSummary) //sanity test
+		if resourceSummary.ResourceCount > 0 {
+			resourcesList, err := server.storage.GetResources(resourceName, executionID, filters)
+			if err != nil {
+				server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
+				continue
+			}
+			for _, element := range resourcesList {
+				data, ok := element["Data"].(map[string]interface{})
+				if !ok {
+					//screw your log
+					continue
+				}
+
+				delete(data, "Tag")
+
+				for _, attrName := range attributeList {
+					_, ok := data[attrName]
+					if !ok {
+						data[attrName] = nil
+					}
+				}
+				result = append(result, data)
+			}
+
+		}
+	}
+
+	server.JSONWrite(resp, http.StatusOK, result)
 }

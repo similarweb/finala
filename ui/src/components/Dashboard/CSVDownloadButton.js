@@ -4,6 +4,7 @@ import { ResourcesService } from "services/resources.service";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
 import { makeStyles } from "@material-ui/core/styles";
+import Button from "@material-ui/core/Button";
 
 const useStyles = makeStyles(() => ({
   myButton: {
@@ -13,10 +14,9 @@ const useStyles = makeStyles(() => ({
     border: "0",
     textAlign: "center",
     fontWeight: "bold",
-    width: "100%",
-    maxWidth: "320px",
     float: "right",
     borderRadius: "4px",
+    textTransform: "none",
   },
 }));
 
@@ -39,12 +39,14 @@ const CSVDownloadButton = ({ currentExecution, filters }) => {
 
   return (
     <div>
-      <input
+      <Button
+        variant="contained"
+        size="small"
         className={classes.myButton}
-        type="button"
-        value="Download Current Data as CSV Report"
         onClick={downloadReport}
-      />
+      >
+        Download Current Data as CSV Report
+      </Button>
       <CSVLink
         data={data}
         filename={currentExecution + ".csv"}

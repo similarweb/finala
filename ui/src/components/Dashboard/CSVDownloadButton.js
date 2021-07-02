@@ -22,7 +22,7 @@ const useStyles = makeStyles(() => ({
 
 const CSVDownloadButton = ({ currentExecution, filters }) => {
   const [data, setData] = useState([]);
-  const [csvLinkEl, setCsvLinkEl] = useState(React.createRef());
+  const [csvLinkEl] = useState(React.createRef());
   const classes = useStyles();
 
   const downloadReport = async () => {

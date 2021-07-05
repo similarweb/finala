@@ -8,6 +8,7 @@ import (
 	"finala/collector/config"
 	"finala/expression"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -39,6 +40,7 @@ type DetectedNATGateway struct {
 	SubnetID string
 	VPCID    string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -74,7 +76,10 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 		"resource": "natgateway",
 	}).Info("analyzing resource")
 
-	ngw.awsManager.GetCollector().CollectStart(ngw.Name)
+	ngw.awsManager.GetCollector().CollectStart(ngw.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ngw.awsManager.GetAccountIdentity().Account,
+		AccountName: ngw.awsManager.GetAccountName(),
+	})
 
 	DetectedNATGateways := []DetectedNATGateway{}
 
@@ -166,6 +171,14 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 					}
 				}
 
+				Arn := "arn:aws:ec2:" + ngw.awsManager.GetRegion() + ":" + *ngw.awsManager.GetAccountIdentity().Account + ":natgateway/" + *natgateway.NatGatewayId
+
+				if !arn.IsARN(Arn) {
+					log.WithFields(log.Fields{
+						"arn": Arn,
+					}).Error("is not an arn")
+				}
+
 				natGateway := DetectedNATGateway{
 					Region:   ngw.awsManager.GetRegion(),
 					Metric:   metric.Description,
@@ -173,10 +186,14 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 					VPCID:    *natgateway.VpcId,
 					PriceDetectedFields: collector.PriceDetectedFields{
 						LaunchTime:    *natgateway.CreateTime,
-						ResourceID:    *natgateway.NatGatewayId,
+						ResourceID:    Arn,
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *ngw.awsManager.GetAccountIdentity().Account,
+						AccountName: ngw.awsManager.GetAccountName(),
 					},
 				}
 
@@ -190,7 +207,10 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 		}
 	}
 
-	ngw.awsManager.GetCollector().CollectFinish(ngw.Name)
+	ngw.awsManager.GetCollector().CollectFinish(ngw.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ngw.awsManager.GetAccountIdentity().Account,
+		AccountName: ngw.awsManager.GetAccountName(),
+	})
 
 	return DetectedNATGateways, nil
 }

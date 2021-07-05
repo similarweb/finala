@@ -34,6 +34,8 @@ type DetectedAWSLastActivity struct {
 	AccessKey    string
 	LastUsedDate time.Time
 	LastActivity string
+	ResourceID   string
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -75,7 +77,10 @@ func (im *IAMManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		"resource": "iam",
 	}).Info("starting to analyze resource")
 
-	im.awsManager.GetCollector().CollectStart(im.Name)
+	im.awsManager.GetCollector().CollectStart(im.Name, collector.AccountSpecifiedFields{
+		AccountID:   *im.awsManager.GetAccountIdentity().Account,
+		AccountName: im.awsManager.GetAccountName(),
+	})
 
 	detected := []DetectedAWSLastActivity{}
 
@@ -133,6 +138,11 @@ func (im *IAMManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 					AccessKey:    *accessKeyData.AccessKeyId,
 					LastUsedDate: lastUsedDate,
 					LastActivity: lastActivity,
+					ResourceID:   *user.Arn,
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *im.awsManager.GetAccountIdentity().Account,
+						AccountName: im.awsManager.GetAccountName(),
+					},
 				}
 
 				im.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -146,7 +156,10 @@ func (im *IAMManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		}
 	}
 
-	im.awsManager.GetCollector().CollectFinish(im.Name)
+	im.awsManager.GetCollector().CollectFinish(im.Name, collector.AccountSpecifiedFields{
+		AccountID:   *im.awsManager.GetAccountIdentity().Account,
+		AccountName: im.awsManager.GetAccountName(),
+	})
 
 	return detected, nil
 }

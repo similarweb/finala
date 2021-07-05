@@ -59,3 +59,12 @@ func ExtractExecutionName(executionId string) (string, error) {
 
 	return executionArr[0], nil
 }
+
+// ExtractAccountInformation will return Account Name and Account ID
+func ExtractAccountInformation(account string) (string, string, error) {
+	info := strings.Split(account, "_")
+	if len(info) != 2 {
+		return "", "", errors.New("unexpected account format")
+	}
+	return info[0], info[1], nil
+}

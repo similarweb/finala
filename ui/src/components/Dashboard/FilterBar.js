@@ -137,6 +137,15 @@ const FilterBar = ({
           type: "resource",
         });
         resource = filterValue;
+      } else if (filterValue && filterKey === "account") {
+        const accounts = filterValue.split(",");
+        accounts.forEach((account) => {
+          filters.push({
+            title: `Account:${account}`,
+            id: `account:${account}`,
+            type: "account",
+          });
+        });
       } else if (filterValue) {
         const filterValues = filterValue.split(",");
 

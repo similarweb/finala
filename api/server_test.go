@@ -235,8 +235,57 @@ func TestGetExecutions(t *testing.T) {
 
 		})
 	}
-
 }
+
+func TestGetAccounts(t *testing.T) {
+	ms, _ := MockServer()
+	ms.BindEndpoints()
+	ms.Serve()
+
+	testCases := []struct {
+		endpoint           string
+		expectedStatusCode int
+		Count              int
+	}{
+		{"/api/v1/accounts", http.StatusNotFound, 0},
+		{"/api/v1/accounts/1", http.StatusOK, 2},
+		{"/api/v1/accounts/err", http.StatusInternalServerError, 0},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.endpoint, func(t *testing.T) {
+
+			rr := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", test.endpoint, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ms.Router().ServeHTTP(rr, req)
+			if rr.Code != test.expectedStatusCode {
+				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
+			}
+
+			if test.expectedStatusCode == http.StatusOK {
+				body, err := ioutil.ReadAll(rr.Body)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				var accountsData []storage.Accounts
+
+				err = json.Unmarshal(body, &accountsData)
+				if err != nil {
+					t.Fatalf("Could not parse http response")
+				}
+
+				if len(accountsData) != test.Count {
+					t.Fatalf("unexpected accounts data response, got %d expected %d", len(accountsData), test.Count)
+				}
+			}
+		})
+	}
+}
+
 func TestSave(t *testing.T) {
 	ms, mockStorage := MockServer()
 	ms.BindEndpoints()

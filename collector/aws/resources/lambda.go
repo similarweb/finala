@@ -36,6 +36,7 @@ type DetectedAWSLambda struct {
 	ResourceID string
 	Name       string
 	Tag        map[string]string
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -70,7 +71,10 @@ func (lm *LambdaManager) Detect(metrics []config.MetricConfig) (interface{}, err
 		"resource": "lambda",
 	}).Info("starting to analyze resource")
 
-	lm.awsManager.GetCollector().CollectStart(lm.Name)
+	lm.awsManager.GetCollector().CollectStart(lm.Name, collector.AccountSpecifiedFields{
+		AccountID:   *lm.awsManager.GetAccountIdentity().Account,
+		AccountName: lm.awsManager.GetAccountName(),
+	})
 
 	detected := []DetectedAWSLambda{}
 	functions, err := lm.describe(nil, nil)
@@ -149,6 +153,10 @@ func (lm *LambdaManager) Detect(metrics []config.MetricConfig) (interface{}, err
 					ResourceID: *fun.FunctionArn,
 					Name:       *fun.FunctionName,
 					Tag:        tagsData,
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *lm.awsManager.GetAccountIdentity().Account,
+						AccountName: lm.awsManager.GetAccountName(),
+					},
 				}
 
 				lm.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -161,7 +169,10 @@ func (lm *LambdaManager) Detect(metrics []config.MetricConfig) (interface{}, err
 		}
 	}
 
-	lm.awsManager.GetCollector().CollectFinish(lm.Name)
+	lm.awsManager.GetCollector().CollectFinish(lm.Name, collector.AccountSpecifiedFields{
+		AccountID:   *lm.awsManager.GetAccountIdentity().Account,
+		AccountName: lm.awsManager.GetAccountName(),
+	})
 	return detected, nil
 
 }

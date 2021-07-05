@@ -23,20 +23,22 @@ func (mc *MockCollector) GetCollectorEvent() []collector.EventCollector {
 	return events
 }
 
-func (mc *MockCollector) CollectStart(resourceName collector.ResourceIdentifier) {
+func (mc *MockCollector) CollectStart(resourceName collector.ResourceIdentifier, accountSpecifiedFields collector.AccountSpecifiedFields) {
 	mc.updateServiceStatus(collector.EventCollector{
 		ResourceName: resourceName,
 		Data: collector.EventStatusData{
-			Status: collector.EventFetch,
+			Status:             collector.EventFetch,
+			AccountInformation: accountSpecifiedFields.AccountName + "_" + accountSpecifiedFields.AccountID,
 		},
 	})
 
 }
-func (mc *MockCollector) CollectFinish(resourceName collector.ResourceIdentifier) {
+func (mc *MockCollector) CollectFinish(resourceName collector.ResourceIdentifier, accountSpecifiedFields collector.AccountSpecifiedFields) {
 	mc.updateServiceStatus(collector.EventCollector{
 		ResourceName: resourceName,
 		Data: collector.EventStatusData{
-			Status: collector.EventFinish,
+			Status:             collector.EventFinish,
+			AccountInformation: accountSpecifiedFields.AccountName + "_" + accountSpecifiedFields.AccountID,
 		},
 	})
 

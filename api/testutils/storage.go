@@ -65,6 +65,23 @@ func (ms *MockStorage) GetExecutions(queryLimit int) ([]storage.Executions, erro
 	return response, nil
 }
 
+func (ms *MockStorage) GetAccounts(executionID string, querylimit int) ([]storage.Accounts, error) {
+	if executionID == "err" {
+		return nil, errors.New("error")
+	}
+	response := []storage.Accounts{
+		{
+			ID:   "1234567890",
+			Name: "Test1",
+		},
+		{
+			ID:   "1234567891",
+			Name: "Test2",
+		},
+	}
+	return response, nil
+}
+
 func (ms *MockStorage) GetResources(resourceType string, executionID string, filters map[string]string) ([]map[string]interface{}, error) {
 
 	var response []map[string]interface{}

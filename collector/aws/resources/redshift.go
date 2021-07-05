@@ -7,6 +7,7 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -38,6 +39,7 @@ type DetectedRedShift struct {
 	NodeType      string
 	NumberOfNodes int64
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -73,7 +75,10 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 		"resource": "redshift",
 	}).Info("analyzing resource")
 
-	rdm.awsManager.GetCollector().CollectStart(rdm.Name)
+	rdm.awsManager.GetCollector().CollectStart(rdm.Name, collector.AccountSpecifiedFields{
+		AccountID:   *rdm.awsManager.GetAccountIdentity().Account,
+		AccountName: rdm.awsManager.GetAccountName(),
+	})
 
 	detectedredshiftClusters := []DetectedRedShift{}
 
@@ -147,6 +152,14 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 					}
 				}
 
+				Arn := "arn:aws:redshift:" + rdm.awsManager.GetRegion() + ":" + *rdm.awsManager.GetAccountIdentity().Account + ":cluster:" + *cluster.ClusterIdentifier
+
+				if !arn.IsARN(Arn) {
+					log.WithFields(log.Fields{
+						"arn": Arn,
+					}).Error("is not an arn")
+				}
+
 				redshift := DetectedRedShift{
 					Region:        rdm.awsManager.GetRegion(),
 					Metric:        metric.Description,
@@ -154,10 +167,14 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 					NumberOfNodes: *cluster.NumberOfNodes,
 					PriceDetectedFields: collector.PriceDetectedFields{
 						LaunchTime:    *cluster.ClusterCreateTime,
-						ResourceID:    *cluster.ClusterIdentifier,
+						ResourceID:    Arn,
 						PricePerHour:  clusterPrice,
 						PricePerMonth: clusterPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *rdm.awsManager.GetAccountIdentity().Account,
+						AccountName: rdm.awsManager.GetAccountName(),
 					},
 				}
 
@@ -171,7 +188,10 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 		}
 	}
 
-	rdm.awsManager.GetCollector().CollectFinish(rdm.Name)
+	rdm.awsManager.GetCollector().CollectFinish(rdm.Name, collector.AccountSpecifiedFields{
+		AccountID:   *rdm.awsManager.GetAccountIdentity().Account,
+		AccountName: rdm.awsManager.GetAccountName(),
+	})
 
 	return detectedredshiftClusters, nil
 }

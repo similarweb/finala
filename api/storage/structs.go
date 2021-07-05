@@ -13,6 +13,7 @@ type StorageDescriber interface {
 	Save(data string) bool
 	GetSummary(executionID string, filters map[string]string) (map[string]CollectorsSummary, error)
 	GetExecutions(querylimit int) ([]Executions, error)
+	GetAccounts(executionID string, querylimit int) ([]Accounts, error)
 	GetResources(resourceType string, executionID string, filters map[string]string) ([]map[string]interface{}, error)
 	GetResourceTrends(resourceType string, filters map[string]string, limit int) ([]ExecutionCost, error)
 	GetExecutionTags(executionID string) (map[string][]string, error)
@@ -31,14 +32,20 @@ type ExecutionCost struct {
 	CostSum            float64
 }
 
+type Accounts struct {
+	ID   string
+	Name string
+}
+
 // CollectorsSummary defines unused resource summary
 type CollectorsSummary struct {
-	ResourceName  string  `json:"ResourceName"`
-	ResourceCount int64   `json:"ResourceCount"`
-	TotalSpent    float64 `json:"TotalSpent"`
-	Status        int     `json:"Status"`
-	ErrorMessage  string  `json:"ErrorMessage"`
-	EventTime     int64   `json:"-"`
+	ResourceName  string             `json:"ResourceName"`
+	ResourceCount int64              `json:"ResourceCount"`
+	TotalSpent    float64            `json:"TotalSpent"`
+	Status        int                `json:"Status"`
+	ErrorMessage  string             `json:"ErrorMessage"`
+	EventTime     int64              `json:"-"`
+	SpentAccounts map[string]float64 `json:"SpentAccounts"`
 }
 
 type SummaryData struct {

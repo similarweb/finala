@@ -1,0 +1,11 @@
+{
+  "buckets": [
+    {
+      "key": "123456789012",
+      "doc_count": 1,
+      "accountSum": {
+        "value": 36.5
+      }
+    }
+  ]
+}

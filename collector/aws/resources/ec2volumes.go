@@ -6,6 +6,7 @@ import (
 	"finala/collector/aws/common"
 	"finala/collector/aws/register"
 	"finala/collector/config"
+	"github.com/aws/aws-sdk-go/aws/arn"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -36,6 +37,7 @@ type DetectedAWSEC2Volume struct {
 	Size          int64
 	PricePerMonth float64
 	Tag           map[string]string
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -75,7 +77,10 @@ func (ev *EC2VolumeManager) Detect(metrics []config.MetricConfig) (interface{}, 
 		"resource": "ec2_volume",
 	}).Info("starting to analyze resource")
 
-	ev.awsManager.GetCollector().CollectStart(ev.Name)
+	ev.awsManager.GetCollector().CollectStart(ev.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ev.awsManager.GetAccountIdentity().Account,
+		AccountName: ev.awsManager.GetAccountName(),
+	})
 
 	detected := []DetectedAWSEC2Volume{}
 	volumes, err := ev.describe(nil, nil)
@@ -115,15 +120,27 @@ func (ev *EC2VolumeManager) Detect(metrics []config.MetricConfig) (interface{}, 
 			}
 		}
 
+		Arn := "arn:aws:ec2:" + ev.awsManager.GetRegion() + ":" + *ev.awsManager.GetAccountIdentity().Account + ":volume/" + *vol.VolumeId
+
+		if !arn.IsARN(Arn) {
+			log.WithFields(log.Fields{
+				"arn": Arn,
+			}).Error("is not an arn")
+		}
+
 		volumeSize := *vol.Size
 		dEBS := DetectedAWSEC2Volume{
 			Region:        ev.awsManager.GetRegion(),
 			Metric:        metric.Description,
-			ResourceID:    *vol.VolumeId,
+			ResourceID:    Arn,
 			Type:          *vol.VolumeType,
 			Size:          volumeSize,
 			PricePerMonth: ev.getCalculatedPrice(vol, price),
 			Tag:           tagsData,
+			AccountSpecifiedFields: collector.AccountSpecifiedFields{
+				AccountID:   *ev.awsManager.GetAccountIdentity().Account,
+				AccountName: ev.awsManager.GetAccountName(),
+			},
 		}
 
 		ev.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -135,7 +152,10 @@ func (ev *EC2VolumeManager) Detect(metrics []config.MetricConfig) (interface{}, 
 
 	}
 
-	ev.awsManager.GetCollector().CollectFinish(ev.Name)
+	ev.awsManager.GetCollector().CollectFinish(ev.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ev.awsManager.GetAccountIdentity().Account,
+		AccountName: ev.awsManager.GetAccountName(),
+	})
 
 	return detected, nil
 

@@ -26,6 +26,7 @@ type AWSManager interface {
 	GetCloudWatchClient() *cloudwatch.CloudwatchManager
 	GetPricingClient() *pricing.PricingManager
 	GetRegion() string
+	GetAccountName() string
 	GetSession() (*session.Session, *aws.Config)
 	GetAccountIdentity() *sts.GetCallerIdentityOutput
 	SetGlobal(resourceName collector.ResourceIdentifier)

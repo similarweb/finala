@@ -8,6 +8,7 @@ import (
 	"finala/collector/config"
 	"finala/expression"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -37,6 +38,7 @@ type DetectedELB struct {
 	Metric string
 	Region string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -72,7 +74,10 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		"resource": "elb",
 	}).Info("starting to analyze resource")
 
-	el.awsManager.GetCollector().CollectStart(el.Name)
+	el.awsManager.GetCollector().CollectStart(el.Name, collector.AccountSpecifiedFields{
+		AccountID:   *el.awsManager.GetAccountIdentity().Account,
+		AccountName: el.awsManager.GetAccountName(),
+	})
 
 	detectedELB := []DetectedELB{}
 
@@ -166,15 +171,27 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 					}
 				}
 
+				Arn := "arn:aws:elasticloadbalancing:" + el.awsManager.GetRegion() + ":" + *el.awsManager.GetAccountIdentity().Account + ":loadbalancer/" + *instance.LoadBalancerName
+
+				if !arn.IsARN(Arn) {
+					log.WithFields(log.Fields{
+						"arn": Arn,
+					}).Error("is not an arn")
+				}
+
 				elb := DetectedELB{
 					Region: el.awsManager.GetRegion(),
 					Metric: metric.Description,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID:    *instance.LoadBalancerName,
+						ResourceID:    Arn,
 						LaunchTime:    *instance.CreatedTime,
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *el.awsManager.GetAccountIdentity().Account,
+						AccountName: el.awsManager.GetAccountName(),
 					},
 				}
 
@@ -190,7 +207,10 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		}
 	}
 
-	el.awsManager.GetCollector().CollectFinish(el.Name)
+	el.awsManager.GetCollector().CollectFinish(el.Name, collector.AccountSpecifiedFields{
+		AccountID:   *el.awsManager.GetAccountIdentity().Account,
+		AccountName: el.awsManager.GetAccountName(),
+	})
 
 	return detectedELB, nil
 

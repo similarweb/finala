@@ -1,0 +1,12 @@
+{
+  "buckets" : [
+    {
+      "key" : "Test_123456789",
+      "doc_count" : 66
+    },
+    {
+      "key" : "Test2_12345675",
+      "doc_count" : 6
+    }
+  ]
+}

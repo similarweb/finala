@@ -23,8 +23,9 @@ const (
 
 // EventStatusData descrive the struct of the resource statuses
 type EventStatusData struct {
-	Status       EventStatus
-	ErrorMessage string
+	Status             EventStatus
+	ErrorMessage       string
+	AccountInformation string
 }
 
 // PriceDetectedFields describe the pricing field
@@ -34,6 +35,12 @@ type PriceDetectedFields struct {
 	PricePerHour  float64
 	PricePerMonth float64
 	Tag           map[string]string
+}
+
+// AccountSpecifiedFields describe account data of an resource
+type AccountSpecifiedFields struct {
+	AccountID   string
+	AccountName string
 }
 
 // EventCollector collector event data structure

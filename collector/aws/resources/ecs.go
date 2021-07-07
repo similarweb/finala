@@ -90,7 +90,7 @@ func (ec *EcsManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 
 			period := int64(metric.Period.Seconds())
 			metricEndTime := now.Add(time.Duration(-metric.StartTime))
-			tmp := strings.Split(*service.ServiceArn, "/")
+			tmp := strings.Split(*service.ClusterArn, "/")
 			metricInput := awsCloudwatch.GetMetricStatisticsInput{
 				Dimensions: []*awsCloudwatch.Dimension{
 					{

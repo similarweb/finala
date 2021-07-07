@@ -135,7 +135,7 @@ func (ec *EcsManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 					"service_name":        *service.ServiceName,
 					"region":              ec.awsManager.GetRegion(),
 					"launch_type":         service.LaunchType,
-				}).Info("Redshift cluster detected as unutilized resource")
+				}).Info("ECS service detected as unutilized resource")
 
 				tagsData := map[string]string{}
 				if err == nil {

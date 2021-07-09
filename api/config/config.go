@@ -22,10 +22,20 @@ type StorageConfig struct {
 	ElasticSearch ElasticsearchConfig `yaml:"elasticsearch"`
 }
 
+type AccountConfig struct {
+	Name     string `yaml:"name"`
+	Password string `yaml:"password"`
+}
+
+type AuthenticationConfig struct {
+	Accounts []AccountConfig `yaml:"accounts"`
+}
+
 // APIConfig present the application config
 type APIConfig struct {
-	LogLevel string        `yaml:"log_level"`
-	Storage  StorageConfig `yaml:"storage"`
+	LogLevel       string               `yaml:"log_level"`
+	Storage        StorageConfig        `yaml:"storage"`
+	Authentication AuthenticationConfig `yaml:"authentication"`
 }
 
 // LoadAPI will load yaml file go struct
@@ -49,6 +59,5 @@ func LoadAPI(location string) (APIConfig, error) {
 		}).Info("override storage endpoint")
 		config.Storage.ElasticSearch.Endpoints = strings.Split(overrideStorageEndpoint, ",")
 	}
-
 	return config, nil
 }

@@ -19,6 +19,8 @@ type EcsClientDescriptor interface {
 	DescribeServices(input *ecs.DescribeServicesInput) (*ecs.DescribeServicesOutput, error)
 	ListClusters(input *ecs.ListClustersInput) (*ecs.ListClustersOutput, error)
 	ListServices(input *ecs.ListServicesInput) (*ecs.ListServicesOutput, error)
+	ListTasks(input *ecs.ListTasksInput) (*ecs.ListTasksOutput, error)
+	DescribeTasks(input *ecs.DescribeTasksInput) (*ecs.DescribeTasksOutput, error)
 }
 
 type EcsManager struct {
@@ -144,14 +146,31 @@ func (ec *EcsManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 					}
 				}
 
+				pricePerHour := float64(0)
+
+				if *service.LaunchType == ecs.LaunchTypeFargate {
+					Tasks, err := ec.describeTasks(service.ClusterArn, service.ServiceName, nil, nil)
+					if err == nil {
+						for _, task := range Tasks {
+							log.WithFields(log.Fields{
+								"arn":    *task.TaskArn,
+								"cpu":    *task.Cpu,
+								"memory": *task.Memory,
+							}).Info("task")
+						}
+					}
+				}
+
 				ecss := DetectedEcs{
 					Region:     ec.awsManager.GetRegion(),
 					Metric:     metric.Description,
 					LaunchType: *service.LaunchType,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID: *service.ServiceArn,
-						LaunchTime: *service.CreatedAt,
-						Tag:        tagsData,
+						ResourceID:    *service.ServiceArn,
+						LaunchTime:    *service.CreatedAt,
+						PricePerHour:  pricePerHour,
+						PricePerMonth: pricePerHour * collector.TotalMonthHours,
+						Tag:           tagsData,
 					},
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
 						AccountID:   *ec.awsManager.GetAccountIdentity().Account,
@@ -237,4 +256,42 @@ func (ec *EcsManager) describeServices(nextToken *string, EcsServices []*ecs.Ser
 
 	return EcsServices, nil
 
+}
+
+func (ec *EcsManager) describeTasks(clusterArn *string, serviceName *string, nextToken *string, Tasks []*ecs.Task) ([]*ecs.Task, error) {
+
+	listInput := &ecs.ListTasksInput{
+		Cluster:     clusterArn,
+		NextToken:   nextToken,
+		ServiceName: serviceName,
+	}
+
+	listResp, err := ec.client.ListTasks(listInput)
+	if err != nil {
+		log.WithField("error", err).Error("could not list any ecs task")
+		return nil, err
+	}
+
+	if Tasks == nil {
+		Tasks = []*ecs.Task{}
+	}
+
+	describeInput := &ecs.DescribeTasksInput{
+		Cluster: clusterArn,
+		Tasks:   listResp.TaskArns,
+	}
+
+	describeResp, err := ec.client.DescribeTasks(describeInput)
+	if err != nil {
+		log.WithField("error", err).Error("could not describe any ecs task")
+		return nil, err
+	}
+
+	Tasks = append(Tasks, describeResp.Tasks...)
+
+	if listResp.NextToken != nil {
+		return ec.describeTasks(clusterArn, serviceName, listResp.NextToken, Tasks)
+	}
+
+	return Tasks, nil
 }

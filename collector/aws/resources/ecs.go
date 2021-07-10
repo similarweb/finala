@@ -7,10 +7,13 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
+	"fmt"
 	awsClient "github.com/aws/aws-sdk-go/aws"
 	awsCloudwatch "github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go/service/pricing"
 	log "github.com/sirupsen/logrus"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -24,10 +27,11 @@ type EcsClientDescriptor interface {
 }
 
 type EcsManager struct {
-	client     EcsClientDescriptor
-	awsManager common.AWSManager
-	namespace  string
-	Name       collector.ResourceIdentifier
+	client             EcsClientDescriptor
+	awsManager         common.AWSManager
+	namespace          string
+	Name               collector.ResourceIdentifier
+	servicePricingCode string
 }
 
 type DetectedEcs struct {
@@ -53,10 +57,11 @@ func NewEcsManager(awsManager common.AWSManager, client interface{}) (common.Res
 	}
 
 	return &EcsManager{
-		client:     ecsClient,
-		awsManager: awsManager,
-		namespace:  "AWS/ECS",
-		Name:       awsManager.GetResourceIdentifier("ECS"),
+		client:             ecsClient,
+		awsManager:         awsManager,
+		namespace:          "AWS/ECS",
+		Name:               awsManager.GetResourceIdentifier("ECS"),
+		servicePricingCode: "AmazonECS",
 	}, nil
 }
 
@@ -151,12 +156,70 @@ func (ec *EcsManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 				if *service.LaunchType == ecs.LaunchTypeFargate {
 					Tasks, err := ec.describeTasks(service.ClusterArn, service.ServiceName, nil, nil)
 					if err == nil {
+
+						pricingRegionPrefix, err := ec.awsManager.GetPricingClient().GetRegionPrefix(ec.awsManager.GetRegion())
+						if err != nil {
+							log.WithError(err).WithFields(log.Fields{
+								"region": ec.awsManager.GetRegion(),
+							}).Error("Could not get pricing region prefix")
+							ec.awsManager.GetCollector().CollectError(ec.Name, err)
+							return detectedEcsServices, err
+						}
+
 						for _, task := range Tasks {
 							log.WithFields(log.Fields{
 								"arn":    *task.TaskArn,
 								"cpu":    *task.Cpu,
 								"memory": *task.Memory,
 							}).Info("task")
+
+							priceGBPerHour, err := ec.awsManager.GetPricingClient().GetPrice(pricing.GetProductsInput{ServiceCode: &ec.servicePricingCode, Filters: []*pricing.Filter{
+								{Type: awsClient.String("TERM_MATCH"),
+									Field: awsClient.String("usageType"),
+									Value: awsClient.String(fmt.Sprintf("%sFargate-GB-Hours", pricingRegionPrefix)),
+								},
+							}}, "", ec.awsManager.GetRegion())
+
+							if err != nil {
+								log.WithError(err).WithFields(log.Fields{
+									"region": ec.awsManager.GetRegion(),
+								}).Error("could not get ECS per GB price")
+								ec.awsManager.GetCollector().CollectError(ec.Name, err)
+								return detectedEcsServices, err
+							}
+							multiplier, err := strconv.ParseFloat(*task.Memory, 64)
+							if err != nil {
+								log.WithError(err).WithFields(log.Fields{
+									"Memory": *task.Memory,
+								}).Error("Cast error in memory cost calc")
+							} else {
+								pricePerHour += multiplier / 1024 * priceGBPerHour
+							}
+
+							priceCPUPerHour, err := ec.awsManager.GetPricingClient().GetPrice(pricing.GetProductsInput{ServiceCode: &ec.servicePricingCode, Filters: []*pricing.Filter{
+								{Type: awsClient.String("TERM_MATCH"),
+									Field: awsClient.String("usageType"),
+									Value: awsClient.String(fmt.Sprintf("%sFargate-vCPU-Hours:perCPU", pricingRegionPrefix)),
+								},
+							}}, "", ec.awsManager.GetRegion())
+
+							if err != nil {
+								log.WithError(err).WithFields(log.Fields{
+									"region": ec.awsManager.GetRegion(),
+								}).Error("could not get ECS per CPU price")
+								ec.awsManager.GetCollector().CollectError(ec.Name, err)
+								return detectedEcsServices, err
+							}
+
+							multiplier, err = strconv.ParseFloat(*task.Cpu, 64)
+							if err != nil {
+								log.WithError(err).WithFields(log.Fields{
+									"CPU": *task.Cpu,
+								}).Error("Cast error in cpu cost calc")
+							} else {
+								pricePerHour += multiplier / 1024 * priceCPUPerHour
+							}
+
 						}
 					}
 				}
@@ -244,10 +307,6 @@ func (ec *EcsManager) describeServices(nextToken *string, EcsServices []*ecs.Ser
 			nextToeken = listServicesOutput.NextToken
 		}
 
-		//ListService fuer jedes arn
-		//Gibt arn von den ersten 10 services
-		//Arn ruft describeServices auf. Braucht arn und services array
-		//List of services
 	}
 
 	if resp.NextToken != nil {

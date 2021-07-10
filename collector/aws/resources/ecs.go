@@ -163,15 +163,10 @@ func (ec *EcsManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 								"region": ec.awsManager.GetRegion(),
 							}).Error("Could not get pricing region prefix")
 							ec.awsManager.GetCollector().CollectError(ec.Name, err)
-							return detectedEcsServices, err
+
 						}
 
 						for _, task := range Tasks {
-							log.WithFields(log.Fields{
-								"arn":    *task.TaskArn,
-								"cpu":    *task.Cpu,
-								"memory": *task.Memory,
-							}).Info("task")
 
 							priceGBPerHour, err := ec.awsManager.GetPricingClient().GetPrice(pricing.GetProductsInput{ServiceCode: &ec.servicePricingCode, Filters: []*pricing.Filter{
 								{Type: awsClient.String("TERM_MATCH"),
@@ -185,7 +180,7 @@ func (ec *EcsManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 									"region": ec.awsManager.GetRegion(),
 								}).Error("could not get ECS per GB price")
 								ec.awsManager.GetCollector().CollectError(ec.Name, err)
-								return detectedEcsServices, err
+								continue
 							}
 							multiplier, err := strconv.ParseFloat(*task.Memory, 64)
 							if err != nil {
@@ -208,7 +203,7 @@ func (ec *EcsManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 									"region": ec.awsManager.GetRegion(),
 								}).Error("could not get ECS per CPU price")
 								ec.awsManager.GetCollector().CollectError(ec.Name, err)
-								return detectedEcsServices, err
+								continue
 							}
 
 							multiplier, err = strconv.ParseFloat(*task.Cpu, 64)

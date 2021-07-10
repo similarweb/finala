@@ -55,11 +55,42 @@ var defaultEcsListServicesMock = ecs.ListServicesOutput{
 	},
 }
 
+var defaultEcsListTasksMock = ecs.ListTasksOutput{
+	NextToken: nil,
+	TaskArns: []*string{
+		awsClient.String("arn:aws:ecs:us-west-2:1234567890:cluster/default/testTaskOne"),
+	},
+}
+
+var defaultEcsDescribeTasksMock = ecs.DescribeTasksOutput{
+	Failures: nil,
+	Tasks: []*ecs.Task{
+		{
+			Cpu:        awsClient.String("1024"),
+			Memory:     awsClient.String("1024"),
+			TaskArn:    awsClient.String("arn:aws:ecs:us-west-2:1234567890:cluster/default/testTaskOne"),
+			ClusterArn: awsClient.String("arn:aws:ecs:us-west-2:1234567890:cluster/default/testFG"),
+		},
+	},
+}
+
+//listtaks und describe tasks
+
 type MockEcsClient struct {
 	responseDescribeServices ecs.DescribeServicesOutput
 	responseListClusters     ecs.ListClustersOutput
 	responseListServices     ecs.ListServicesOutput
+	responseDescribeTasks    ecs.DescribeTasksOutput
+	responseListTasks        ecs.ListTasksOutput
 	err                      error
+}
+
+func (ec *MockEcsClient) ListTasks(input *ecs.ListTasksInput) (*ecs.ListTasksOutput, error) {
+	return &ec.responseListTasks, ec.err
+}
+
+func (ec *MockEcsClient) DescribeTasks(input *ecs.DescribeTasksInput) (*ecs.DescribeTasksOutput, error) {
+	return &ec.responseDescribeTasks, ec.err
 }
 
 func (ec *MockEcsClient) DescribeServices(input *ecs.DescribeServicesInput) (*ecs.DescribeServicesOutput, error) {
@@ -85,6 +116,8 @@ func TestEcsDescribeServices(t *testing.T) {
 			responseDescribeServices: defaultEcsDescribeServicesMock,
 			responseListClusters:     defaultEcsListClustersMock,
 			responseListServices:     defaultEcsListServicesMock,
+			responseDescribeTasks:    defaultEcsDescribeTasksMock,
+			responseListTasks:        defaultEcsListTasksMock,
 			err:                      nil,
 		}
 
@@ -110,6 +143,8 @@ func TestEcsDescribeServices(t *testing.T) {
 			responseDescribeServices: defaultEcsDescribeServicesMock,
 			responseListClusters:     defaultEcsListClustersMock,
 			responseListServices:     defaultEcsListServicesMock,
+			responseDescribeTasks:    defaultEcsDescribeTasksMock,
+			responseListTasks:        defaultEcsListTasksMock,
 			err:                      errors.New("error"),
 		}
 
@@ -165,6 +200,8 @@ func TestEcsDetect(t *testing.T) {
 		responseDescribeServices: defaultEcsDescribeServicesMock,
 		responseListClusters:     defaultEcsListClustersMock,
 		responseListServices:     defaultEcsListServicesMock,
+		responseDescribeTasks:    defaultEcsDescribeTasksMock,
+		responseListTasks:        defaultEcsListTasksMock,
 		err:                      nil,
 	}
 
@@ -227,6 +264,8 @@ func TestEcsDetectError(t *testing.T) {
 		responseDescribeServices: defaultEcsDescribeServicesMock,
 		responseListClusters:     defaultEcsListClustersMock,
 		responseListServices:     defaultEcsListServicesMock,
+		responseDescribeTasks:    defaultEcsDescribeTasksMock,
+		responseListTasks:        defaultEcsListTasksMock,
 		err:                      errors.New("error"),
 	}
 

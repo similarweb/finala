@@ -74,8 +74,6 @@ var defaultEcsDescribeTasksMock = ecs.DescribeTasksOutput{
 	},
 }
 
-//listtaks und describe tasks
-
 type MockEcsClient struct {
 	responseDescribeServices ecs.DescribeServicesOutput
 	responseListClusters     ecs.ListClustersOutput
@@ -104,8 +102,6 @@ func (ec *MockEcsClient) ListClusters(input *ecs.ListClustersInput) (*ecs.ListCl
 func (ec *MockEcsClient) ListServices(input *ecs.ListServicesInput) (*ecs.ListServicesOutput, error) {
 	return &ec.responseListServices, ec.err
 }
-
-//detect und describeServices testen
 
 func TestEcsDescribeServices(t *testing.T) {
 	collector := collectorTestutils.NewMockCollector()
@@ -170,8 +166,6 @@ func TestEcsDescribeServices(t *testing.T) {
 }
 
 func TestEcsDetect(t *testing.T) {
-	//events 2
-	//len 3
 
 	metricConfig := []config.MetricConfig{
 		{

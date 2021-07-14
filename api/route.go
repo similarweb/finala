@@ -198,7 +198,7 @@ func (server *Server) Login(resp http.ResponseWriter, req *http.Request) {
 	}
 
 	for _, user := range server.authentication.Accounts {
-		if detectUser["username"] == user.Name && detectUser["password"] == user.Password {
+		if detectUser["Username"] == user.Name && detectUser["Password"] == user.Password {
 
 			expTime := time.Now().Add(time.Minute * 5)
 
@@ -209,7 +209,7 @@ func (server *Server) Login(resp http.ResponseWriter, req *http.Request) {
 			at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 			token, err := at.SignedString([]byte("secret"))
 			if err != nil {
-				server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{Error: err.Error()})
+				server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
 				return
 			}
 
@@ -220,9 +220,10 @@ func (server *Server) Login(resp http.ResponseWriter, req *http.Request) {
 			}
 
 			http.SetCookie(resp, &cookie)
-
+			return
 		}
 	}
+	server.JSONWrite(resp, http.StatusUnauthorized, "{\"message\":\"Login data not authorized\"}")
 }
 
 //NotFoundRoute return when route not found

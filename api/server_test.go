@@ -511,3 +511,51 @@ func TestVersion(t *testing.T) {
 	}
 
 }
+
+func TestLogin(t *testing.T) {
+	ms, _ := MockServer()
+	ms.BindEndpoints()
+	ms.Serve()
+
+	type testAccount struct {
+		Username string
+		Password string
+	}
+
+	testCases := []struct {
+		endpoint           string
+		expectedStatusCode int
+		BodyRequest        testAccount
+	}{
+		{"/api/v1/login", http.StatusOK, testAccount{Username: "User", Password: "Finala"}},
+		{"/api/v1/login", http.StatusUnauthorized, testAccount{Username: "", Password: ""}},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.endpoint, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			buf, err := json.Marshal(test.BodyRequest)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			req, err := http.NewRequest("GET", test.endpoint, bytes.NewBuffer(buf))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			ms.Router().ServeHTTP(rr, req)
+			if rr.Code != test.expectedStatusCode {
+				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
+			}
+
+			if test.expectedStatusCode == http.StatusOK {
+				if cookie := rr.Header().Get("Set-Cookie"); cookie == "" {
+					t.Fatalf("unexpected error, got %s expected jwt={SomeValue}", cookie)
+				}
+			}
+
+		})
+	}
+
+}

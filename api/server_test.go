@@ -20,7 +20,9 @@ func MockServer() (*api.Server, *testutils.MockStorage) {
 	version := testutils.NewMockVersion()
 
 	mockStorage := testutils.NewMockStorage()
-	server := api.NewServer(9090, mockStorage, version)
+	mockAuthenticationConfig := testutils.GetAuthenticationConfig()
+
+	server := api.NewServer(9090, mockStorage, version, mockAuthenticationConfig)
 	return server, mockStorage
 }
 

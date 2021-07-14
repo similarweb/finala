@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"finala/api/httpparameters"
 	"finala/api/storage"
+	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -179,6 +180,49 @@ func (server *Server) DetectEvents(resp http.ResponseWriter, req *http.Request) 
 
 	server.JSONWrite(resp, http.StatusAccepted, nil)
 
+}
+
+func (server *Server) Login(resp http.ResponseWriter, req *http.Request) {
+	buf, bodyErr := ioutil.ReadAll(req.Body)
+
+	if bodyErr != nil {
+		server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{Error: bodyErr.Error()})
+		return
+	}
+
+	var detectUser map[string]string
+	err := json.Unmarshal(buf, &detectUser)
+	if err != nil {
+		server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{Error: err.Error()})
+		return
+	}
+
+	for _, user := range server.authentication.Accounts {
+		if detectUser["username"] == user.Name && detectUser["password"] == user.Password {
+
+			expTime := time.Now().Add(time.Minute * 5)
+
+			atClaims := jwt.MapClaims{}
+			atClaims["authorized"] = true
+			atClaims["user_id"] = user.Name
+			atClaims["exp"] = expTime.Unix()
+			at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+			token, err := at.SignedString([]byte("secret"))
+			if err != nil {
+				server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{Error: err.Error()})
+				return
+			}
+
+			cookie := http.Cookie{
+				Name:    "jwt",
+				Value:   token,
+				Expires: expTime,
+			}
+
+			http.SetCookie(resp, &cookie)
+
+		}
+	}
 }
 
 //NotFoundRoute return when route not found

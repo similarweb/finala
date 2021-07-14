@@ -1,6 +1,7 @@
 package testutils
 
 import (
+	"finala/api/config"
 	"net"
 	"net/http"
 	"strings"
@@ -9,6 +10,17 @@ import (
 
 	"github.com/gorilla/mux"
 )
+
+func GetAuthenticationConfig() config.AuthenticationConfig {
+	return config.AuthenticationConfig{
+		Accounts: []config.AccountConfig{
+			{
+				Name:     "User",
+				Password: "Finala",
+			},
+		},
+	}
+}
 
 type MockWebserver struct {
 	Port   string

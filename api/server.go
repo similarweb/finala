@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"finala/api/config"
 	"fmt"
 	"net/http"
 	"time"
@@ -24,21 +25,23 @@ const (
 
 // Server is the API server struct
 type Server struct {
-	router     *mux.Router
-	httpserver *http.Server
-	storage    storage.StorageDescriber
-	version    version.VersionManagerDescriptor
+	router         *mux.Router
+	httpserver     *http.Server
+	storage        storage.StorageDescriber
+	authentication config.AuthenticationConfig
+	version        version.VersionManagerDescriptor
 }
 
 // NewServer returns a new Server
-func NewServer(port int, storage storage.StorageDescriber, version version.VersionManagerDescriptor) *Server {
+func NewServer(port int, storage storage.StorageDescriber, version version.VersionManagerDescriptor, auth config.AuthenticationConfig) *Server {
 
 	router := mux.NewRouter()
 	corsObj := handlers.AllowedOrigins([]string{"*"})
 	return &Server{
-		router:  router,
-		storage: storage,
-		version: version,
+		router:         router,
+		storage:        storage,
+		version:        version,
+		authentication: auth,
 		httpserver: &http.Server{
 			Handler: handlers.CORS(corsObj)(router),
 			Addr:    fmt.Sprintf("0.0.0.0:%d", port),
@@ -86,6 +89,7 @@ func (server *Server) BindEndpoints() {
 	server.router.HandleFunc("/api/v1/trends/{type}", server.GetResourceTrends).Methods("GET")
 	server.router.HandleFunc("/api/v1/tags/{executionID}", server.GetExecutionTags).Methods("GET")
 	server.router.HandleFunc("/api/v1/detect-events/{executionID}", server.DetectEvents).Methods("POST")
+	server.router.HandleFunc("/api/v1/login", server.Login).Methods("GET")
 	server.router.HandleFunc("/api/v1/version", server.VersionHandler).Methods("GET")
 	server.router.HandleFunc("/api/v1/health", server.HealthCheckHandler).Methods("GET")
 	server.router.NotFoundHandler = http.HandlerFunc(server.NotFoundRoute)

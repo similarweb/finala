@@ -200,7 +200,7 @@ func (server *Server) Login(resp http.ResponseWriter, req *http.Request) {
 	for _, user := range server.authentication.Accounts {
 		if detectUser["Username"] == user.Name && detectUser["Password"] == user.Password {
 
-			expTime := time.Now().Add(time.Minute * 5)
+			expTime := time.Now().Add(time.Hour * 1)
 
 			atClaims := jwt.MapClaims{}
 			atClaims["authorized"] = true

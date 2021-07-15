@@ -233,6 +233,7 @@ providers:
           constraint:
             operator: "<="
             value: 1
+
       s3:
         - description: Number of Requests
           enable: true
@@ -240,8 +241,8 @@ providers:
             - name: AllRequests
               statistic: Sum
           period: 24h 
+
           start_time: 168h # 24h * 7d
           constraint:
             operator: "=="
             value: 0
-

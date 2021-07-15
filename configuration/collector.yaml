@@ -210,7 +210,18 @@ providers:
           start_time: 168h # 24h * 7d
           constraint:
             operator: "=="
-            value: 0
+            value: 0        
+      eks:
+        - description: Cluster node count
+          enable: true
+          metrics:
+          - name: ClusterNodeCount
+            statistic: Maximum
+          period: 24h
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "<="
+            value: 1
       s3:
         - description: Number of Requests
           enable: true
@@ -222,3 +233,4 @@ providers:
           constraint:
             operator: "=="
             value: 0
+

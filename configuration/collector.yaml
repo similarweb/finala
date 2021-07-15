@@ -200,6 +200,17 @@ providers:
           constraint:
             operator: "=="
             value: 0
+      ecs:
+        - description: Percentage of used CPU
+          enable: true
+          metrics:
+            - name: CPUUtilization
+              statistic: Average
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "<"
+            value: 5
       natgateway:
         - description: Active connection count
           enable: true
@@ -210,7 +221,19 @@ providers:
           start_time: 168h # 24h * 7d
           constraint:
             operator: "=="
-            value: 0
+            value: 0        
+      eks:
+        - description: Cluster node count
+          enable: true
+          metrics:
+          - name: ClusterNodeCount
+            statistic: Maximum
+          period: 24h
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "<="
+            value: 1
+
       s3:
         - description: Number of Requests
           enable: true
@@ -218,6 +241,7 @@ providers:
             - name: AllRequests
               statistic: Sum
           period: 24h 
+
           start_time: 168h # 24h * 7d
           constraint:
             operator: "=="

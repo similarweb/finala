@@ -8,7 +8,6 @@ import AccountsList from "./AccountsList";
 import FilterBar from "./FilterBar";
 import StatisticsBar from "./StatisticsBar";
 import ResourceScanning from "./ResourceScanning";
-import ResourcesChart from "./ResourcesChart";
 import ResourcesCharts from "./ResourcesCharts";
 import ResourcesList from "./ResourcesList";
 import ResourceTable from "./ResourceTable";

@@ -2,9 +2,11 @@ package testutils
 
 import (
 	"finala/api/config"
+	"github.com/dgrijalva/jwt-go"
 	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -20,6 +22,28 @@ func GetAuthenticationConfig() config.AuthenticationConfig {
 			},
 		},
 	}
+}
+
+func GetTestCookie() *http.Cookie {
+
+	expTime := time.Now().Add(time.Minute * 5)
+
+	atClaims := jwt.MapClaims{}
+	atClaims["authorized"] = true
+	atClaims["user_id"] = "TestCookie"
+	atClaims["exp"] = expTime.Unix()
+	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+	token, err := at.SignedString([]byte("secret"))
+	if err != nil {
+		return nil
+	}
+
+	cookie := http.Cookie{
+		Name:    "jwt",
+		Value:   token,
+		Expires: expTime,
+	}
+	return &cookie
 }
 
 type MockWebserver struct {

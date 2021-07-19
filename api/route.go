@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"finala/api/httpparameters"
 	"finala/api/storage"
-	"github.com/dgrijalva/jwt-go"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -245,6 +245,28 @@ func (server *Server) VersionHandler(resp http.ResponseWriter, req *http.Request
 		return
 	}
 	server.JSONWrite(resp, http.StatusOK, version)
+}
+
+func (server *Server) middleware(next http.Handler) http.HandlerFunc {
+	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		cookie, err := req.Cookie("jwt")
+		log.Println(cookie)
+		if err != nil {
+			server.JSONWrite(resp, http.StatusUnauthorized, HttpErrorResponse{Error: "Authorize cookie not found"})
+			return
+		}
+		claims := jwt.MapClaims{}
+		_, err = jwt.ParseWithClaims(cookie.Value, claims, func(token *jwt.Token) (interface{}, error) {
+			return []byte("secret"), nil
+		})
+
+		if err != nil {
+			server.JSONWrite(resp, http.StatusUnauthorized, HttpErrorResponse{Error: err.Error()})
+			return
+		}
+
+		next.ServeHTTP(resp, req)
+	})
 }
 
 //Returns json thingy wingy dingy i dont know how

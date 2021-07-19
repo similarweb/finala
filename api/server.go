@@ -82,12 +82,12 @@ func (server *Server) Serve() serverutil.StopFunc {
 // BindEndpoints sets up the router to handle API endpoints
 func (server *Server) BindEndpoints() {
 
-	server.router.HandleFunc("/api/v1/summary/{executionID}", server.GetSummary).Methods("GET")
-	server.router.HandleFunc("/api/v1/executions", server.GetExecutions).Methods("GET")
-	server.router.HandleFunc("/api/v1/accounts/{executionID}", server.GetAccounts).Methods(("GET"))
-	server.router.HandleFunc("/api/v1/resources/{type}", server.GetResourceData).Methods("GET")
-	server.router.HandleFunc("/api/v1/trends/{type}", server.GetResourceTrends).Methods("GET")
-	server.router.HandleFunc("/api/v1/tags/{executionID}", server.GetExecutionTags).Methods("GET")
+	server.router.HandleFunc("/api/v1/summary/{executionID}", server.middleware(http.HandlerFunc(server.GetSummary))).Methods("GET")
+	server.router.HandleFunc("/api/v1/executions", server.middleware(http.HandlerFunc(server.GetExecutions))).Methods("GET")
+	server.router.HandleFunc("/api/v1/accounts/{executionID}", server.middleware(http.HandlerFunc(server.GetAccounts))).Methods(("GET"))
+	server.router.HandleFunc("/api/v1/resources/{type}", server.middleware(http.HandlerFunc(server.GetResourceData))).Methods("GET")
+	server.router.HandleFunc("/api/v1/trends/{type}", server.middleware(http.HandlerFunc(server.GetResourceTrends))).Methods("GET")
+	server.router.HandleFunc("/api/v1/tags/{executionID}", server.middleware(http.HandlerFunc(server.GetExecutionTags))).Methods("GET")
 	server.router.HandleFunc("/api/v1/detect-events/{executionID}", server.DetectEvents).Methods("POST")
 	server.router.HandleFunc("/api/v1/login", server.Login).Methods("GET")
 	server.router.HandleFunc("/api/v1/version", server.VersionHandler).Methods("GET")

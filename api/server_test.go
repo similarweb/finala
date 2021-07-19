@@ -105,6 +105,7 @@ func TestGetSummary(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -158,6 +159,7 @@ func TestGetResourcesData(t *testing.T) {
 		t.Run(test.endpoint, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -211,6 +213,7 @@ func TestGetExecutions(t *testing.T) {
 		t.Run(test.endpoint, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -259,6 +262,7 @@ func TestGetAccounts(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -362,6 +366,7 @@ func TestGetExecutionTags(t *testing.T) {
 		t.Run(test.endpoint, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -416,6 +421,7 @@ func TestGetResourceTrends(t *testing.T) {
 		t.Run(test.endpoint, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
 			if err != nil {
 				t.Fatal(err)
 			}

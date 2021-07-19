@@ -184,47 +184,70 @@ func (server *Server) DetectEvents(resp http.ResponseWriter, req *http.Request) 
 }
 
 func (server *Server) Login(resp http.ResponseWriter, req *http.Request) {
-	buf, bodyErr := ioutil.ReadAll(req.Body)
+	if server.authentication.Enabled {
+		buf, bodyErr := ioutil.ReadAll(req.Body)
 
-	if bodyErr != nil {
-		server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{Error: bodyErr.Error()})
-		return
-	}
-
-	var detectUser map[string]string
-	err := json.Unmarshal(buf, &detectUser)
-	if err != nil {
-		server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{Error: err.Error()})
-		return
-	}
-
-	for _, user := range server.authentication.Accounts {
-		if detectUser["Username"] == user.Name && detectUser["Password"] == user.Password {
-
-			expTime := time.Now().Add(time.Hour * 1)
-
-			atClaims := jwt.MapClaims{}
-			atClaims["authorized"] = true
-			atClaims["user_id"] = user.Name
-			atClaims["exp"] = expTime.Unix()
-			at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
-			token, err := at.SignedString([]byte("secret"))
-			if err != nil {
-				server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
-				return
-			}
-
-			cookie := http.Cookie{
-				Name:    "jwt",
-				Value:   token,
-				Expires: expTime,
-			}
-
-			http.SetCookie(resp, &cookie)
+		if bodyErr != nil {
+			server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{Error: bodyErr.Error()})
 			return
 		}
+
+		var detectUser map[string]string
+		err := json.Unmarshal(buf, &detectUser)
+		if err != nil {
+			server.JSONWrite(resp, http.StatusBadRequest, HttpErrorResponse{Error: err.Error()})
+			return
+		}
+
+		for _, user := range server.authentication.Accounts {
+			if detectUser["Username"] == user.Name && detectUser["Password"] == user.Password {
+
+				expTime := time.Now().Add(time.Hour * 1)
+
+				atClaims := jwt.MapClaims{}
+				atClaims["authorized"] = true
+				atClaims["user_id"] = user.Name
+				atClaims["exp"] = expTime.Unix()
+				at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+				token, err := at.SignedString([]byte("secret"))
+				if err != nil {
+					server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
+					return
+				}
+
+				cookie := http.Cookie{
+					Name:    "jwt",
+					Value:   token,
+					Expires: expTime,
+				}
+
+				http.SetCookie(resp, &cookie)
+				return
+			}
+		}
+		server.JSONWrite(resp, http.StatusUnauthorized, "{\"message\":\"Login data not authorized\"}")
+	} else {
+		expTime := time.Now().Add(time.Hour * 1)
+
+		atClaims := jwt.MapClaims{}
+		atClaims["authorized"] = true
+		atClaims["user_id"] = "user"
+		atClaims["exp"] = expTime.Unix()
+		at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
+		token, err := at.SignedString([]byte("secret"))
+		if err != nil {
+			server.JSONWrite(resp, http.StatusInternalServerError, HttpErrorResponse{Error: err.Error()})
+			return
+		}
+
+		cookie := http.Cookie{
+			Name:    "jwt",
+			Value:   token,
+			Expires: expTime,
+		}
+
+		http.SetCookie(resp, &cookie)
 	}
-	server.JSONWrite(resp, http.StatusUnauthorized, "{\"message\":\"Login data not authorized\"}")
 }
 
 //NotFoundRoute return when route not found

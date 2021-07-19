@@ -15,6 +15,7 @@ import (
 
 func GetAuthenticationConfig() config.AuthenticationConfig {
 	return config.AuthenticationConfig{
+		Enabled: true,
 		Accounts: []config.AccountConfig{
 			{
 				Name:     "User",

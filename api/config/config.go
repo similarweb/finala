@@ -28,6 +28,7 @@ type AccountConfig struct {
 }
 
 type AuthenticationConfig struct {
+	Enabled  bool            `yaml:"enabled"`
 	Accounts []AccountConfig `yaml:"accounts"`
 }
 

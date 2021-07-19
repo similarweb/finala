@@ -9,6 +9,7 @@ storage:
     endpoints: 
       - http://127.0.0.1:9200
 authentication:
+  enabled: true
   accounts:
     - name: User
       password: Password

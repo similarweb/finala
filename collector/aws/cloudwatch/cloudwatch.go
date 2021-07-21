@@ -50,10 +50,6 @@ func (cw *CloudwatchManager) GetMetric(metricInput *awsCloudwatch.GetMetricStati
 			return calculatedMetricValue, metricsResponseValue, err
 		}
 
-		if len(metricData.Datapoints) == 0 {
-			return calculatedMetricValue, metricsResponseValue, errors.New("No Datapoints in this region for this resource.")
-		}
-
 		switch metric.Statistic {
 		case "Average":
 			calculatedMetricValue = cw.AvgDatapoint(metricData)
@@ -81,6 +77,7 @@ func (cw *CloudwatchManager) GetMetric(metricInput *awsCloudwatch.GetMetricStati
 	if err != nil {
 		return calculatedMetricValue, metricsResponseValue, err
 	}
+
 	return formulaResponse.(float64), metricsResponseValue, nil
 
 }

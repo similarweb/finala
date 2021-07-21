@@ -45,7 +45,7 @@ var regionsInfo = map[string]regionInfo{
 	"cn-north-1":     {fullName: "China (Beijing)", prefix: ""},
 	"cn-northwest-1": {fullName: "China (Ningxia)", prefix: ""},
 	"eu-central-1":   {fullName: "EU (Frankfurt)", prefix: "EUC1"},
-	"eu-west-1":      {fullName: "EU (Ireland)", prefix: "EU"},
+	"eu-west-1":      {fullName: "EU (Ireland)", prefix: "EUW1"},
 	"eu-west-2":      {fullName: "EU (London)", prefix: "EUW2"},
 	"eu-west-3":      {fullName: "EU (Paris)", prefix: "EUW3"},
 	"eu-south-1":     {fullName: "EU (Milan)", prefix: "EUS1"},

@@ -179,6 +179,10 @@ const ResourcesChart = ({
     return resource;
   });
 
+  if (account && !sortedResources.length && !isResourceListLoading) {
+    return <Fragment></Fragment>;
+  }
+
   return (
     <Fragment>
       <Box mb={3}>

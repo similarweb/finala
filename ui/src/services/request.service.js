@@ -16,6 +16,7 @@ class Http {
   request(url, action, customRequestOptions = {}) {
     let defaultRequestOptions = {
       method: action,
+      credentials: "include",
     };
     merge(defaultRequestOptions, customRequestOptions);
     let fullUrl = "";
@@ -38,6 +39,21 @@ class Http {
 function handleResponse(response) {
   return response.json().then((result) => {
     if (response.status == 200) {
+      return result;
+    }
+    return Promise.reject(response);
+  });
+}
+
+/**
+ * Manage http login request response
+ *
+ * @param {response} url url request
+ * @returns {object}
+ */
+function handleAuthResponse(response) {
+  return response.json().then((result) => {
+    if (response.status == 200 || response.status == 401) {
       return result;
     }
     return Promise.reject(response);

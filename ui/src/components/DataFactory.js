@@ -1,6 +1,7 @@
 import React, { Fragment, useEffect } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
+import { AuthService } from "../services/authentification.service";
 import { ResourcesService } from "services/resources.service";
 import { SettingsService } from "services/settings.service";
 import { titleDirective } from "utils/Title";
@@ -51,6 +52,12 @@ const DataFacotry = ({
   setIsAppLoading,
   setIsScanning,
 }) => {
+  const checkAuthentication = async (username, password) => {
+    const response = await AuthService.Auth(username, password).catch(() => {});
+  };
+  useEffect(() => {
+    checkAuthentication("", "");
+  }, []);
   /**
    * start fetching data from server
    * will load executions list

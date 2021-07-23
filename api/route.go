@@ -288,6 +288,7 @@ func (server *Server) GetReport(resp http.ResponseWriter, req *http.Request) {
 
 				delete(data, "Tag")
 
+				data["ResourceName"] = resourceName
 				for _, attrName := range attributeList {
 					_, ok := data[attrName]
 					if !ok {

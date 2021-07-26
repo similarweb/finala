@@ -51,9 +51,13 @@ const DataFacotry = ({
   resources,
   setIsAppLoading,
   setIsScanning,
+  setAuthRequired,
 }) => {
   const checkAuthentication = async (username, password) => {
     const response = await AuthService.Auth(username, password).catch(() => {});
+    if (response.ok) {
+      setAuthRequired(false);
+    }
   };
   useEffect(() => {
     checkAuthentication("", "");
@@ -291,6 +295,7 @@ DataFacotry.propTypes = {
   setResources: PropTypes.func,
   setCurrentResourceData: PropTypes.func,
   setCurrentExecution: PropTypes.func,
+  setAuthRequired: PropTypes.func,
 
   currentResource: PropTypes.string,
   accounts: PropTypes.object,
@@ -301,6 +306,8 @@ DataFacotry.propTypes = {
   setScanning: PropTypes.func,
 
   isScanning: PropTypes.bool,
+
+  authRequired: PropTypes.bool,
 };
 
 const mapStateToProps = (state) => ({
@@ -310,6 +317,7 @@ const mapStateToProps = (state) => ({
   currentExecution: state.executions.current,
   filters: state.filters.filters,
   isScanning: state.executions.isScanning,
+  authRequired: state.accounts.authRequired,
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -326,6 +334,8 @@ const mapDispatchToProps = (dispatch) => ({
   setCurrentExecution: (id) => dispatch({ type: "EXECUTION_SELECTED", id }),
   setCurrentResourceData: (data) =>
     dispatch({ type: "SET_CURRENT_RESOURCE_DATA", data }),
+  setAuthRequired: (authRequired) =>
+    dispatch({ type: "AUTH_REQUIRED", authRequired }),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(DataFacotry);

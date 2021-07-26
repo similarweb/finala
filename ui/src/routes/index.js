@@ -1,14 +1,15 @@
 import React from "react";
 import { connect } from "react-redux";
-import { Route, Switch } from "react-router";
 import PropTypes from "prop-types";
-import Dashboard from "../components/Dashboard/Index";
 import PageLoader from "../components/PageLoader";
-import NotFound from "../components/NotFound";
-import NoData from "../components/NoData";
 import DataFactory from "../components/DataFactory";
+import Login from "../components/Dashboard/Login";
 
-import { CssBaseline, makeStyles, Box } from "@material-ui/core";
+import { Box, CssBaseline, makeStyles } from "@material-ui/core";
+import NoData from "../components/NoData";
+import {Dashboard} from "@material-ui/icons";
+import NotFound from "../components/NotFound";
+import {Route, Switch} from "react-router";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -29,7 +30,7 @@ const useStyles = makeStyles(() => ({
  * @param  {bool} isAppLoading App loading state
  * @param  {array} executions Executions list
  */
-const RouterIndex = ({ isAppLoading, executions }) => {
+const RouterIndex = ({ isAppLoading, executions, authRequired }) => {
   const classes = useStyles();
 
   return (
@@ -38,9 +39,10 @@ const RouterIndex = ({ isAppLoading, executions }) => {
       <DataFactory />
       <main className={classes.content}>
         <Box component="div" m={3}>
-          {isAppLoading && <PageLoader />}
-          {!isAppLoading && !executions.length && <NoData />}
-          {!isAppLoading && executions.length > 0 && (
+          {authRequired && <Login />}
+          {!authRequired && isAppLoading && <PageLoader />}
+          {!authRequired && !isAppLoading && !executions.length && <NoData />}
+          {!authRequired && !isAppLoading && executions.length > 0 && (
             <Box component="div">
               <Switch>
                 <Route exact path="/" component={Dashboard} />
@@ -57,6 +59,7 @@ const RouterIndex = ({ isAppLoading, executions }) => {
 const mapStateToProps = (state) => ({
   executions: state.executions.list,
   isAppLoading: state.executions.isAppLoading,
+  authRequired: state.accounts.authRequired,
 });
 
 const mapDispatchToProps = () => ({});
@@ -66,6 +69,7 @@ RouterIndex.propTypes = {
   isAppLoading: PropTypes.bool,
   executions: PropTypes.array,
   setCurrentExecution: PropTypes.func,
+  authRequired: PropTypes.bool,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(RouterIndex);

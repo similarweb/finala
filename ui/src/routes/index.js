@@ -7,9 +7,9 @@ import Login from "../components/Dashboard/Login";
 
 import { Box, CssBaseline, makeStyles } from "@material-ui/core";
 import NoData from "../components/NoData";
-import {Dashboard} from "@material-ui/icons";
+import Dashboard from "../components/Dashboard/Index";
 import NotFound from "../components/NotFound";
-import {Route, Switch} from "react-router";
+import { Route, Switch } from "react-router";
 
 const useStyles = makeStyles(() => ({
   root: {
@@ -59,7 +59,7 @@ const RouterIndex = ({ isAppLoading, executions, authRequired }) => {
 const mapStateToProps = (state) => ({
   executions: state.executions.list,
   isAppLoading: state.executions.isAppLoading,
-  authRequired: state.accounts.authRequired,
+  authRequired: state.auth.authRequired,
 });
 
 const mapDispatchToProps = () => ({});

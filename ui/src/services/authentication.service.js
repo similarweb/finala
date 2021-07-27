@@ -4,7 +4,7 @@ export const AuthService = {
 };
 
 /**
- *
+ * send authentication request to api
  * @param username {string} The users username
  * @param password {string} The users password
  */
@@ -20,7 +20,7 @@ function Auth(username, password) {
     body: JSON.stringify(body),
   };
   return http
-    .send("api/v1/login", `get`, customRequestOptions)
+    .sendAuth("api/v1/login", `post`, customRequestOptions)
     .then(this.handleAuthResponse)
     .then((response) => {
       return response;

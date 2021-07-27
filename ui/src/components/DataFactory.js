@@ -1,7 +1,7 @@
 import React, { Fragment, useEffect } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
-import { AuthService } from "../services/authentification.service";
+import { AuthService } from "../services/authentication.service";
 import { ResourcesService } from "services/resources.service";
 import { SettingsService } from "services/settings.service";
 import { titleDirective } from "utils/Title";
@@ -33,6 +33,7 @@ let lastFiltersSearched = "[]";
  *
  * @param  {func} setIsAppLoading  Update App IsLoading status
  * @param  {func} setIsScanning  Update scanning status
+ * @param  {func} setAuthRequired Update, if authentication is required
  * }
  */
 const DataFacotry = ({
@@ -53,22 +54,25 @@ const DataFacotry = ({
   setIsScanning,
   setAuthRequired,
 }) => {
-  const checkAuthentication = async (username, password) => {
-    const response = await AuthService.Auth(username, password).catch(() => {});
-    if (response.ok) {
-      setAuthRequired(false);
-    }
-  };
-  useEffect(() => {
-    checkAuthentication("", "");
-  }, []);
   /**
    * start fetching data from server
+   * will check for enabled authentication
    * will load executions list
    */
   const init = async () => {
     await SettingsService.GetSettings().catch(() => false);
+    checkAuthentication();
     fetchData();
+  };
+
+  /**
+   * checks, if authentication is required/enabled
+   */
+  const checkAuthentication = async () => {
+    const authenticated = await AuthService.Auth("", "").catch(() => false);
+    if (authenticated) {
+      setAuthRequired(false);
+    }
   };
 
   /**
@@ -79,7 +83,6 @@ const DataFacotry = ({
     const executionsList = await ResourcesService.GetExecutions().catch(
       () => []
     );
-
     setExecutions(executionsList);
     setIsAppLoading(false);
     if (!executionsList.length) {
@@ -120,7 +123,7 @@ const DataFacotry = ({
   };
 
   /**
-   * Triggered every-time executionId/filters changes and re-load resources list
+   * Triggered every-time executionId/filters changes and re-load resources list and accounts list
    * @param  {string} currentExecution Current Selected Execution
    * @param  {array} filters  Filters List
    */
@@ -306,8 +309,6 @@ DataFacotry.propTypes = {
   setScanning: PropTypes.func,
 
   isScanning: PropTypes.bool,
-
-  authRequired: PropTypes.bool,
 };
 
 const mapStateToProps = (state) => ({
@@ -317,7 +318,6 @@ const mapStateToProps = (state) => ({
   currentExecution: state.executions.current,
   filters: state.filters.filters,
   isScanning: state.executions.isScanning,
-  authRequired: state.accounts.authRequired,
 });
 
 const mapDispatchToProps = (dispatch) => ({
@@ -334,8 +334,7 @@ const mapDispatchToProps = (dispatch) => ({
   setCurrentExecution: (id) => dispatch({ type: "EXECUTION_SELECTED", id }),
   setCurrentResourceData: (data) =>
     dispatch({ type: "SET_CURRENT_RESOURCE_DATA", data }),
-  setAuthRequired: (authRequired) =>
-    dispatch({ type: "AUTH_REQUIRED", authRequired }),
+  setAuthRequired: (data) => dispatch({ type: "SET_AUTH_REQUIRED", data }),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(DataFacotry);

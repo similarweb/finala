@@ -7,6 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.31.3
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/dustin/go-humanize v1.0.0
+	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
 	github.com/kr/pretty v0.2.0 // indirect

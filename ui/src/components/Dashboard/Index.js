@@ -90,7 +90,6 @@ DashboardIndex.propTypes = {
 const mapStateToProps = (state) => ({
   currentResource: state.resources.currentResource,
   filters: state.filters.filters,
-
 });
 
 const mapDispatchToProps = (dispatch) => ({

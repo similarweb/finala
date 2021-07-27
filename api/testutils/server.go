@@ -2,7 +2,7 @@ package testutils
 
 import (
 	"finala/api/config"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"net"
 	"net/http"
 	"strings"

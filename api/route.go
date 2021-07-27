@@ -5,7 +5,7 @@ import (
 	"finala/api/httpparameters"
 	"finala/api/storage"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -220,9 +220,10 @@ func (server *Server) Login(resp http.ResponseWriter, req *http.Request) {
 				}
 
 				cookie := http.Cookie{
-					Name:    "jwt",
-					Value:   token,
-					Expires: expTime,
+					Name:     "jwt",
+					Value:    token,
+					Expires:  expTime,
+					SameSite: http.SameSiteNoneMode,
 				}
 
 				http.SetCookie(resp, &cookie)
@@ -245,9 +246,10 @@ func (server *Server) Login(resp http.ResponseWriter, req *http.Request) {
 		}
 
 		cookie := http.Cookie{
-			Name:    "jwt",
-			Value:   token,
-			Expires: expTime,
+			Name:     "jwt",
+			Value:    token,
+			Expires:  expTime,
+			SameSite: http.SameSiteLaxMode,
 		}
 
 		http.SetCookie(resp, &cookie)
@@ -277,7 +279,7 @@ func (server *Server) VersionHandler(resp http.ResponseWriter, req *http.Request
 func (server *Server) middleware(next http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		cookie, err := req.Cookie("jwt")
-		log.Println(cookie)
+
 		if err != nil {
 			server.JSONWrite(resp, http.StatusUnauthorized, HttpErrorResponse{Error: "Authorize cookie not found"})
 			return

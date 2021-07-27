@@ -42,7 +42,7 @@ var apiServer = &cobra.Command{
 			os.Exit(1)
 		}
 
-		apiManager := api.NewServer(port, storage, versionManager, configStruct.Authentication)
+		apiManager := api.NewServer(port, storage, versionManager, configStruct.Authentication, configStruct.UIServer.Address)
 
 		apiStopper := serverutil.RunAll(apiManager).StopFunc
 

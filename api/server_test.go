@@ -21,8 +21,9 @@ func MockServer() (*api.Server, *testutils.MockStorage) {
 
 	mockStorage := testutils.NewMockStorage()
 	mockAuthenticationConfig := testutils.GetAuthenticationConfig()
+	allowedOrigin := testutils.GetAllowedOrigin()
 
-	server := api.NewServer(9090, mockStorage, version, mockAuthenticationConfig)
+	server := api.NewServer(9090, mockStorage, version, mockAuthenticationConfig, allowedOrigin)
 	return server, mockStorage
 }
 
@@ -545,7 +546,7 @@ func TestLogin(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			req, err := http.NewRequest("GET", test.endpoint, bytes.NewBuffer(buf))
+			req, err := http.NewRequest("POST", test.endpoint, bytes.NewBuffer(buf))
 			if err != nil {
 				t.Fatal(err)
 			}

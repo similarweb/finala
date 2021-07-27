@@ -33,17 +33,21 @@ type Server struct {
 }
 
 // NewServer returns a new Server
-func NewServer(port int, storage storage.StorageDescriber, version version.VersionManagerDescriptor, auth config.AuthenticationConfig) *Server {
+func NewServer(port int, storage storage.StorageDescriber, version version.VersionManagerDescriptor, auth config.AuthenticationConfig, allowedOrigin string) *Server {
 
 	router := mux.NewRouter()
-	corsObj := handlers.AllowedOrigins([]string{"*"})
+	corsObjects := []handlers.CORSOption{}
+	corsObjects = append(corsObjects, handlers.AllowedOrigins([]string{allowedOrigin}))
+	corsObjects = append(corsObjects, handlers.AllowedMethods([]string{"GET", "POST", "OPTIONS"}))
+	corsObjects = append(corsObjects, handlers.AllowedHeaders([]string{"Content-Type"}))
+	corsObjects = append(corsObjects, handlers.AllowCredentials())
 	return &Server{
 		router:         router,
 		storage:        storage,
 		version:        version,
 		authentication: auth,
 		httpserver: &http.Server{
-			Handler: handlers.CORS(corsObj)(router),
+			Handler: handlers.CORS(corsObjects...)(router),
 			Addr:    fmt.Sprintf("0.0.0.0:%d", port),
 		},
 	}
@@ -89,7 +93,7 @@ func (server *Server) BindEndpoints() {
 	server.router.HandleFunc("/api/v1/trends/{type}", server.middleware(http.HandlerFunc(server.GetResourceTrends))).Methods("GET")
 	server.router.HandleFunc("/api/v1/tags/{executionID}", server.middleware(http.HandlerFunc(server.GetExecutionTags))).Methods("GET")
 	server.router.HandleFunc("/api/v1/detect-events/{executionID}", server.DetectEvents).Methods("POST")
-	server.router.HandleFunc("/api/v1/login", server.Login).Methods("GET")
+	server.router.HandleFunc("/api/v1/login", server.Login).Methods("POST", "OPTIONS")
 	server.router.HandleFunc("/api/v1/version", server.VersionHandler).Methods("GET")
 	server.router.HandleFunc("/api/v1/health", server.HealthCheckHandler).Methods("GET")
 	server.router.HandleFunc("/api/v1/report/{executionID}", server.GetReport).Methods("GET")

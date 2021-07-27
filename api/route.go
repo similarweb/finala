@@ -184,6 +184,10 @@ func (server *Server) DetectEvents(resp http.ResponseWriter, req *http.Request) 
 }
 
 func (server *Server) Login(resp http.ResponseWriter, req *http.Request) {
+	if req.Method == http.MethodOptions {
+		server.JSONWrite(resp, http.StatusOK, nil)
+		return
+	}
 	if server.authentication.Enabled {
 		buf, bodyErr := ioutil.ReadAll(req.Body)
 

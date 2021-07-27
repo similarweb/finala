@@ -32,9 +32,14 @@ type AuthenticationConfig struct {
 	Accounts []AccountConfig `yaml:"accounts"`
 }
 
+type UIServerConfig struct {
+	Address string `yaml:"address"`
+}
+
 // APIConfig present the application config
 type APIConfig struct {
 	LogLevel       string               `yaml:"log_level"`
+	UIServer       UIServerConfig       `yaml:"ui_server"`
 	Storage        StorageConfig        `yaml:"storage"`
 	Authentication AuthenticationConfig `yaml:"authentication"`
 }

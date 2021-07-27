@@ -25,6 +25,10 @@ func GetAuthenticationConfig() config.AuthenticationConfig {
 	}
 }
 
+func GetAllowedOrigin() string {
+	return "http://127.0.0.1:8080"
+}
+
 func GetTestCookie() *http.Cookie {
 
 	expTime := time.Now().Add(time.Minute * 5)

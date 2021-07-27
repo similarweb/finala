@@ -1,6 +1,7 @@
 ---
 log_level: info
-
+ui_server:
+  address: http://127.0.0.1:8080
 storage:
   elasticsearch:
     username: ""

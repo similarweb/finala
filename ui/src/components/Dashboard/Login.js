@@ -20,6 +20,9 @@ const useStyles = makeStyles((theme) => ({
     marginLeft: "auto",
     maxWidth: "600px",
   },
+  error: {
+    color: "red",
+  },
 }));
 
 /**
@@ -29,11 +32,15 @@ const Login = ({ setAuthRequired }) => {
   const classes = useStyles();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const onSubmit = async () => {
+    setErrorMessage("");
     const ok = await AuthService.Auth(username, password).catch(() => false);
     if (ok) {
       setAuthRequired(false);
+    } else {
+      setErrorMessage("Login Failed");
     }
   };
 
@@ -47,6 +54,11 @@ const Login = ({ setAuthRequired }) => {
               <Grid item xs={12}>
                 <TextField
                   onChange={(e) => setUsername(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key == "Enter") {
+                      onSubmit();
+                    }
+                  }}
                   fullWidth
                   label="Username"
                   name="username"
@@ -58,6 +70,11 @@ const Login = ({ setAuthRequired }) => {
               <Grid item xs={12}>
                 <TextField
                   onChange={(e) => setPassword(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key == "Enter") {
+                      onSubmit();
+                    }
+                  }}
                   fullWidth
                   label="Password"
                   name="password"
@@ -79,6 +96,9 @@ const Login = ({ setAuthRequired }) => {
             >
               Log in
             </Button>
+          </Grid>
+          <Grid item xs={12} className={classes.error}>
+            {errorMessage}
           </Grid>
         </Grid>
       </Box>

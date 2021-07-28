@@ -223,7 +223,7 @@ func (server *Server) Login(resp http.ResponseWriter, req *http.Request) {
 					Name:     "jwt",
 					Value:    token,
 					Expires:  expTime,
-					SameSite: http.SameSiteNoneMode,
+					SameSite: http.SameSiteLaxMode,
 				}
 
 				http.SetCookie(resp, &cookie)

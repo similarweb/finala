@@ -47,6 +47,7 @@ const useStyles = makeStyles(() => ({
 const ResourcesChart = ({
   resources,
   filters,
+  setFilters,
   isResourceListLoading,
   addFilter,
   setResource,
@@ -81,6 +82,18 @@ const ResourcesChart = ({
             const res = sortedResources;
             const selectedResource = res[dataPointIndex];
             setSelectedResource(selectedResource);
+            if (account) {
+              const nfilters = filters.filter(
+                (filter) => filter.type !== "account"
+              );
+              setFilters(nfilters);
+              const filter = {
+                title: `Account:${account}`,
+                id: `account:${account}`,
+                type: "account",
+              };
+              addFilter(filter);
+            }
           },
         },
       },
@@ -179,6 +192,10 @@ const ResourcesChart = ({
     return resource;
   });
 
+  if (account && !sortedResources.length && !isResourceListLoading) {
+    return <Fragment></Fragment>;
+  }
+
   return (
     <Fragment>
       <Box mb={3}>
@@ -220,6 +237,7 @@ ResourcesChart.defaultProps = {};
 ResourcesChart.propTypes = {
   resources: PropTypes.object,
   filters: PropTypes.array,
+  setFilters: PropTypes.func,
   isResourceListLoading: PropTypes.bool,
   addFilter: PropTypes.func,
   setResource: PropTypes.func,
@@ -235,6 +253,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
+  setFilters: (data) => dispatch({ type: "SET_FILTERS", data }),
   addFilter: (data) => dispatch({ type: "ADD_FILTER", data }),
   setResource: (data) => dispatch({ type: "SET_RESOURCE", data }),
 });

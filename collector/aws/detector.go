@@ -21,6 +21,7 @@ type DetectorDescriptor interface {
 	GetCloudWatchClient() *cloudwatch.CloudwatchManager
 	GetPricingClient() *pricing.PricingManager
 	GetRegion() string
+	GetAccountName() string
 	GetSession() (*session.Session, *awsClient.Config)
 	GetAccountIdentity() *sts.GetCallerIdentityOutput
 }
@@ -38,12 +39,20 @@ type DetectorManager struct {
 	session          *session.Session
 	awsConfig        *awsClient.Config
 	accountIdentity  *sts.GetCallerIdentityOutput
+	accountName      string
 	region           string
 	global           map[string]struct{}
 }
 
 // NewDetectorManager create new instance of detector manager
-func NewDetectorManager(awsAuth AuthDescriptor, collector collector.CollectorDescriber, account config.AWSAccount, stsManager *STSManager, global map[string]struct{}, region string) *DetectorManager {
+func NewDetectorManager(
+	awsAuth AuthDescriptor,
+	collector collector.CollectorDescriber,
+	account config.AWSAccount,
+	stsManager *STSManager,
+	global map[string]struct{},
+	region string,
+) *DetectorManager {
 
 	priceSession, _ := awsAuth.Login(defaultRegionPrice)
 	pricingManager := pricing.NewPricingManager(awsPricing.New(priceSession), defaultRegionPrice)
@@ -60,6 +69,7 @@ func NewDetectorManager(awsAuth AuthDescriptor, collector collector.CollectorDes
 		session:          regionSession,
 		awsConfig:        regionConfig,
 		accountIdentity:  callerIdentityOutput,
+		accountName:      account.Name,
 		global:           global,
 	}
 }
@@ -87,6 +97,11 @@ func (dm *DetectorManager) GetPricingClient() *pricing.PricingManager {
 // GetRegion returns the current region
 func (dm *DetectorManager) GetRegion() string {
 	return dm.region
+}
+
+// GetAccountName returns the account name
+func (dm *DetectorManager) GetAccountName() string {
+	return dm.accountName
 }
 
 // GetSession return the aws session

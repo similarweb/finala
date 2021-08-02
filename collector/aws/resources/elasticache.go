@@ -7,6 +7,7 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -39,6 +40,7 @@ type DetectedElasticache struct {
 	CacheNodeType string
 	CacheNodes    int
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -74,7 +76,10 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 		"resource": "elasticache",
 	}).Info("starting to analyze resource")
 
-	ec.awsManager.GetCollector().CollectStart(ec.Name)
+	ec.awsManager.GetCollector().CollectStart(ec.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+		AccountName: ec.awsManager.GetAccountName(),
+	})
 
 	detectedelasticache := []DetectedElasticache{}
 
@@ -150,6 +155,14 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 					}
 				}
 
+				Arn := "arn:aws:elasticache:" + ec.awsManager.GetRegion() + ":" + *ec.awsManager.GetAccountIdentity().Account + ":cluster:" + *instance.CacheClusterId
+
+				if !arn.IsARN(Arn) {
+					log.WithFields(log.Fields{
+						"arn": Arn,
+					}).Error("is not an arn")
+				}
+
 				es := DetectedElasticache{
 					Region:        ec.awsManager.GetRegion(),
 					Metric:        metric.Description,
@@ -158,10 +171,14 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 					CacheNodes:    len(instance.CacheNodes),
 					PriceDetectedFields: collector.PriceDetectedFields{
 						LaunchTime:    *instance.CacheClusterCreateTime,
-						ResourceID:    *instance.CacheClusterId,
+						ResourceID:    Arn,
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+						AccountName: ec.awsManager.GetAccountName(),
 					},
 				}
 
@@ -175,7 +192,10 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 		}
 	}
 
-	ec.awsManager.GetCollector().CollectFinish(ec.Name)
+	ec.awsManager.GetCollector().CollectFinish(ec.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+		AccountName: ec.awsManager.GetAccountName(),
+	})
 
 	return detectedelasticache, nil
 }

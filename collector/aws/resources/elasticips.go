@@ -6,6 +6,8 @@ import (
 	"finala/collector/aws/common"
 	"finala/collector/aws/register"
 	"finala/collector/config"
+	"fmt"
+	"github.com/aws/aws-sdk-go/aws/arn"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -29,12 +31,11 @@ type ElasticIPManager struct {
 
 // DetectedElasticIP defines the detected AWS elastic ip
 type DetectedElasticIP struct {
-	Region        string
-	Metric        string
-	IP            string
-	PricePerHour  float64
-	PricePerMonth float64
-	Tag           map[string]string
+	Region string
+	Metric string
+	IP     string
+	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -72,18 +73,35 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 		"resource": "elastic ips",
 	}).Info("starting to analyze resource")
 
-	ei.awsManager.GetCollector().CollectStart(ei.Name)
+	ei.awsManager.GetCollector().CollectStart(ei.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ei.awsManager.GetAccountIdentity().Account,
+		AccountName: ei.awsManager.GetAccountName(),
+	})
 
 	elasticIPs := []DetectedElasticIP{}
 
-	priceFIlters := ei.getPricingFilterInput()
+	pricingRegionPrefix, err := ei.awsManager.GetPricingClient().GetRegionPrefix(ei.awsManager.GetRegion())
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"region": ei.awsManager.GetRegion(),
+		}).Error("Could not get pricing region prefix")
+		ei.awsManager.GetCollector().CollectError(ei.Name, err)
+		return elasticIPs, err
+	}
+
+	priceFilters := ei.getPricingFilterInput([]*pricing.Filter{
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("usagetype"),
+			Value: awsClient.String(fmt.Sprintf("%sElasticIP:IdleAddress", pricingRegionPrefix)),
+		}})
 	// Get elastic ip pricing
-	price, err := ei.awsManager.GetPricingClient().GetPrice(priceFIlters, ei.rateCode, ei.awsManager.GetRegion())
+	price, err := ei.awsManager.GetPricingClient().GetPrice(priceFilters, ei.rateCode, ei.awsManager.GetRegion())
 	if err != nil {
 		log.WithError(err).WithFields(log.Fields{
 			"rate_code":     ei.rateCode,
 			"region":        ei.awsManager.GetRegion(),
-			"price_filters": priceFIlters,
+			"price_filters": priceFilters,
 		}).Error("could not get elastic ip price")
 		ei.awsManager.GetCollector().CollectError(ei.Name, err)
 
@@ -108,13 +126,28 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 				}
 			}
 
+			Arn := "arn:aws:ec2:" + ei.awsManager.GetRegion() + ":" + *ei.awsManager.GetAccountIdentity().Account + ":elastic-ip/" + *ip.AllocationId
+
+			if !arn.IsARN(Arn) {
+				log.WithFields(log.Fields{
+					"arn": Arn,
+				}).Error("is not an arn")
+			}
+
 			eIP := DetectedElasticIP{
-				Region:        ei.awsManager.GetRegion(),
-				Metric:        metric.Description,
-				IP:            *ip.PublicIp,
-				PricePerHour:  price,
-				PricePerMonth: price * collector.TotalMonthHours,
-				Tag:           tagsData,
+				Region: ei.awsManager.GetRegion(),
+				Metric: metric.Description,
+				IP:     *ip.PublicIp,
+				PriceDetectedFields: collector.PriceDetectedFields{
+					ResourceID:    Arn,
+					PricePerHour:  price,
+					PricePerMonth: price * collector.TotalMonthHours,
+					Tag:           tagsData,
+				},
+				AccountSpecifiedFields: collector.AccountSpecifiedFields{
+					AccountID:   *ei.awsManager.GetAccountIdentity().Account,
+					AccountName: ei.awsManager.GetAccountName(),
+				},
 			}
 
 			ei.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -127,34 +160,38 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 		}
 	}
 
-	ei.awsManager.GetCollector().CollectFinish(ei.Name)
+	ei.awsManager.GetCollector().CollectFinish(ei.Name, collector.AccountSpecifiedFields{
+		AccountID:   *ei.awsManager.GetAccountIdentity().Account,
+		AccountName: ei.awsManager.GetAccountName(),
+	})
 
 	return elasticIPs, nil
 
 }
 
 // getPricingFilterInput returns the elastic ip price filters.
-func (ei *ElasticIPManager) getPricingFilterInput() pricing.GetProductsInput {
+func (ei *ElasticIPManager) getPricingFilterInput(extraFilters []*pricing.Filter) pricing.GetProductsInput {
+
+	filters := []*pricing.Filter{
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("TermType"),
+			Value: awsClient.String("OnDemand"),
+		},
+		{
+			Type:  awsClient.String("TERM_MATCH"),
+			Field: awsClient.String("productFamily"),
+			Value: awsClient.String("IP Address"),
+		},
+	}
+
+	if extraFilters != nil {
+		filters = append(filters, extraFilters...)
+	}
 
 	return pricing.GetProductsInput{
 		ServiceCode: &ei.servicePricingCode,
-		Filters: []*pricing.Filter{
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("TermType"),
-				Value: awsClient.String("OnDemand"),
-			},
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("productFamily"),
-				Value: awsClient.String("IP Address"),
-			},
-			{
-				Type:  awsClient.String("TERM_MATCH"),
-				Field: awsClient.String("group"),
-				Value: awsClient.String("ElasticIP:Address"),
-			},
-		},
+		Filters:     filters,
 	}
 
 }

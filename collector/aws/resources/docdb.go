@@ -39,6 +39,7 @@ type DetectedDocumentDB struct {
 	MultiAZ      bool
 	Engine       string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -74,7 +75,10 @@ func (dd *DocumentDBManager) Detect(metrics []config.MetricConfig) (interface{},
 		"resource": "documentDB",
 	}).Info("starting to analyze resource")
 
-	dd.awsManager.GetCollector().CollectStart(dd.Name)
+	dd.awsManager.GetCollector().CollectStart(dd.Name, collector.AccountSpecifiedFields{
+		AccountID:   *dd.awsManager.GetAccountIdentity().Account,
+		AccountName: dd.awsManager.GetAccountName(),
+	})
 
 	detectedDocDB := []DetectedDocumentDB{}
 	instances, err := dd.describeInstances(nil, nil)
@@ -162,6 +166,10 @@ func (dd *DocumentDBManager) Detect(metrics []config.MetricConfig) (interface{},
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
 					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *dd.awsManager.GetAccountIdentity().Account,
+						AccountName: dd.awsManager.GetAccountName(),
+					},
 				}
 
 				dd.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -176,7 +184,10 @@ func (dd *DocumentDBManager) Detect(metrics []config.MetricConfig) (interface{},
 
 	}
 
-	dd.awsManager.GetCollector().CollectFinish(dd.Name)
+	dd.awsManager.GetCollector().CollectFinish(dd.Name, collector.AccountSpecifiedFields{
+		AccountID:   *dd.awsManager.GetAccountIdentity().Account,
+		AccountName: dd.awsManager.GetAccountName(),
+	})
 
 	return detectedDocDB, nil
 

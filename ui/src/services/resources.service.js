@@ -12,7 +12,6 @@ export const ResourcesService = {
  * @returns filters params for request
  */
 const getTransformedFilters = (filters) => {
-  console.log(filters);
   const params = {};
   filters.forEach((filter) => {
     if (filter.type === "resource") {

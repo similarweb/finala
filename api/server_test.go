@@ -20,7 +20,10 @@ func MockServer() (*api.Server, *testutils.MockStorage) {
 	version := testutils.NewMockVersion()
 
 	mockStorage := testutils.NewMockStorage()
-	server := api.NewServer(9090, mockStorage, version)
+	mockAuthenticationConfig := testutils.GetAuthenticationConfig()
+	allowedOrigin := testutils.GetAllowedOrigin()
+
+	server := api.NewServer(9090, mockStorage, version, mockAuthenticationConfig, allowedOrigin)
 	return server, mockStorage
 }
 
@@ -103,6 +106,7 @@ func TestGetSummary(t *testing.T) {
 
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -156,6 +160,7 @@ func TestGetResourcesData(t *testing.T) {
 		t.Run(test.endpoint, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -209,6 +214,7 @@ func TestGetExecutions(t *testing.T) {
 		t.Run(test.endpoint, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -235,8 +241,106 @@ func TestGetExecutions(t *testing.T) {
 
 		})
 	}
+}
+
+func TestGetAccounts(t *testing.T) {
+	ms, _ := MockServer()
+	ms.BindEndpoints()
+	ms.Serve()
+
+	testCases := []struct {
+		endpoint           string
+		expectedStatusCode int
+		Count              int
+	}{
+		{"/api/v1/accounts", http.StatusNotFound, 0},
+		{"/api/v1/accounts/1", http.StatusOK, 2},
+		{"/api/v1/accounts/err", http.StatusInternalServerError, 0},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.endpoint, func(t *testing.T) {
+
+			rr := httptest.NewRecorder()
+			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
+			if err != nil {
+				t.Fatal(err)
+			}
+			ms.Router().ServeHTTP(rr, req)
+			if rr.Code != test.expectedStatusCode {
+				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
+			}
+
+			if test.expectedStatusCode == http.StatusOK {
+				body, err := ioutil.ReadAll(rr.Body)
+				if err != nil {
+					t.Fatal(err)
+				}
+
+				var accountsData []storage.Accounts
+
+				err = json.Unmarshal(body, &accountsData)
+				if err != nil {
+					t.Fatalf("Could not parse http response")
+				}
+
+				if len(accountsData) != test.Count {
+					t.Fatalf("unexpected accounts data response, got %d expected %d", len(accountsData), test.Count)
+				}
+			}
+		})
+	}
+}
+
+func TestLogin(t *testing.T) {
+	ms, _ := MockServer()
+	ms.BindEndpoints()
+	ms.Serve()
+
+	type testAccount struct {
+		Username string
+		Password string
+	}
+
+	testCases := []struct {
+		endpoint           string
+		expectedStatusCode int
+		BodyRequest        testAccount
+	}{
+		{"/api/v1/login", http.StatusOK, testAccount{Username: "User", Password: "Finala"}},
+		{"/api/v1/login", http.StatusUnauthorized, testAccount{Username: "", Password: ""}},
+	}
+
+	for _, test := range testCases {
+		t.Run(test.endpoint, func(t *testing.T) {
+			rr := httptest.NewRecorder()
+			buf, err := json.Marshal(test.BodyRequest)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			req, err := http.NewRequest("POST", test.endpoint, bytes.NewBuffer(buf))
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			ms.Router().ServeHTTP(rr, req)
+			if rr.Code != test.expectedStatusCode {
+				t.Fatalf("handler returned wrong status code: got %v want %v", rr.Code, test.expectedStatusCode)
+			}
+
+			if test.expectedStatusCode == http.StatusOK {
+				if cookie := rr.Header().Get("Set-Cookie"); cookie == "" {
+					t.Fatalf("unexpected error, got %s expected jwt={SomeValue}", cookie)
+				}
+			}
+
+		})
+	}
 
 }
+
 func TestSave(t *testing.T) {
 	ms, mockStorage := MockServer()
 	ms.BindEndpoints()
@@ -311,6 +415,7 @@ func TestGetExecutionTags(t *testing.T) {
 		t.Run(test.endpoint, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -365,6 +470,7 @@ func TestGetResourceTrends(t *testing.T) {
 		t.Run(test.endpoint, func(t *testing.T) {
 			rr := httptest.NewRecorder()
 			req, err := http.NewRequest("GET", test.endpoint, nil)
+			req.AddCookie(testutils.GetTestCookie())
 			if err != nil {
 				t.Fatal(err)
 			}

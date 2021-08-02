@@ -7,6 +7,7 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
+	"fmt"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -38,6 +39,7 @@ type DetectedKinesis struct {
 	Metric string
 	Region string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -74,10 +76,22 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 		"resource": "kinesis",
 	}).Info("analyzing resource")
 
-	km.awsManager.GetCollector().CollectStart(km.Name)
+	km.awsManager.GetCollector().CollectStart(km.Name, collector.AccountSpecifiedFields{
+		AccountID:   *km.awsManager.GetAccountIdentity().Account,
+		AccountName: km.awsManager.GetAccountName(),
+	})
 
 	streams, err := km.describeStreams(nil, nil)
 	if err != nil {
+		km.awsManager.GetCollector().CollectError(km.Name, err)
+		return detectedStreams, err
+	}
+
+	pricingRegionPrefix, err := km.awsManager.GetPricingClient().GetRegionPrefix(km.awsManager.GetRegion())
+	if err != nil {
+		log.WithError(err).WithFields(log.Fields{
+			"region": km.awsManager.GetRegion(),
+		}).Error("Could not get pricing region prefix")
 		km.awsManager.GetCollector().CollectError(km.Name, err)
 		return detectedStreams, err
 	}
@@ -89,11 +103,16 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("group"),
 				Value: awsClient.String("Provisioned shard hour"),
+			}, {
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("usageType"),
+				Value: awsClient.String(fmt.Sprintf("%sStorage-ShardHour", pricingRegionPrefix)),
 			}}), "", km.awsManager.GetRegion())
 	if err != nil {
 		log.WithError(err).Error("Could not get shard price")
 		return detectedStreams, err
 	}
+
 	// Get Price for extended Shard Hour retention
 	extendedRetentionPrice, err := km.awsManager.GetPricingClient().GetPrice(
 		km.getPricingFilterInput([]*pricing.Filter{
@@ -101,6 +120,10 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 				Type:  awsClient.String("TERM_MATCH"),
 				Field: awsClient.String("group"),
 				Value: awsClient.String("Addon shard hour"),
+			}, {
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("usageType"),
+				Value: awsClient.String(fmt.Sprintf("%sExtended-ShardHour", pricingRegionPrefix)),
 			}}), "", km.awsManager.GetRegion())
 	if err != nil {
 		log.WithError(err).Error("Could not get shard extended retention price")
@@ -187,11 +210,15 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 					Region: km.awsManager.GetRegion(),
 					Metric: metric.Description,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID:    *stream.StreamName,
+						ResourceID:    *stream.StreamARN,
 						LaunchTime:    *stream.StreamCreationTimestamp,
 						PricePerHour:  totalShardsPerHourPrice,
 						PricePerMonth: totalShardsPerHourPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
+					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountID:   *km.awsManager.GetAccountIdentity().Account,
+						AccountName: km.awsManager.GetAccountName(),
 					},
 				}
 
@@ -204,7 +231,10 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 			}
 		}
 	}
-	km.awsManager.GetCollector().CollectFinish(km.Name)
+	km.awsManager.GetCollector().CollectFinish(km.Name, collector.AccountSpecifiedFields{
+		AccountID:   *km.awsManager.GetAccountIdentity().Account,
+		AccountName: km.awsManager.GetAccountName(),
+	})
 	return detectedStreams, nil
 }
 

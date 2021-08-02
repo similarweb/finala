@@ -4,6 +4,7 @@ export const ResourcesService = {
   GetExecutions,
   Summary,
   GetContent,
+  GetReport,
 };
 
 /**
@@ -14,12 +15,17 @@ export const ResourcesService = {
 const getTransformedFilters = (filters) => {
   const params = {};
   filters.forEach((filter) => {
-    if (filter.id.substr(0, 8) === "resource") {
+    if (filter.type === "resource") {
       return;
     }
     const [key, value] = filter.id.split(":");
+    let paramKey;
+    if (value && filter.type === "account") {
+      paramKey = `filter_Data.AccountID`;
+    } else {
+      paramKey = `filter_Data.Tag.${key}`;
+    }
     if (value) {
-      const paramKey = `filter_Data.Tag.${key}`;
       if (params[paramKey]) {
         params[paramKey] += `,${value}`;
       } else {
@@ -78,6 +84,21 @@ function GetContent(name, executionID, filters = []) {
 
   return http
     .send(`api/v1/resources/${name}?${searchParams}`, `get`)
+    .then(this.handleResponse)
+    .then((response) => {
+      return response;
+    });
+}
+
+function GetReport(executionID, filters = []) {
+  const params = {
+    ...getTransformedFilters(filters),
+  };
+  const searchParams = decodeURIComponent(
+    new window.URLSearchParams(params).toString()
+  );
+  return http
+    .send(`api/v1/report/${executionID}?${searchParams}`, `get`)
     .then(this.handleResponse)
     .then((response) => {
       return response;

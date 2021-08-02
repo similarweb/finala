@@ -1,10 +1,12 @@
 import React, { Fragment, useEffect } from "react";
 import { connect } from "react-redux";
 import PropTypes from "prop-types";
+import { AuthService } from "../services/authentication.service";
 import { ResourcesService } from "services/resources.service";
 import { SettingsService } from "services/settings.service";
 import { titleDirective } from "utils/Title";
 import { getHistory, setHistory } from "../utils/History";
+import { AccsService } from "../services/accs.service";
 
 let fetchTimeoutRequest = false;
 let fetchTableTimeoutRequest = false;
@@ -19,6 +21,7 @@ let lastFiltersSearched = "[]";
  * @param  {func} setCurrentExecution Update Current Execution
  *
  * @param  {string} currentResource Current selected resource
+ * @param  {func} setAccounts Update Accounts List
  * @param  {func} setResources Update Resources List
  * @param  {func} setCurrentResourceData Update current resource data
  * @param  {func} setIsResourceListLoading  update isLoading state for resources
@@ -30,6 +33,7 @@ let lastFiltersSearched = "[]";
  *
  * @param  {func} setIsAppLoading  Update App IsLoading status
  * @param  {func} setIsScanning  Update scanning status
+ * @param  {func} setAuthRequired Update, if authentication is required
  * }
  */
 const DataFacotry = ({
@@ -38,6 +42,7 @@ const DataFacotry = ({
   setCurrentExecution,
 
   currentResource,
+  setAccounts,
   setResources,
   setCurrentResourceData,
   setIsResourceListLoading,
@@ -47,14 +52,27 @@ const DataFacotry = ({
   resources,
   setIsAppLoading,
   setIsScanning,
+  setAuthRequired,
 }) => {
   /**
    * start fetching data from server
+   * will check for enabled authentication
    * will load executions list
    */
   const init = async () => {
     await SettingsService.GetSettings().catch(() => false);
+    checkAuthentication();
     fetchData();
+  };
+
+  /**
+   * checks, if authentication is required/enabled
+   */
+  const checkAuthentication = async () => {
+    const authenticated = await AuthService.Auth("", "").catch(() => false);
+    if (authenticated) {
+      setAuthRequired(false);
+    }
   };
 
   /**
@@ -65,7 +83,6 @@ const DataFacotry = ({
     const executionsList = await ResourcesService.GetExecutions().catch(
       () => []
     );
-
     setExecutions(executionsList);
     setIsAppLoading(false);
     if (!executionsList.length) {
@@ -106,7 +123,7 @@ const DataFacotry = ({
   };
 
   /**
-   * Triggered every-time executionId/filters changes and re-load resources list
+   * Triggered every-time executionId/filters changes and re-load resources list and accounts list
    * @param  {string} currentExecution Current Selected Execution
    * @param  {array} filters  Filters List
    */
@@ -114,6 +131,7 @@ const DataFacotry = ({
     clearTimeout(fetchTimeoutRequest);
     setIsResourceListLoading(true);
     await getResources(currentExecution, filters);
+    await getAccounts(currentExecution);
     setIsResourceListLoading(false);
 
     if (currentResource) {
@@ -138,6 +156,24 @@ const DataFacotry = ({
     setIsResourceTableLoading(true);
     await getResourceTable(currentResource, currentExecution, filters);
     setIsResourceTableLoading(false);
+  };
+
+  /**
+   * Will fetch account list from server
+   * @param {string} currentExecution current Selected Execution
+   */
+  const getAccounts = async (currentExecution) => {
+    const AccountsArray = await AccsService.list(currentExecution).catch(
+      () => false
+    );
+
+    const accounts = {};
+    AccountsArray.forEach((value) => {
+      accounts[value.ID] = value;
+    });
+
+    setAccounts(accounts);
+    return true;
   };
 
   /**
@@ -258,11 +294,14 @@ DataFacotry.propTypes = {
   setIsResourceListLoading: PropTypes.func,
   setIsResourceTableLoading: PropTypes.func,
   setIsScanning: PropTypes.func,
+  setAccounts: PropTypes.func,
   setResources: PropTypes.func,
   setCurrentResourceData: PropTypes.func,
   setCurrentExecution: PropTypes.func,
+  setAuthRequired: PropTypes.func,
 
   currentResource: PropTypes.string,
+  accounts: PropTypes.object,
   resources: PropTypes.object,
   filters: PropTypes.array,
   currentExecution: PropTypes.string,
@@ -273,6 +312,7 @@ DataFacotry.propTypes = {
 };
 
 const mapStateToProps = (state) => ({
+  accounts: state.accounts.accounts,
   resources: state.resources.resources,
   currentResource: state.resources.currentResource,
   currentExecution: state.executions.current,
@@ -289,10 +329,12 @@ const mapDispatchToProps = (dispatch) => ({
   setIsResourceTableLoading: (isLoading) =>
     dispatch({ type: "IS_RESOURCE_TABLE_LOADING", isLoading }),
   setIsScanning: (isScanning) => dispatch({ type: "IS_SCANNING", isScanning }),
+  setAccounts: (data) => dispatch({ type: "ACCOUNT_LIST", data }),
   setResources: (data) => dispatch({ type: "RESOURCE_LIST", data }),
   setCurrentExecution: (id) => dispatch({ type: "EXECUTION_SELECTED", id }),
   setCurrentResourceData: (data) =>
     dispatch({ type: "SET_CURRENT_RESOURCE_DATA", data }),
+  setAuthRequired: (data) => dispatch({ type: "SET_AUTH_REQUIRED", data }),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(DataFacotry);

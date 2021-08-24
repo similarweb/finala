@@ -71,28 +71,3 @@ func TestExtractExecutionName(t *testing.T) {
 		t.Errorf("extractedExecutionName %s is not equal to expected timestamp %s", extractedExecutionName, index_prefix)
 	}
 }
-
-func TestExtractAccountInformation(t *testing.T) {
-	const name, id = "Test", "1234567890"
-	//test for right input
-	accountInfo := fmt.Sprintf("%s_%s", name, id)
-	extractedName, extractedId, err := interpolation.ExtractAccountInformation(accountInfo)
-	if err != nil {
-		t.Fatalf("error occured while running ExtractAccountInformation e: %s\n", err)
-	}
-
-	if extractedName != name {
-		t.Errorf("extractedName %s is not equal to expected name %s", extractedName, name)
-	}
-
-	if extractedId != id {
-		t.Errorf("extractedId %s is not equal to expected id %s", extractedId, id)
-	}
-
-	//test for wrong input
-	const wrong = "noUnderScore"
-	_, _, err = interpolation.ExtractAccountInformation(wrong)
-	if err == nil {
-		t.Errorf("ExtractAccountInformation returns no error for input without underscore: %s", wrong)
-	}
-}

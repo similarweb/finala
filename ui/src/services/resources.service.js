@@ -20,7 +20,7 @@ const getTransformedFilters = (filters) => {
     const [key, value] = filter.id.split(":");
     let paramKey;
     if (value && filter.type === "account") {
-      paramKey = `filter_Data.AccountID`;
+      paramKey = `filter_Data.AccountId`;
     } else {
       paramKey = `filter_Data.Tag.${key}`;
     }

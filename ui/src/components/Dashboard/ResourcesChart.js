@@ -42,7 +42,6 @@ const useStyles = makeStyles(() => ({
  * @param  {func} addFilter Add filter to  filters list
  * @param  {func} setResource Update Selected Resource}
  * @param  {string} account Account ID for account specific summary
- * @param  {object} accounts Accounts of current execution
  */
 const ResourcesChart = ({
   resources,
@@ -52,7 +51,6 @@ const ResourcesChart = ({
   addFilter,
   setResource,
   account,
-  accounts,
 }) => {
   const classes = useStyles();
   const colorList = colors.map((color) => color.hex);
@@ -60,10 +58,11 @@ const ResourcesChart = ({
   if (account) {
     sortedResources = Object.values(resources)
       .filter(
-        (row) => row.SpentAccounts[account] && row.SpentAccounts[account] > 0
+        (row) =>
+          row.SpentAccounts[account.ID] && row.SpentAccounts[account.ID] > 0
       )
       .sort((a, b) =>
-        a.SpentAccounts[account] >= b.SpentAccounts[account] ? -1 : 1
+        a.SpentAccounts[account.ID] >= b.SpentAccounts[account.ID] ? -1 : 1
       );
   } else {
     sortedResources = Object.values(resources)
@@ -88,8 +87,8 @@ const ResourcesChart = ({
               );
               setFilters(nfilters);
               const filter = {
-                title: `Account:${account}`,
-                id: `account:${account}`,
+                title: `Account:${account.ID}`,
+                id: `account:${account.ID}`,
                 type: "account",
               };
               addFilter(filter);
@@ -180,14 +179,14 @@ const ResourcesChart = ({
   sortedResources.forEach((resource) => {
     const title = titleDirective(resource.ResourceName);
     const amount = MoneyDirective(
-      account ? resource.SpentAccounts[account] : resource.TotalSpent
+      account ? resource.SpentAccounts[account.ID] : resource.TotalSpent
     );
     resource.title = `${title} (${amount})`;
     resource.display_title = `${title}`;
 
     chartOptions.options.xaxis.categories.push(resource.title);
     chartOptions.series[0].data.push(
-      account ? resource.SpentAccounts[account] : resource.TotalSpent
+      account ? resource.SpentAccounts[account.ID] : resource.TotalSpent
     );
     return resource;
   });
@@ -204,9 +203,7 @@ const ResourcesChart = ({
             {!isResourceListLoading && sortedResources.length > 0 && (
               <Fragment>
                 <h4 className={classes.title}>
-                  {account
-                    ? `${accounts[account].Name} (${accounts[account].ID}):`
-                    : "Summary:"}
+                  {account ? `${account.Name} (${account.ID}):` : "Summary:"}
                 </h4>
                 <Chart
                   id="MainChart"
@@ -241,15 +238,13 @@ ResourcesChart.propTypes = {
   isResourceListLoading: PropTypes.bool,
   addFilter: PropTypes.func,
   setResource: PropTypes.func,
-  account: PropTypes.string,
-  accounts: PropTypes.array,
+  account: PropTypes.object,
 };
 
 const mapStateToProps = (state) => ({
   resources: state.resources.resources,
   isResourceListLoading: state.resources.isResourceListLoading,
   filters: state.filters.filters,
-  accounts: state.accounts.accounts,
 });
 
 const mapDispatchToProps = (dispatch) => ({

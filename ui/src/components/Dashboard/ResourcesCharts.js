@@ -9,14 +9,19 @@ import ResourcesChart from "./ResourcesChart";
  * @param {filters} array Filters list
  */
 const ResourcesCharts = ({ accounts, filters }) => {
-  let selectedAccountIds = filters
+  const selectedAccountIds = filters
     .filter((filter) => filter.type === "account")
     .map((filter) => filter.id.split(":")[1]);
+  let selectedAccounts;
   if (selectedAccountIds.length === 0) {
-    selectedAccountIds = accounts.map((account) => account.ID);
+    selectedAccounts = accounts;
+  } else {
+    selectedAccounts = accounts.filter((account) =>
+      selectedAccountIds.includes(account.ID)
+    );
   }
-  let resourcesCharts = selectedAccountIds.map((accountID) => (
-    <ResourcesChart key={accountID} account={accountID} />
+  let resourcesCharts = selectedAccounts.map((account) => (
+    <ResourcesChart key={account.ID} account={account} />
   ));
   resourcesCharts = [<ResourcesChart key={1} />, ...resourcesCharts];
   return <Fragment>{resourcesCharts}</Fragment>;

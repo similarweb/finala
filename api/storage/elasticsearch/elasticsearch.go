@@ -318,6 +318,7 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 	return executions, nil
 }
 
+// GetAccounts returns a list of all checked accounts for the given execution ID
 func (sm *StorageManager) GetAccounts(executionID string, querylimit int) ([]storage.Accounts, error) {
 	accounts := []storage.Accounts{}
 

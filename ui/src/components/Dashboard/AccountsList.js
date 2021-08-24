@@ -75,7 +75,7 @@ const AccountsList = ({ accounts, filters, addFilter }) => {
 
 AccountsList.defaultProps = {};
 AccountsList.propTypes = {
-  accounts: PropTypes.object,
+  accounts: PropTypes.array,
   filters: PropTypes.array,
   addFilter: PropTypes.func,
 };

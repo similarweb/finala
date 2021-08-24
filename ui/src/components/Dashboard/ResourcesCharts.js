@@ -5,7 +5,7 @@ import { Fragment } from "react";
 import ResourcesChart from "./ResourcesChart";
 
 /**
- * @param {accounts} object Accounts of current execution
+ * @param {accounts} array Accounts of current execution
  * @param {filters} array Filters list
  */
 const ResourcesCharts = ({ accounts, filters }) => {
@@ -13,7 +13,7 @@ const ResourcesCharts = ({ accounts, filters }) => {
     .filter((filter) => filter.type === "account")
     .map((filter) => filter.id.split(":")[1]);
   if (selectedAccountIds.length === 0) {
-    selectedAccountIds = Object.keys(accounts);
+    selectedAccountIds = accounts.map((account) => account.ID);
   }
   let resourcesCharts = selectedAccountIds.map((accountID) => (
     <ResourcesChart key={accountID} account={accountID} />
@@ -25,7 +25,7 @@ const ResourcesCharts = ({ accounts, filters }) => {
 ResourcesCharts.defaultProps = {};
 ResourcesCharts.propTypes = {
   filters: PropTypes.array,
-  accounts: PropTypes.object,
+  accounts: PropTypes.array,
 };
 
 const mapStateToProps = (state) => ({

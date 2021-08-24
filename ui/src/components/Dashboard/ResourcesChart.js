@@ -242,7 +242,7 @@ ResourcesChart.propTypes = {
   addFilter: PropTypes.func,
   setResource: PropTypes.func,
   account: PropTypes.string,
-  accounts: PropTypes.object,
+  accounts: PropTypes.array,
 };
 
 const mapStateToProps = (state) => ({

@@ -7,7 +7,6 @@ import (
 	"finala/collector/aws/register"
 	"finala/collector/config"
 	"finala/expression"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"strings"
 	"time"
 
@@ -157,21 +156,13 @@ func (ec *EC2Manager) Detect(metrics []config.MetricConfig) (interface{}, error)
 					}
 				}
 
-				Arn := "arn:aws:ec2:" + ec.awsManager.GetRegion() + ":" + *ec.awsManager.GetAccountIdentity().Account + ":instance/" + *instance.InstanceId
-
-				if !arn.IsARN(Arn) {
-					log.WithFields(log.Fields{
-						"arn": Arn,
-					}).Error("is not an arn")
-				}
-
 				ec2 := DetectedEC2{
 					Region:       ec.awsManager.GetRegion(),
 					Metric:       metric.Description,
 					Name:         name,
 					InstanceType: *instance.InstanceType,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID:    Arn,
+						ResourceID:    *instance.InstanceId,
 						LaunchTime:    *instance.LaunchTime,
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,

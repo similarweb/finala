@@ -8,7 +8,6 @@ import (
 	"finala/collector/config"
 	"finala/expression"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"time"
 
 	awsClient "github.com/aws/aws-sdk-go/aws"
@@ -171,19 +170,11 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 					}
 				}
 
-				Arn := "arn:aws:elasticloadbalancing:" + el.awsManager.GetRegion() + ":" + *el.awsManager.GetAccountIdentity().Account + ":loadbalancer/" + *instance.LoadBalancerName
-
-				if !arn.IsARN(Arn) {
-					log.WithFields(log.Fields{
-						"arn": Arn,
-					}).Error("is not an arn")
-				}
-
 				elb := DetectedELB{
 					Region: el.awsManager.GetRegion(),
 					Metric: metric.Description,
 					PriceDetectedFields: collector.PriceDetectedFields{
-						ResourceID:    Arn,
+						ResourceID:    *instance.LoadBalancerName,
 						LaunchTime:    *instance.CreatedTime,
 						PricePerHour:  price,
 						PricePerMonth: price * collector.TotalMonthHours,

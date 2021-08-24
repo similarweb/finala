@@ -6,8 +6,6 @@ import (
 	"finala/collector/aws/common"
 	"finala/collector/aws/register"
 	"finala/collector/config"
-	"github.com/aws/aws-sdk-go/aws/arn"
-
 	awsClient "github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/pricing"
@@ -120,19 +118,11 @@ func (ev *EC2VolumeManager) Detect(metrics []config.MetricConfig) (interface{}, 
 			}
 		}
 
-		Arn := "arn:aws:ec2:" + ev.awsManager.GetRegion() + ":" + *ev.awsManager.GetAccountIdentity().Account + ":volume/" + *vol.VolumeId
-
-		if !arn.IsARN(Arn) {
-			log.WithFields(log.Fields{
-				"arn": Arn,
-			}).Error("is not an arn")
-		}
-
 		volumeSize := *vol.Size
 		dEBS := DetectedAWSEC2Volume{
 			Region:        ev.awsManager.GetRegion(),
 			Metric:        metric.Description,
-			ResourceID:    Arn,
+			ResourceID:    *vol.VolumeId,
 			Type:          *vol.VolumeType,
 			Size:          volumeSize,
 			PricePerMonth: ev.getCalculatedPrice(vol, price),

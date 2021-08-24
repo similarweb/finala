@@ -5,6 +5,8 @@ import (
 	"finala/collector/aws/register"
 	_ "finala/collector/aws/resources"
 	"finala/collector/config"
+	_ "github.com/aws/aws-sdk-go/aws"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go/service/sts"
 	log "github.com/sirupsen/logrus"
@@ -36,7 +38,7 @@ func NewAnalyzeManager(cl collector.CollectorDescriber, metricsManager collector
 // All will loop on all the aws provider settings, and check from the configuration of the metric should be reported
 func (app *Analyze) All() {
 
-	for _, account := range app.awsAccounts {
+	for index, account := range app.awsAccounts {
 
 		awsAuth := NewAuth(account)
 		globalsession, globalConfig := awsAuth.Login("")
@@ -44,6 +46,10 @@ func (app *Analyze) All() {
 
 		for _, region := range account.Regions {
 			resourcesDetection := NewDetectorManager(awsAuth, app.cl, account, stsManager, app.global, region)
+			if resourcesDetection.accountIdentity.Account == nil {
+				log.Error("Account " + account.Name + " is not a valid aws account")
+				resourcesDetection.accountIdentity.SetAccount(strconv.Itoa(index))
+			}
 			for resourceType, resourceDetector := range register.GetResources() {
 
 				resource, err := resourceDetector(resourcesDetection, nil)

@@ -39,7 +39,7 @@ type PriceDetectedFields struct {
 
 // AccountSpecifiedFields describe account data of an resource
 type AccountSpecifiedFields struct {
-	AccountID   string
+	AccountId   string
 	AccountName string
 }
 

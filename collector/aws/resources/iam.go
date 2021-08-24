@@ -78,7 +78,7 @@ func (im *IAMManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 	}).Info("starting to analyze resource")
 
 	im.awsManager.GetCollector().CollectStart(im.Name, collector.AccountSpecifiedFields{
-		AccountID:   *im.awsManager.GetAccountIdentity().Account,
+		AccountId:   *im.awsManager.GetAccountIdentity().Account,
 		AccountName: im.awsManager.GetAccountName(),
 	})
 
@@ -140,7 +140,7 @@ func (im *IAMManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 					LastActivity: lastActivity,
 					ResourceID:   *user.Arn,
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *im.awsManager.GetAccountIdentity().Account,
+						AccountId:   *im.awsManager.GetAccountIdentity().Account,
 						AccountName: im.awsManager.GetAccountName(),
 					},
 				}
@@ -157,7 +157,7 @@ func (im *IAMManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 	}
 
 	im.awsManager.GetCollector().CollectFinish(im.Name, collector.AccountSpecifiedFields{
-		AccountID:   *im.awsManager.GetAccountIdentity().Account,
+		AccountId:   *im.awsManager.GetAccountIdentity().Account,
 		AccountName: im.awsManager.GetAccountName(),
 	})
 

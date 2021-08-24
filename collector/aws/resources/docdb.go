@@ -76,7 +76,7 @@ func (dd *DocumentDBManager) Detect(metrics []config.MetricConfig) (interface{},
 	}).Info("starting to analyze resource")
 
 	dd.awsManager.GetCollector().CollectStart(dd.Name, collector.AccountSpecifiedFields{
-		AccountID:   *dd.awsManager.GetAccountIdentity().Account,
+		AccountId:   *dd.awsManager.GetAccountIdentity().Account,
 		AccountName: dd.awsManager.GetAccountName(),
 	})
 
@@ -167,7 +167,7 @@ func (dd *DocumentDBManager) Detect(metrics []config.MetricConfig) (interface{},
 						Tag:           tagsData,
 					},
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *dd.awsManager.GetAccountIdentity().Account,
+						AccountId:   *dd.awsManager.GetAccountIdentity().Account,
 						AccountName: dd.awsManager.GetAccountName(),
 					},
 				}
@@ -185,7 +185,7 @@ func (dd *DocumentDBManager) Detect(metrics []config.MetricConfig) (interface{},
 	}
 
 	dd.awsManager.GetCollector().CollectFinish(dd.Name, collector.AccountSpecifiedFields{
-		AccountID:   *dd.awsManager.GetAccountIdentity().Account,
+		AccountId:   *dd.awsManager.GetAccountIdentity().Account,
 		AccountName: dd.awsManager.GetAccountName(),
 	})
 

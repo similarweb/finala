@@ -76,7 +76,7 @@ func (np *NeptuneManager) Detect(metrics []config.MetricConfig) (interface{}, er
 	}).Info("starting to analyze resource")
 
 	np.awsManager.GetCollector().CollectStart(np.Name, collector.AccountSpecifiedFields{
-		AccountID:   *np.awsManager.GetAccountIdentity().Account,
+		AccountId:   *np.awsManager.GetAccountIdentity().Account,
 		AccountName: np.awsManager.GetAccountName(),
 	})
 
@@ -168,7 +168,7 @@ func (np *NeptuneManager) Detect(metrics []config.MetricConfig) (interface{}, er
 						Tag:           tagsData,
 					},
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *np.awsManager.GetAccountIdentity().Account,
+						AccountId:   *np.awsManager.GetAccountIdentity().Account,
 						AccountName: np.awsManager.GetAccountName(),
 					},
 				}
@@ -182,7 +182,7 @@ func (np *NeptuneManager) Detect(metrics []config.MetricConfig) (interface{}, er
 		}
 	}
 	np.awsManager.GetCollector().CollectFinish(np.Name, collector.AccountSpecifiedFields{
-		AccountID:   *np.awsManager.GetAccountIdentity().Account,
+		AccountId:   *np.awsManager.GetAccountIdentity().Account,
 		AccountName: np.awsManager.GetAccountName(),
 	})
 	return detected, nil

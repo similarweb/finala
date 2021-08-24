@@ -76,7 +76,7 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 	}).Info("analyzing resource")
 
 	ngw.awsManager.GetCollector().CollectStart(ngw.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ngw.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ngw.awsManager.GetAccountIdentity().Account,
 		AccountName: ngw.awsManager.GetAccountName(),
 	})
 
@@ -183,7 +183,7 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 						Tag:           tagsData,
 					},
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *ngw.awsManager.GetAccountIdentity().Account,
+						AccountId:   *ngw.awsManager.GetAccountIdentity().Account,
 						AccountName: ngw.awsManager.GetAccountName(),
 					},
 				}
@@ -199,7 +199,7 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 	}
 
 	ngw.awsManager.GetCollector().CollectFinish(ngw.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ngw.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ngw.awsManager.GetAccountIdentity().Account,
 		AccountName: ngw.awsManager.GetAccountName(),
 	})
 

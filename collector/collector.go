@@ -102,8 +102,9 @@ func (cm *CollectorManager) CollectStart(resourceName ResourceIdentifier, accoun
 	cm.updateServiceStatus(EventCollector{
 		ResourceName: resourceName,
 		Data: EventStatusData{
-			Status:             EventFetch,
-			AccountInformation: accountSpecifiedFields.AccountName + "_" + accountSpecifiedFields.AccountID,
+			Status:      EventFetch,
+			AccountName: accountSpecifiedFields.AccountName,
+			AccountId:   accountSpecifiedFields.AccountId,
 		},
 	})
 }
@@ -113,8 +114,9 @@ func (cm *CollectorManager) CollectFinish(resourceName ResourceIdentifier, accou
 	cm.updateServiceStatus(EventCollector{
 		ResourceName: resourceName,
 		Data: EventStatusData{
-			Status:             EventFinish,
-			AccountInformation: accountSpecifiedFields.AccountName + "_" + accountSpecifiedFields.AccountID,
+			Status:      EventFinish,
+			AccountName: accountSpecifiedFields.AccountName,
+			AccountId:   accountSpecifiedFields.AccountId,
 		},
 	})
 }

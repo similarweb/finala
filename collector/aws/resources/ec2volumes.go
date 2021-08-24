@@ -76,7 +76,7 @@ func (ev *EC2VolumeManager) Detect(metrics []config.MetricConfig) (interface{}, 
 	}).Info("starting to analyze resource")
 
 	ev.awsManager.GetCollector().CollectStart(ev.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ev.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ev.awsManager.GetAccountIdentity().Account,
 		AccountName: ev.awsManager.GetAccountName(),
 	})
 
@@ -128,7 +128,7 @@ func (ev *EC2VolumeManager) Detect(metrics []config.MetricConfig) (interface{}, 
 			PricePerMonth: ev.getCalculatedPrice(vol, price),
 			Tag:           tagsData,
 			AccountSpecifiedFields: collector.AccountSpecifiedFields{
-				AccountID:   *ev.awsManager.GetAccountIdentity().Account,
+				AccountId:   *ev.awsManager.GetAccountIdentity().Account,
 				AccountName: ev.awsManager.GetAccountName(),
 			},
 		}
@@ -143,7 +143,7 @@ func (ev *EC2VolumeManager) Detect(metrics []config.MetricConfig) (interface{}, 
 	}
 
 	ev.awsManager.GetCollector().CollectFinish(ev.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ev.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ev.awsManager.GetAccountIdentity().Account,
 		AccountName: ev.awsManager.GetAccountName(),
 	})
 

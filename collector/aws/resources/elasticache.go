@@ -76,7 +76,7 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 	}).Info("starting to analyze resource")
 
 	ec.awsManager.GetCollector().CollectStart(ec.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ec.awsManager.GetAccountIdentity().Account,
 		AccountName: ec.awsManager.GetAccountName(),
 	})
 
@@ -168,7 +168,7 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 						Tag:           tagsData,
 					},
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+						AccountId:   *ec.awsManager.GetAccountIdentity().Account,
 						AccountName: ec.awsManager.GetAccountName(),
 					},
 				}
@@ -184,7 +184,7 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 	}
 
 	ec.awsManager.GetCollector().CollectFinish(ec.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ec.awsManager.GetAccountIdentity().Account,
 		AccountName: ec.awsManager.GetAccountName(),
 	})
 

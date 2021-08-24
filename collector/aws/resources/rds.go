@@ -88,7 +88,7 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 	}).Info("starting to analyze resource")
 
 	r.awsManager.GetCollector().CollectStart(r.Name, collector.AccountSpecifiedFields{
-		AccountID:   *r.awsManager.GetAccountIdentity().Account,
+		AccountId:   *r.awsManager.GetAccountIdentity().Account,
 		AccountName: r.awsManager.GetAccountName(),
 	})
 
@@ -211,7 +211,7 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 						Tag:           tagsData,
 					},
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *r.awsManager.GetAccountIdentity().Account,
+						AccountId:   *r.awsManager.GetAccountIdentity().Account,
 						AccountName: r.awsManager.GetAccountName(),
 					},
 				}
@@ -228,7 +228,7 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 	}
 
 	r.awsManager.GetCollector().CollectFinish(r.Name, collector.AccountSpecifiedFields{
-		AccountID:   *r.awsManager.GetAccountIdentity().Account,
+		AccountId:   *r.awsManager.GetAccountIdentity().Account,
 		AccountName: r.awsManager.GetAccountName(),
 	})
 

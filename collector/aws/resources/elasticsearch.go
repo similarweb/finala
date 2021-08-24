@@ -90,7 +90,7 @@ func (esm *ElasticSearchManager) Detect(metrics []config.MetricConfig) (interfac
 	}).Info("analyzing resource")
 
 	esm.awsManager.GetCollector().CollectStart(esm.Name, collector.AccountSpecifiedFields{
-		AccountID:   *esm.awsManager.GetAccountIdentity().Account,
+		AccountId:   *esm.awsManager.GetAccountIdentity().Account,
 		AccountName: esm.awsManager.GetAccountName(),
 	})
 
@@ -225,7 +225,7 @@ func (esm *ElasticSearchManager) Detect(metrics []config.MetricConfig) (interfac
 						Tag:           tagsData,
 					},
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *esm.awsManager.GetAccountIdentity().Account,
+						AccountId:   *esm.awsManager.GetAccountIdentity().Account,
 						AccountName: esm.awsManager.GetAccountName(),
 					},
 				}
@@ -241,7 +241,7 @@ func (esm *ElasticSearchManager) Detect(metrics []config.MetricConfig) (interfac
 	}
 
 	esm.awsManager.GetCollector().CollectFinish(esm.Name, collector.AccountSpecifiedFields{
-		AccountID:   *esm.awsManager.GetAccountIdentity().Account,
+		AccountId:   *esm.awsManager.GetAccountIdentity().Account,
 		AccountName: esm.awsManager.GetAccountName(),
 	})
 

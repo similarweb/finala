@@ -75,7 +75,7 @@ func (ec *EC2Manager) Detect(metrics []config.MetricConfig) (interface{}, error)
 	}).Info("starting to analyze resource")
 
 	ec.awsManager.GetCollector().CollectStart(ec.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ec.awsManager.GetAccountIdentity().Account,
 		AccountName: ec.awsManager.GetAccountName(),
 	})
 
@@ -169,7 +169,7 @@ func (ec *EC2Manager) Detect(metrics []config.MetricConfig) (interface{}, error)
 						Tag:           tagsData,
 					},
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+						AccountId:   *ec.awsManager.GetAccountIdentity().Account,
 						AccountName: ec.awsManager.GetAccountName(),
 					},
 				}
@@ -187,7 +187,7 @@ func (ec *EC2Manager) Detect(metrics []config.MetricConfig) (interface{}, error)
 	}
 
 	ec.awsManager.GetCollector().CollectFinish(ec.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ec.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ec.awsManager.GetAccountIdentity().Account,
 		AccountName: ec.awsManager.GetAccountName(),
 	})
 

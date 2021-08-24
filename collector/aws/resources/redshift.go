@@ -75,7 +75,7 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 	}).Info("analyzing resource")
 
 	rdm.awsManager.GetCollector().CollectStart(rdm.Name, collector.AccountSpecifiedFields{
-		AccountID:   *rdm.awsManager.GetAccountIdentity().Account,
+		AccountId:   *rdm.awsManager.GetAccountIdentity().Account,
 		AccountName: rdm.awsManager.GetAccountName(),
 	})
 
@@ -164,7 +164,7 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 						Tag:           tagsData,
 					},
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *rdm.awsManager.GetAccountIdentity().Account,
+						AccountId:   *rdm.awsManager.GetAccountIdentity().Account,
 						AccountName: rdm.awsManager.GetAccountName(),
 					},
 				}
@@ -180,7 +180,7 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 	}
 
 	rdm.awsManager.GetCollector().CollectFinish(rdm.Name, collector.AccountSpecifiedFields{
-		AccountID:   *rdm.awsManager.GetAccountIdentity().Account,
+		AccountId:   *rdm.awsManager.GetAccountIdentity().Account,
 		AccountName: rdm.awsManager.GetAccountName(),
 	})
 

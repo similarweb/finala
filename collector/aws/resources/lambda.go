@@ -72,7 +72,7 @@ func (lm *LambdaManager) Detect(metrics []config.MetricConfig) (interface{}, err
 	}).Info("starting to analyze resource")
 
 	lm.awsManager.GetCollector().CollectStart(lm.Name, collector.AccountSpecifiedFields{
-		AccountID:   *lm.awsManager.GetAccountIdentity().Account,
+		AccountId:   *lm.awsManager.GetAccountIdentity().Account,
 		AccountName: lm.awsManager.GetAccountName(),
 	})
 
@@ -154,7 +154,7 @@ func (lm *LambdaManager) Detect(metrics []config.MetricConfig) (interface{}, err
 					Name:       *fun.FunctionName,
 					Tag:        tagsData,
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *lm.awsManager.GetAccountIdentity().Account,
+						AccountId:   *lm.awsManager.GetAccountIdentity().Account,
 						AccountName: lm.awsManager.GetAccountName(),
 					},
 				}
@@ -170,7 +170,7 @@ func (lm *LambdaManager) Detect(metrics []config.MetricConfig) (interface{}, err
 	}
 
 	lm.awsManager.GetCollector().CollectFinish(lm.Name, collector.AccountSpecifiedFields{
-		AccountID:   *lm.awsManager.GetAccountIdentity().Account,
+		AccountId:   *lm.awsManager.GetAccountIdentity().Account,
 		AccountName: lm.awsManager.GetAccountName(),
 	})
 	return detected, nil

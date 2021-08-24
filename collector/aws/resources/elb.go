@@ -74,7 +74,7 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 	}).Info("starting to analyze resource")
 
 	el.awsManager.GetCollector().CollectStart(el.Name, collector.AccountSpecifiedFields{
-		AccountID:   *el.awsManager.GetAccountIdentity().Account,
+		AccountId:   *el.awsManager.GetAccountIdentity().Account,
 		AccountName: el.awsManager.GetAccountName(),
 	})
 
@@ -181,7 +181,7 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 						Tag:           tagsData,
 					},
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *el.awsManager.GetAccountIdentity().Account,
+						AccountId:   *el.awsManager.GetAccountIdentity().Account,
 						AccountName: el.awsManager.GetAccountName(),
 					},
 				}
@@ -199,7 +199,7 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 	}
 
 	el.awsManager.GetCollector().CollectFinish(el.Name, collector.AccountSpecifiedFields{
-		AccountID:   *el.awsManager.GetAccountIdentity().Account,
+		AccountId:   *el.awsManager.GetAccountIdentity().Account,
 		AccountName: el.awsManager.GetAccountName(),
 	})
 

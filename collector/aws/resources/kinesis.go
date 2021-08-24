@@ -76,7 +76,7 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 	}).Info("analyzing resource")
 
 	km.awsManager.GetCollector().CollectStart(km.Name, collector.AccountSpecifiedFields{
-		AccountID:   *km.awsManager.GetAccountIdentity().Account,
+		AccountId:   *km.awsManager.GetAccountIdentity().Account,
 		AccountName: km.awsManager.GetAccountName(),
 	})
 
@@ -198,7 +198,7 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 						Tag:           tagsData,
 					},
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *km.awsManager.GetAccountIdentity().Account,
+						AccountId:   *km.awsManager.GetAccountIdentity().Account,
 						AccountName: km.awsManager.GetAccountName(),
 					},
 				}
@@ -213,7 +213,7 @@ func (km *KinesisManager) Detect(metrics []config.MetricConfig) (interface{}, er
 		}
 	}
 	km.awsManager.GetCollector().CollectFinish(km.Name, collector.AccountSpecifiedFields{
-		AccountID:   *km.awsManager.GetAccountIdentity().Account,
+		AccountId:   *km.awsManager.GetAccountIdentity().Account,
 		AccountName: km.awsManager.GetAccountName(),
 	})
 	return detectedStreams, nil

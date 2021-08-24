@@ -71,7 +71,7 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 	}).Info("starting to analyze resource")
 
 	ei.awsManager.GetCollector().CollectStart(ei.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ei.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ei.awsManager.GetAccountIdentity().Account,
 		AccountName: ei.awsManager.GetAccountName(),
 	})
 
@@ -120,7 +120,7 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 					Tag:           tagsData,
 				},
 				AccountSpecifiedFields: collector.AccountSpecifiedFields{
-					AccountID:   *ei.awsManager.GetAccountIdentity().Account,
+					AccountId:   *ei.awsManager.GetAccountIdentity().Account,
 					AccountName: ei.awsManager.GetAccountName(),
 				},
 			}
@@ -136,7 +136,7 @@ func (ei *ElasticIPManager) Detect(metrics []config.MetricConfig) (interface{}, 
 	}
 
 	ei.awsManager.GetCollector().CollectFinish(ei.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ei.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ei.awsManager.GetAccountIdentity().Account,
 		AccountName: ei.awsManager.GetAccountName(),
 	})
 

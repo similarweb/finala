@@ -80,7 +80,7 @@ func TestAddEvent(t *testing.T) {
 
 	coll.CollectStart(collector.ResourceIdentifier("test"), collector.AccountSpecifiedFields{
 		AccountName: "Test",
-		AccountID:   "1234567890",
+		AccountId:   "1234567890",
 	})
 	coll.AddResource(collector.EventCollector{
 		ResourceName: "test1",
@@ -127,7 +127,7 @@ func TestAddEventServerUnavailable(t *testing.T) {
 
 	coll.CollectStart(collector.ResourceIdentifier("test"), collector.AccountSpecifiedFields{
 		AccountName: "Test",
-		AccountID:   "1234567890",
+		AccountId:   "1234567890",
 	})
 
 	coll.AddResource(collector.EventCollector{

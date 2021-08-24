@@ -73,7 +73,7 @@ func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{},
 	}).Info("starting to analyze resource")
 
 	ag.awsManager.GetCollector().CollectStart(ag.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ag.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ag.awsManager.GetAccountIdentity().Account,
 		AccountName: ag.awsManager.GetAccountName(),
 	})
 	detectAPIGateway := []DetectedAPIGateway{}
@@ -152,7 +152,7 @@ func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{},
 					LaunchTime: *api.CreatedDate,
 					Tag:        tagsData,
 					AccountSpecifiedFields: collector.AccountSpecifiedFields{
-						AccountID:   *ag.awsManager.GetAccountIdentity().Account,
+						AccountId:   *ag.awsManager.GetAccountIdentity().Account,
 						AccountName: ag.awsManager.GetAccountName(),
 					},
 				}
@@ -169,7 +169,7 @@ func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{},
 	}
 
 	ag.awsManager.GetCollector().CollectFinish(ag.Name, collector.AccountSpecifiedFields{
-		AccountID:   *ag.awsManager.GetAccountIdentity().Account,
+		AccountId:   *ag.awsManager.GetAccountIdentity().Account,
 		AccountName: ag.awsManager.GetAccountName(),
 	})
 

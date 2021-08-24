@@ -298,7 +298,7 @@ func TestGetSummary(t *testing.T) {
 		case `{"aggregations":{"sum":{"sum":{"field":"Data.PricePerMonth"}}},"query":{"bool":{"must":[{"match":{"ResourceName":{"minimum_should_match":"100%","query":"aws_resource_name"}}},{"term":{"ExecutionID":""}},{"term":{"EventType":"resource_detected"}}]}},"size":0}`:
 			response.Aggregations = map[string]json.RawMessage{"sum": []byte(`{"value": 36.5}`)}
 			response.Hits = &elastic.SearchHits{TotalHits: &elastic.TotalHits{Value: 1}}
-		case `{"aggregations":{"accounts":{"aggregations":{"accountSum":{"sum":{"field":"Data.PricePerMonth"}}},"terms":{"field":"Data.AccountID.keyword"}}},"query":{"bool":{"must":[{"match":{"ResourceName":{"minimum_should_match":"100%","query":"aws_resource_name"}}},{"term":{"ExecutionID":""}},{"term":{"EventType":"resource_detected"}}]}},"size":0}`:
+		case `{"aggregations":{"accounts":{"aggregations":{"accountSum":{"sum":{"field":"Data.PricePerMonth"}}},"terms":{"field":"Data.AccountId.keyword"}}},"query":{"bool":{"must":[{"match":{"ResourceName":{"minimum_should_match":"100%","query":"aws_resource_name"}}},{"term":{"ExecutionID":""}},{"term":{"EventType":"resource_detected"}}]}},"size":0}`:
 			response.Aggregations = map[string]json.RawMessage{"accounts": testutils.LoadResponse("summary/aggregations/default")}
 			response.Hits = &elastic.SearchHits{TotalHits: &elastic.TotalHits{Value: 1}}
 		default:

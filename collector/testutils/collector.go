@@ -28,7 +28,7 @@ func (mc *MockCollector) CollectStart(resourceName collector.ResourceIdentifier,
 		ResourceName: resourceName,
 		Data: collector.EventStatusData{
 			Status:             collector.EventFetch,
-			AccountInformation: accountSpecifiedFields.AccountName + "_" + accountSpecifiedFields.AccountID,
+			AccountInformation: accountSpecifiedFields.AccountName + "_" + accountSpecifiedFields.AccountId,
 		},
 	})
 
@@ -38,7 +38,7 @@ func (mc *MockCollector) CollectFinish(resourceName collector.ResourceIdentifier
 		ResourceName: resourceName,
 		Data: collector.EventStatusData{
 			Status:             collector.EventFinish,
-			AccountInformation: accountSpecifiedFields.AccountName + "_" + accountSpecifiedFields.AccountID,
+			AccountInformation: accountSpecifiedFields.AccountName + "_" + accountSpecifiedFields.AccountId,
 		},
 	})
 

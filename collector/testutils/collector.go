@@ -27,8 +27,9 @@ func (mc *MockCollector) CollectStart(resourceName collector.ResourceIdentifier,
 	mc.updateServiceStatus(collector.EventCollector{
 		ResourceName: resourceName,
 		Data: collector.EventStatusData{
-			Status:             collector.EventFetch,
-			AccountInformation: accountSpecifiedFields.AccountName + "_" + accountSpecifiedFields.AccountId,
+			Status:      collector.EventFetch,
+			AccountName: accountSpecifiedFields.AccountName,
+			AccountId:   accountSpecifiedFields.AccountId,
 		},
 	})
 
@@ -37,9 +38,9 @@ func (mc *MockCollector) CollectFinish(resourceName collector.ResourceIdentifier
 	mc.updateServiceStatus(collector.EventCollector{
 		ResourceName: resourceName,
 		Data: collector.EventStatusData{
-			Status:             collector.EventFinish,
-			AccountInformation: accountSpecifiedFields.AccountName + "_" + accountSpecifiedFields.AccountId,
-		},
+			Status:      collector.EventFinish,
+			AccountName: accountSpecifiedFields.AccountName,
+			AccountId:   accountSpecifiedFields.AccountId},
 	})
 
 }

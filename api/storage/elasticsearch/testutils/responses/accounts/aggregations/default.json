@@ -1,12 +1,36 @@
 {
   "buckets" : [
     {
-      "key" : "Test_123456789",
-      "doc_count" : 66
+      "key" : "123456789",
+      "doc_count" : 66,
+      "AccountNames" : {
+        "doc_count_error_upper_bound" : 0,
+        "sum_other_doc_count" : 0,
+        "buckets" : [
+          {
+            "key" : "Test",
+            "doc_count" : 34
+          },
+          {
+            "key" : "Test2",
+            "doc_count" : 32
+          }
+        ]
+      }
     },
     {
-      "key" : "Test2_12345675",
-      "doc_count" : 6
+      "key" : "12345675",
+      "doc_count" : 6,
+      "AccountNames" : {
+        "doc_count_error_upper_bound" : 0,
+        "sum_other_doc_count" : 0,
+        "buckets" : [
+          {
+            "key" : "Test3",
+            "doc_count" : 6
+          }
+        ]
+      }
     }
   ]
 }

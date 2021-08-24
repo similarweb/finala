@@ -229,7 +229,7 @@ func TestGetAccounts(t *testing.T) {
 		responseCount int
 		ErrorMessage  error
 	}{
-		{"valid response", 1, 2, nil},
+		{"valid response", 5, 3, nil},
 		{"invalid terms", 2, 0, ErrAggregationTermNotFound},
 		{"invalid es response", 3, 0, ErrInvalidQuery},
 	}
@@ -238,15 +238,15 @@ func TestGetAccounts(t *testing.T) {
 
 	mockClient.Router.HandleFunc("/_search", func(resp http.ResponseWriter, req *http.Request) {
 		switch testutils.GetPostParams(req) {
-		case `{"aggregations":{"Accounts":{"terms":{"field":"Data.AccountInformation.keyword","size":1}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
+		case `{"aggregations":{"AccountIds":{"aggregations":{"AccountNames":{"terms":{"field":"Data.AccountName.keyword"}}},"terms":{"field":"Data.AccountId.keyword","size":5}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
 			testutils.JSONResponse(resp, http.StatusOK, elastic.SearchResult{Aggregations: map[string]json.RawMessage{
-				"Accounts": testutils.LoadResponse("accounts/aggregations/default"),
+				"AccountIds": testutils.LoadResponse("accounts/aggregations/default"),
 			}})
-		case `{"aggregations":{"Accounts":{"terms":{"field":"Data.AccountInformation.keyword","size":2}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
+		case `{"aggregations":{"AccountIds":{"aggregations":{"AccountNames":{"terms":{"field":"Data.AccountName.keyword"}}},"terms":{"field":"Data.AccountId.keyword","size":2}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
 			testutils.JSONResponse(resp, http.StatusOK, elastic.SearchResult{Aggregations: map[string]json.RawMessage{
 				"invalid-key": testutils.LoadResponse("accounts/aggregations/default"),
 			}})
-		case `{"aggregations":{"Accounts":{"terms":{"field":"Data.AccountInformation.keyword","size":3}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
+		case `{"aggregations":{"AccountIds":{"aggregations":{"AccountNames":{"terms":{"field":"Data.AccountName.keyword"}}},"terms":{"field":"Data.AccountId.keyword","size":3}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
 			testutils.JSONResponse(resp, http.StatusBadRequest, elastic.SearchResult{Aggregations: map[string]json.RawMessage{}})
 		default:
 			t.Fatalf("unexpected request params")

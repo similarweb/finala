@@ -111,7 +111,7 @@ func (sm *StorageManager) getDynamicMatchQuery(filters map[string]string, operat
 	dynamicMatchQuery := []elastic.Query{}
 	var mq *elastic.MatchQuery
 	for name, value := range filters {
-		if name == "Data.AccountID" {
+		if name == "Data.AccountId" {
 			var accountIds = strings.Split(value, ",")
 			var accountBoolQuery = elastic.NewBoolQuery()
 			for _, accountId := range accountIds {
@@ -223,7 +223,7 @@ func (sm *StorageManager) getResourceSummaryDetails(executionID string, filters 
 
 	searchResultAccount, err := sm.client.Search().
 		Query(elastic.NewBoolQuery().Must(dynamicMatchQuery...)).
-		Aggregation("accounts", elastic.NewTermsAggregation().Field("Data.AccountID.keyword").
+		Aggregation("accounts", elastic.NewTermsAggregation().Field("Data.AccountId.keyword").
 			SubAggregation("accountSum", elastic.NewSumAggregation().Field("Data.PricePerMonth"))).
 		Size(0).Do(context.Background())
 
@@ -332,8 +332,10 @@ func (sm *StorageManager) GetAccounts(executionID string, querylimit int) ([]sto
 	logger := log.WithField("execution_id", executionID)
 
 	searchResult, err := sm.client.Search().Query(elastic.NewMatchQuery("ExecutionID", executionID)).
-		Aggregation("Accounts", elastic.NewTermsAggregation().
-			Field("Data.AccountInformation.keyword").Size(querylimit)).
+		Aggregation("AccountIds",
+			elastic.NewTermsAggregation().Field("Data.AccountId.keyword").
+				SubAggregation("AccountNames", elastic.NewTermsAggregation().Field("Data.AccountName.keyword")).
+				Size(querylimit)).
 		Do(context.Background())
 
 	if err != nil {
@@ -341,27 +343,37 @@ func (sm *StorageManager) GetAccounts(executionID string, querylimit int) ([]sto
 		return accounts, ErrInvalidQuery
 	}
 
-	resp, ok := searchResult.Aggregations.Terms("Accounts")
+	resp, ok := searchResult.Aggregations.Terms("AccountIds")
 	if !ok {
-		logger.Error("accounts field term does not exist")
+		logger.Error("accountIds field term does not exist")
 		return accounts, ErrAggregationTermNotFound
 	}
 
-	for _, accountsBucket := range resp.Buckets {
-		account, ok := accountsBucket.Key.(string)
+	for _, accountIdsBucket := range resp.Buckets {
+		accountId, ok := accountIdsBucket.Key.(string)
 		if !ok {
 			logger.Error("type assertion to string failed")
 			continue
 		}
-		name, id, err := interpolation.ExtractAccountInformation(account)
-		if err != nil {
-			logger.WithError(err).WithField("account", account).Error("could not extract account information")
-			continue
+
+		names, ok := accountIdsBucket.Aggregations.Terms("AccountNames")
+		if !ok {
+			logger.Error("accountNames field term does not exist")
+			return accounts, ErrAggregationTermNotFound
 		}
-		accounts = append(accounts, storage.Accounts{
-			ID:   id,
-			Name: name,
-		})
+
+		for _, namesBucket := range names.Buckets {
+			name, ok := namesBucket.Key.(string)
+			if !ok {
+				logger.Error("type assertion to string failed")
+				continue
+			}
+
+			accounts = append(accounts, storage.Accounts{
+				ID:   accountId,
+				Name: name,
+			})
+		}
 	}
 	return accounts, nil
 }

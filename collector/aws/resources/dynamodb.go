@@ -42,6 +42,7 @@ type DetectedAWSDynamoDB struct {
 	Metric string
 	Name   string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -78,7 +79,10 @@ func (dd *DynamoDBManager) Detect(metrics []config.MetricConfig) (interface{}, e
 		"resource": "dynamoDB",
 	}).Info("starting to analyze resource")
 
-	dd.awsManager.GetCollector().CollectStart(dd.Name)
+	dd.awsManager.GetCollector().CollectStart(dd.Name, collector.AccountSpecifiedFields{
+		AccountId:   *dd.awsManager.GetAccountIdentity().Account,
+		AccountName: dd.awsManager.GetAccountName(),
+	})
 
 	detectedTables := []DetectedAWSDynamoDB{}
 	tables, err := dd.describeTables(nil, nil)
@@ -199,6 +203,10 @@ func (dd *DynamoDBManager) Detect(metrics []config.MetricConfig) (interface{}, e
 						PricePerMonth: pricePerMonth,
 						Tag:           tagsData,
 					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountId:   *dd.awsManager.GetAccountIdentity().Account,
+						AccountName: dd.awsManager.GetAccountName(),
+					},
 				}
 
 				dd.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -212,7 +220,10 @@ func (dd *DynamoDBManager) Detect(metrics []config.MetricConfig) (interface{}, e
 		}
 	}
 
-	dd.awsManager.GetCollector().CollectFinish(dd.Name)
+	dd.awsManager.GetCollector().CollectFinish(dd.Name, collector.AccountSpecifiedFields{
+		AccountId:   *dd.awsManager.GetAccountIdentity().Account,
+		AccountName: dd.awsManager.GetAccountName(),
+	})
 
 	return detectedTables, nil
 

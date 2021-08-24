@@ -16,9 +16,17 @@ import (
 
 var defaultUsersMock = iam.ListUsersOutput{
 	Users: []*iam.User{
-		{UserName: awsClient.String("foo")},
-		{UserName: awsClient.String("foo2")},
-		{UserName: awsClient.String("test")},
+		{
+			UserName: awsClient.String("foo"),
+			Arn:      awsClient.String("arn:aws:iam::123456789012:user/foo")},
+		{
+			UserName: awsClient.String("foo2"),
+			Arn:      awsClient.String("arn:aws:iam::123456789012:user/foo2"),
+		},
+		{
+			UserName: awsClient.String("test"),
+			Arn:      awsClient.String("arn:aws:iam::123456789012:user/test"),
+		},
 	},
 }
 

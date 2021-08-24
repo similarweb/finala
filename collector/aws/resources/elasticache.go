@@ -39,6 +39,7 @@ type DetectedElasticache struct {
 	CacheNodeType string
 	CacheNodes    int
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -74,7 +75,10 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 		"resource": "elasticache",
 	}).Info("starting to analyze resource")
 
-	ec.awsManager.GetCollector().CollectStart(ec.Name)
+	ec.awsManager.GetCollector().CollectStart(ec.Name, collector.AccountSpecifiedFields{
+		AccountId:   *ec.awsManager.GetAccountIdentity().Account,
+		AccountName: ec.awsManager.GetAccountName(),
+	})
 
 	detectedelasticache := []DetectedElasticache{}
 
@@ -163,6 +167,10 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
 					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountId:   *ec.awsManager.GetAccountIdentity().Account,
+						AccountName: ec.awsManager.GetAccountName(),
+					},
 				}
 
 				ec.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -175,7 +183,10 @@ func (ec *ElasticacheManager) Detect(metrics []config.MetricConfig) (interface{}
 		}
 	}
 
-	ec.awsManager.GetCollector().CollectFinish(ec.Name)
+	ec.awsManager.GetCollector().CollectFinish(ec.Name, collector.AccountSpecifiedFields{
+		AccountId:   *ec.awsManager.GetAccountIdentity().Account,
+		AccountName: ec.awsManager.GetAccountName(),
+	})
 
 	return detectedelasticache, nil
 }

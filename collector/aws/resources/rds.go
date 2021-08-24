@@ -43,6 +43,7 @@ type DetectedAWSRDS struct {
 	MultiAZ      bool
 	Engine       string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 // RDSVolumeType will hold the available volume types for RDS types
@@ -86,7 +87,10 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 		"resource": "rds",
 	}).Info("starting to analyze resource")
 
-	r.awsManager.GetCollector().CollectStart(r.Name)
+	r.awsManager.GetCollector().CollectStart(r.Name, collector.AccountSpecifiedFields{
+		AccountId:   *r.awsManager.GetAccountIdentity().Account,
+		AccountName: r.awsManager.GetAccountName(),
+	})
 
 	detected := []DetectedAWSRDS{}
 
@@ -206,6 +210,10 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 						PricePerMonth: totalHourlyPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
 					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountId:   *r.awsManager.GetAccountIdentity().Account,
+						AccountName: r.awsManager.GetAccountName(),
+					},
 				}
 
 				r.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -219,7 +227,10 @@ func (r *RDSManager) Detect(metrics []config.MetricConfig) (interface{}, error) 
 
 	}
 
-	r.awsManager.GetCollector().CollectFinish(r.Name)
+	r.awsManager.GetCollector().CollectFinish(r.Name, collector.AccountSpecifiedFields{
+		AccountId:   *r.awsManager.GetAccountIdentity().Account,
+		AccountName: r.awsManager.GetAccountName(),
+	})
 
 	return detected, nil
 

@@ -25,8 +25,8 @@ const (
 // CollectorDescriber describe the collector functions
 type CollectorDescriber interface {
 	AddResource(data EventCollector)
-	CollectStart(resourceName ResourceIdentifier)
-	CollectFinish(resourceName ResourceIdentifier)
+	CollectStart(resourceName ResourceIdentifier, accountSpecifiedFields AccountSpecifiedFields)
+	CollectFinish(resourceName ResourceIdentifier, accountSpecifiedFields AccountSpecifiedFields)
 	CollectError(resourceName ResourceIdentifier, err error)
 	GetCollectorEvent() []EventCollector
 }
@@ -98,21 +98,25 @@ func (cm *CollectorManager) AddResource(data EventCollector) {
 }
 
 // CollectStart add `fetch` event to collector by given resource name
-func (cm *CollectorManager) CollectStart(resourceName ResourceIdentifier) {
+func (cm *CollectorManager) CollectStart(resourceName ResourceIdentifier, accountSpecifiedFields AccountSpecifiedFields) {
 	cm.updateServiceStatus(EventCollector{
 		ResourceName: resourceName,
 		Data: EventStatusData{
-			Status: EventFetch,
+			Status:      EventFetch,
+			AccountName: accountSpecifiedFields.AccountName,
+			AccountId:   accountSpecifiedFields.AccountId,
 		},
 	})
 }
 
 // CollectFinish add `finish` event to collector by given resource name
-func (cm *CollectorManager) CollectFinish(resourceName ResourceIdentifier) {
+func (cm *CollectorManager) CollectFinish(resourceName ResourceIdentifier, accountSpecifiedFields AccountSpecifiedFields) {
 	cm.updateServiceStatus(EventCollector{
 		ResourceName: resourceName,
 		Data: EventStatusData{
-			Status: EventFinish,
+			Status:      EventFinish,
+			AccountName: accountSpecifiedFields.AccountName,
+			AccountId:   accountSpecifiedFields.AccountId,
 		},
 	})
 }

@@ -21,12 +21,15 @@ var defaultAddressesMock = ec2.DescribeAddressesOutput{
 			AssociationId:      awsClient.String("foo-00000"),
 			InstanceId:         awsClient.String("i-00000"),
 			NetworkInterfaceId: awsClient.String("00000"),
+			AllocationId:       awsClient.String("aws_eip.example.id"),
 		},
 		{
-			PublicIp: awsClient.String("80.80.80.81"),
+			PublicIp:     awsClient.String("80.80.80.81"),
+			AllocationId: awsClient.String("aws_eip.example.id"),
 		},
 		{
-			PublicIp: awsClient.String("80.80.80.82"),
+			PublicIp:     awsClient.String("80.80.80.82"),
+			AllocationId: awsClient.String("aws_eip.example.id"),
 		},
 	},
 }

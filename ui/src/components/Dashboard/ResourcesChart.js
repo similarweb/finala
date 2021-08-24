@@ -17,6 +17,9 @@ import {
 import ReportProblemIcon from "@material-ui/icons/ReportProblem";
 
 const useStyles = makeStyles(() => ({
+  title: {
+    fontFamily: "MuseoModerno",
+  },
   noDataTitle: {
     textAlign: "center",
     fontWeight: "bold",
@@ -38,19 +41,34 @@ const useStyles = makeStyles(() => ({
  * @param  {bool} isResourceListLoading  isLoading state for resources
  * @param  {func} addFilter Add filter to  filters list
  * @param  {func} setResource Update Selected Resource}
+ * @param  {string} account Account ID for account specific summary
  */
 const ResourcesChart = ({
   resources,
   filters,
+  setFilters,
   isResourceListLoading,
   addFilter,
   setResource,
+  account,
 }) => {
   const classes = useStyles();
   const colorList = colors.map((color) => color.hex);
-  const sortedResources = Object.values(resources)
-    .filter((row) => row.TotalSpent > 0)
-    .sort((a, b) => (a.TotalSpent >= b.TotalSpent ? -1 : 1));
+  let sortedResources;
+  if (account) {
+    sortedResources = Object.values(resources)
+      .filter(
+        (row) =>
+          row.SpentAccounts[account.ID] && row.SpentAccounts[account.ID] > 0
+      )
+      .sort((a, b) =>
+        a.SpentAccounts[account.ID] >= b.SpentAccounts[account.ID] ? -1 : 1
+      );
+  } else {
+    sortedResources = Object.values(resources)
+      .filter((row) => row.TotalSpent > 0)
+      .sort((a, b) => (a.TotalSpent >= b.TotalSpent ? -1 : 1));
+  }
 
   const chartOptions = {
     options: {
@@ -63,6 +81,18 @@ const ResourcesChart = ({
             const res = sortedResources;
             const selectedResource = res[dataPointIndex];
             setSelectedResource(selectedResource);
+            if (account) {
+              const nfilters = filters.filter(
+                (filter) => filter.type !== "account"
+              );
+              setFilters(nfilters);
+              const filter = {
+                title: `Account:${account.ID}`,
+                id: `account:${account.ID}`,
+                type: "account",
+              };
+              addFilter(filter);
+            }
           },
         },
       },
@@ -148,14 +178,22 @@ const ResourcesChart = ({
    */
   sortedResources.forEach((resource) => {
     const title = titleDirective(resource.ResourceName);
-    const amount = MoneyDirective(resource.TotalSpent);
+    const amount = MoneyDirective(
+      account ? resource.SpentAccounts[account.ID] : resource.TotalSpent
+    );
     resource.title = `${title} (${amount})`;
     resource.display_title = `${title}`;
 
     chartOptions.options.xaxis.categories.push(resource.title);
-    chartOptions.series[0].data.push(resource.TotalSpent);
+    chartOptions.series[0].data.push(
+      account ? resource.SpentAccounts[account.ID] : resource.TotalSpent
+    );
     return resource;
   });
+
+  if (account && !sortedResources.length && !isResourceListLoading) {
+    return <Fragment></Fragment>;
+  }
 
   return (
     <Fragment>
@@ -163,13 +201,18 @@ const ResourcesChart = ({
         <Card>
           <CardContent style={{ minHeight: getCardHeight() }}>
             {!isResourceListLoading && sortedResources.length > 0 && (
-              <Chart
-                id="MainChart"
-                height={getChartHeight()}
-                options={chartOptions.options}
-                series={chartOptions.series}
-                type="bar"
-              />
+              <Fragment>
+                <h4 className={classes.title}>
+                  {account ? `${account.Name} (${account.ID}):` : "Summary:"}
+                </h4>
+                <Chart
+                  id="MainChart"
+                  height={getChartHeight()}
+                  options={chartOptions.options}
+                  series={chartOptions.series}
+                  type="bar"
+                />
+              </Fragment>
             )}
             {isResourceListLoading && (
               <LinearProgress className={classes.progress} />
@@ -191,9 +234,11 @@ ResourcesChart.defaultProps = {};
 ResourcesChart.propTypes = {
   resources: PropTypes.object,
   filters: PropTypes.array,
+  setFilters: PropTypes.func,
   isResourceListLoading: PropTypes.bool,
   addFilter: PropTypes.func,
   setResource: PropTypes.func,
+  account: PropTypes.object,
 };
 
 const mapStateToProps = (state) => ({
@@ -203,6 +248,7 @@ const mapStateToProps = (state) => ({
 });
 
 const mapDispatchToProps = (dispatch) => ({
+  setFilters: (data) => dispatch({ type: "SET_FILTERS", data }),
   addFilter: (data) => dispatch({ type: "ADD_FILTER", data }),
   setResource: (data) => dispatch({ type: "SET_RESOURCE", data }),
 });

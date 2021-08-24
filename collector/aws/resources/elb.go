@@ -37,6 +37,7 @@ type DetectedELB struct {
 	Metric string
 	Region string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -72,7 +73,10 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		"resource": "elb",
 	}).Info("starting to analyze resource")
 
-	el.awsManager.GetCollector().CollectStart(el.Name)
+	el.awsManager.GetCollector().CollectStart(el.Name, collector.AccountSpecifiedFields{
+		AccountId:   *el.awsManager.GetAccountIdentity().Account,
+		AccountName: el.awsManager.GetAccountName(),
+	})
 
 	detectedELB := []DetectedELB{}
 
@@ -176,6 +180,10 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
 					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountId:   *el.awsManager.GetAccountIdentity().Account,
+						AccountName: el.awsManager.GetAccountName(),
+					},
 				}
 
 				el.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -190,7 +198,10 @@ func (el *ELBManager) Detect(metrics []config.MetricConfig) (interface{}, error)
 		}
 	}
 
-	el.awsManager.GetCollector().CollectFinish(el.Name)
+	el.awsManager.GetCollector().CollectFinish(el.Name, collector.AccountSpecifiedFields{
+		AccountId:   *el.awsManager.GetAccountIdentity().Account,
+		AccountName: el.awsManager.GetAccountName(),
+	})
 
 	return detectedELB, nil
 

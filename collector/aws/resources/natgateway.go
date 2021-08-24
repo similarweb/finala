@@ -39,6 +39,7 @@ type DetectedNATGateway struct {
 	SubnetID string
 	VPCID    string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -74,7 +75,10 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 		"resource": "natgateway",
 	}).Info("analyzing resource")
 
-	ngw.awsManager.GetCollector().CollectStart(ngw.Name)
+	ngw.awsManager.GetCollector().CollectStart(ngw.Name, collector.AccountSpecifiedFields{
+		AccountId:   *ngw.awsManager.GetAccountIdentity().Account,
+		AccountName: ngw.awsManager.GetAccountName(),
+	})
 
 	DetectedNATGateways := []DetectedNATGateway{}
 
@@ -178,6 +182,10 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
 					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountId:   *ngw.awsManager.GetAccountIdentity().Account,
+						AccountName: ngw.awsManager.GetAccountName(),
+					},
 				}
 
 				ngw.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -190,7 +198,10 @@ func (ngw *NatGatewayManager) Detect(metrics []config.MetricConfig) (interface{}
 		}
 	}
 
-	ngw.awsManager.GetCollector().CollectFinish(ngw.Name)
+	ngw.awsManager.GetCollector().CollectFinish(ngw.Name, collector.AccountSpecifiedFields{
+		AccountId:   *ngw.awsManager.GetAccountIdentity().Account,
+		AccountName: ngw.awsManager.GetAccountName(),
+	})
 
 	return DetectedNATGateways, nil
 }

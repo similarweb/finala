@@ -36,6 +36,7 @@ type DetectedAPIGateway struct {
 	Name       string
 	LaunchTime time.Time
 	Tag        map[string]string
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -71,7 +72,10 @@ func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{},
 		"resource": "apigateway",
 	}).Info("starting to analyze resource")
 
-	ag.awsManager.GetCollector().CollectStart(ag.Name)
+	ag.awsManager.GetCollector().CollectStart(ag.Name, collector.AccountSpecifiedFields{
+		AccountId:   *ag.awsManager.GetAccountIdentity().Account,
+		AccountName: ag.awsManager.GetAccountName(),
+	})
 	detectAPIGateway := []DetectedAPIGateway{}
 
 	apigateways, err := ag.getRestApis(nil, nil)
@@ -147,6 +151,10 @@ func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{},
 					Name:       *api.Name,
 					LaunchTime: *api.CreatedDate,
 					Tag:        tagsData,
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountId:   *ag.awsManager.GetAccountIdentity().Account,
+						AccountName: ag.awsManager.GetAccountName(),
+					},
 				}
 
 				ag.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -160,7 +168,10 @@ func (ag *APIGatewayManager) Detect(metrics []config.MetricConfig) (interface{},
 		}
 	}
 
-	ag.awsManager.GetCollector().CollectFinish(ag.Name)
+	ag.awsManager.GetCollector().CollectFinish(ag.Name, collector.AccountSpecifiedFields{
+		AccountId:   *ag.awsManager.GetAccountIdentity().Account,
+		AccountName: ag.awsManager.GetAccountName(),
+	})
 
 	return detectAPIGateway, nil
 }

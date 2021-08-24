@@ -38,6 +38,7 @@ type DetectedRedShift struct {
 	NodeType      string
 	NumberOfNodes int64
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -73,7 +74,10 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 		"resource": "redshift",
 	}).Info("analyzing resource")
 
-	rdm.awsManager.GetCollector().CollectStart(rdm.Name)
+	rdm.awsManager.GetCollector().CollectStart(rdm.Name, collector.AccountSpecifiedFields{
+		AccountId:   *rdm.awsManager.GetAccountIdentity().Account,
+		AccountName: rdm.awsManager.GetAccountName(),
+	})
 
 	detectedredshiftClusters := []DetectedRedShift{}
 
@@ -159,6 +163,10 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 						PricePerMonth: clusterPrice * collector.TotalMonthHours,
 						Tag:           tagsData,
 					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountId:   *rdm.awsManager.GetAccountIdentity().Account,
+						AccountName: rdm.awsManager.GetAccountName(),
+					},
 				}
 
 				rdm.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -171,7 +179,10 @@ func (rdm *RedShiftManager) Detect(metrics []config.MetricConfig) (interface{}, 
 		}
 	}
 
-	rdm.awsManager.GetCollector().CollectFinish(rdm.Name)
+	rdm.awsManager.GetCollector().CollectFinish(rdm.Name, collector.AccountSpecifiedFields{
+		AccountId:   *rdm.awsManager.GetAccountIdentity().Account,
+		AccountName: rdm.awsManager.GetAccountName(),
+	})
 
 	return detectedredshiftClusters, nil
 }

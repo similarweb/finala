@@ -217,6 +217,64 @@ func TestGetExecutions(t *testing.T) {
 	}
 }
 
+func TestGetAccounts(t *testing.T) {
+
+	// each different queryLimit will result in a different elasticsearch response.
+	// 1 - returns valid account data response
+	// 2 - returns invalid aggregation term query response
+	// 4 - returns invalid statuscode response
+	testCases := []struct {
+		name          string
+		queryLimit    int
+		responseCount int
+		ErrorMessage  error
+	}{
+		{"valid response", 5, 3, nil},
+		{"invalid terms", 2, 0, ErrAggregationTermNotFound},
+		{"invalid es response", 3, 0, ErrInvalidQuery},
+	}
+
+	mockClient, config := testutils.NewESMock(prefixIndexName, true)
+
+	mockClient.Router.HandleFunc("/_search", func(resp http.ResponseWriter, req *http.Request) {
+		switch testutils.GetPostParams(req) {
+		case `{"aggregations":{"AccountIds":{"aggregations":{"AccountNames":{"terms":{"field":"Data.AccountName.keyword"}}},"terms":{"field":"Data.AccountId.keyword","size":5}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
+			testutils.JSONResponse(resp, http.StatusOK, elastic.SearchResult{Aggregations: map[string]json.RawMessage{
+				"AccountIds": testutils.LoadResponse("accounts/aggregations/default"),
+			}})
+		case `{"aggregations":{"AccountIds":{"aggregations":{"AccountNames":{"terms":{"field":"Data.AccountName.keyword"}}},"terms":{"field":"Data.AccountId.keyword","size":2}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
+			testutils.JSONResponse(resp, http.StatusOK, elastic.SearchResult{Aggregations: map[string]json.RawMessage{
+				"invalid-key": testutils.LoadResponse("accounts/aggregations/default"),
+			}})
+		case `{"aggregations":{"AccountIds":{"aggregations":{"AccountNames":{"terms":{"field":"Data.AccountName.keyword"}}},"terms":{"field":"Data.AccountId.keyword","size":3}}},"query":{"match":{"ExecutionID":{"query":"1"}}}}`:
+			testutils.JSONResponse(resp, http.StatusBadRequest, elastic.SearchResult{Aggregations: map[string]json.RawMessage{}})
+		default:
+			t.Fatalf("unexpected request params")
+		}
+	})
+
+	es, err := NewStorageManager(config)
+	if err != nil {
+		t.Fatalf("unexpected error, got %v expected nil", err)
+	}
+
+	for _, test := range testCases {
+		t.Run(test.name, func(t *testing.T) {
+
+			response, err := es.GetAccounts("1", test.queryLimit)
+
+			if err != test.ErrorMessage {
+				t.Fatalf("unexpected error, got %v expected %v", err, test.ErrorMessage)
+			}
+
+			if len(response) != test.responseCount {
+				t.Fatalf("handler query response: got %d want %d", len(response), test.responseCount)
+			}
+
+		})
+	}
+}
+
 func TestGetSummary(t *testing.T) {
 
 	mockClient, config := testutils.NewESMock(prefixIndexName, true)
@@ -225,7 +283,9 @@ func TestGetSummary(t *testing.T) {
 
 		response := elastic.SearchResult{}
 
-		switch testutils.GetPostParams(req) {
+		var s = testutils.GetPostParams(req)
+		fmt.Println(s)
+		switch s {
 		case `{"query":{"bool":{"must":[{"term":{"EventType":"service_status"}},{"term":{"ExecutionID":""}}]}},"size":0}`:
 			response.Hits = &elastic.SearchHits{TotalHits: &elastic.TotalHits{Value: 1}}
 		case `{"query":{"bool":{"must":[{"term":{"EventType":"service_status"}},{"term":{"ExecutionID":""}}]}},"size":1}`:
@@ -237,6 +297,9 @@ func TestGetSummary(t *testing.T) {
 			}
 		case `{"aggregations":{"sum":{"sum":{"field":"Data.PricePerMonth"}}},"query":{"bool":{"must":[{"match":{"ResourceName":{"minimum_should_match":"100%","query":"aws_resource_name"}}},{"term":{"ExecutionID":""}},{"term":{"EventType":"resource_detected"}}]}},"size":0}`:
 			response.Aggregations = map[string]json.RawMessage{"sum": []byte(`{"value": 36.5}`)}
+			response.Hits = &elastic.SearchHits{TotalHits: &elastic.TotalHits{Value: 1}}
+		case `{"aggregations":{"accounts":{"aggregations":{"accountSum":{"sum":{"field":"Data.PricePerMonth"}}},"terms":{"field":"Data.AccountId.keyword"}}},"query":{"bool":{"must":[{"match":{"ResourceName":{"minimum_should_match":"100%","query":"aws_resource_name"}}},{"term":{"ExecutionID":""}},{"term":{"EventType":"resource_detected"}}]}},"size":0}`:
+			response.Aggregations = map[string]json.RawMessage{"accounts": testutils.LoadResponse("summary/aggregations/default")}
 			response.Hits = &elastic.SearchHits{TotalHits: &elastic.TotalHits{Value: 1}}
 		default:
 			t.Fatalf("unexpected request params")

@@ -78,7 +78,10 @@ func TestAddEvent(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	coll.CollectStart(collector.ResourceIdentifier("test"))
+	coll.CollectStart(collector.ResourceIdentifier("test"), collector.AccountSpecifiedFields{
+		AccountName: "Test",
+		AccountId:   "1234567890",
+	})
 	coll.AddResource(collector.EventCollector{
 		ResourceName: "test1",
 		Data:         "test data",
@@ -122,7 +125,10 @@ func TestAddEventServerUnavailable(t *testing.T) {
 
 	time.Sleep(time.Second)
 
-	coll.CollectStart(collector.ResourceIdentifier("test"))
+	coll.CollectStart(collector.ResourceIdentifier("test"), collector.AccountSpecifiedFields{
+		AccountName: "Test",
+		AccountId:   "1234567890",
+	})
 
 	coll.AddResource(collector.EventCollector{
 		ResourceName: "test1",

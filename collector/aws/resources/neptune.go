@@ -39,6 +39,7 @@ type DetectedAWSNeptune struct {
 	MultiAZ      bool
 	Engine       string
 	collector.PriceDetectedFields
+	collector.AccountSpecifiedFields
 }
 
 func init() {
@@ -74,7 +75,10 @@ func (np *NeptuneManager) Detect(metrics []config.MetricConfig) (interface{}, er
 		"resource": "neptune",
 	}).Info("starting to analyze resource")
 
-	np.awsManager.GetCollector().CollectStart(np.Name)
+	np.awsManager.GetCollector().CollectStart(np.Name, collector.AccountSpecifiedFields{
+		AccountId:   *np.awsManager.GetAccountIdentity().Account,
+		AccountName: np.awsManager.GetAccountName(),
+	})
 
 	detected := []DetectedAWSNeptune{}
 	instances, err := np.describeInstances(nil, nil)
@@ -163,6 +167,10 @@ func (np *NeptuneManager) Detect(metrics []config.MetricConfig) (interface{}, er
 						PricePerMonth: price * collector.TotalMonthHours,
 						Tag:           tagsData,
 					},
+					AccountSpecifiedFields: collector.AccountSpecifiedFields{
+						AccountId:   *np.awsManager.GetAccountIdentity().Account,
+						AccountName: np.awsManager.GetAccountName(),
+					},
 				}
 
 				np.awsManager.GetCollector().AddResource(collector.EventCollector{
@@ -173,7 +181,10 @@ func (np *NeptuneManager) Detect(metrics []config.MetricConfig) (interface{}, er
 			}
 		}
 	}
-	np.awsManager.GetCollector().CollectFinish(np.Name)
+	np.awsManager.GetCollector().CollectFinish(np.Name, collector.AccountSpecifiedFields{
+		AccountId:   *np.awsManager.GetAccountIdentity().Account,
+		AccountName: np.awsManager.GetAccountName(),
+	})
 	return detected, nil
 
 }

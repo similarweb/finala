@@ -245,10 +245,17 @@ func (sm *StorageManager) getResourceSummaryDetails(executionID string, filters 
 			if val, ok := spent.Aggregations["value"]; ok {
 				accountID, ok := AccountIdBucket.Key.(string)
 				if !ok {
-					log.Error("type assertion to string failed")
+					log.WithFields(log.Fields{
+						"search_account_id": AccountIdBucket.Key,
+						"val":               val,
+					}).Error("type assertion to string failed")
 					continue
 				}
-				spentAccounts[accountID], _ = strconv.ParseFloat(string(val), 64)
+				spentAccounts[accountID], err = strconv.ParseFloat(string(val), 64)
+				if err != nil {
+					log.WithError(err).Error("parse failure")
+					continue
+				}
 
 				totalSpent += spentAccounts[accountID]
 				resourceCount += AccountIdBucket.DocCount
@@ -321,31 +328,33 @@ func (sm *StorageManager) GetExecutions(queryLimit int) ([]storage.Executions, e
 func (sm *StorageManager) GetAccounts(executionID string, querylimit int) ([]storage.Accounts, error) {
 	accounts := []storage.Accounts{}
 
+	logger := log.WithField("execution_id", executionID)
+
 	searchResult, err := sm.client.Search().Query(elastic.NewMatchQuery("ExecutionID", executionID)).
 		Aggregation("Accounts", elastic.NewTermsAggregation().
 			Field("Data.AccountInformation.keyword").Size(querylimit)).
 		Do(context.Background())
 
 	if err != nil {
-		log.WithError(err).Error("error when trying to get AccountIDs")
+		logger.WithError(err).Error("error when trying to get AccountIDs")
 		return accounts, ErrInvalidQuery
 	}
 
 	resp, ok := searchResult.Aggregations.Terms("Accounts")
 	if !ok {
-		log.Error("accounts field term does not exist")
+		logger.Error("accounts field term does not exist")
 		return accounts, ErrAggregationTermNotFound
 	}
 
 	for _, accountsBucket := range resp.Buckets {
 		account, ok := accountsBucket.Key.(string)
 		if !ok {
-			log.Error("type assertion to string failed")
+			logger.Error("type assertion to string failed")
 			continue
 		}
 		name, id, err := interpolation.ExtractAccountInformation(account)
 		if err != nil {
-			log.WithError(err).WithField("account", account).Error("could not extract account information")
+			logger.WithError(err).WithField("account", account).Error("could not extract account information")
 			continue
 		}
 		accounts = append(accounts, storage.Accounts{

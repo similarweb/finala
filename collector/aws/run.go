@@ -47,7 +47,7 @@ func (app *Analyze) All() {
 		for _, region := range account.Regions {
 			resourcesDetection := NewDetectorManager(awsAuth, app.cl, account, stsManager, app.global, region)
 			if resourcesDetection.accountIdentity.Account == nil {
-				log.Error("Account " + account.Name + " is not a valid aws account")
+				log.WithField("account_name", account.Name).Error("Account is not a valid aws account")
 				resourcesDetection.accountIdentity.SetAccount(strconv.Itoa(index))
 			}
 			for resourceType, resourceDetector := range register.GetResources() {

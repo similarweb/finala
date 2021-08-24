@@ -1,5 +1,5 @@
 const initialState = {
-  accounts: {},
+  accounts: [],
 };
 
 /**

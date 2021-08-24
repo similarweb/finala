@@ -153,12 +153,7 @@ const DataFacotry = ({
       () => false
     );
 
-    const accounts = {};
-    AccountsArray.forEach((value) => {
-      accounts[value.ID] = value;
-    });
-
-    setAccounts(accounts);
+    setAccounts(AccountsArray);
     return true;
   };
 
@@ -286,7 +281,7 @@ DataFacotry.propTypes = {
   setCurrentExecution: PropTypes.func,
 
   currentResource: PropTypes.string,
-  accounts: PropTypes.object,
+  accounts: PropTypes.array,
   resources: PropTypes.object,
   filters: PropTypes.array,
   currentExecution: PropTypes.string,

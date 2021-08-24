@@ -363,16 +363,18 @@ func (sm *StorageManager) GetAccounts(executionID string, querylimit int) ([]sto
 		}
 
 		for _, namesBucket := range names.Buckets {
-			name, ok := namesBucket.Key.(string)
+			accountName, ok := namesBucket.Key.(string)
 			if !ok {
 				logger.Error("type assertion to string failed")
 				continue
 			}
 
-			accounts = append(accounts, storage.Accounts{
-				ID:   accountId,
-				Name: name,
-			})
+			if accountId != "" || accountName != "" {
+				accounts = append(accounts, storage.Accounts{
+					ID:   accountId,
+					Name: accountName,
+				})
+			}
 		}
 	}
 	return accounts, nil

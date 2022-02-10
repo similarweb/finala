@@ -32,7 +32,7 @@
     "favicons-webpack-plugin": "4.2.0",
     "html-webpack-plugin": "4.3.0",
     "mini-css-extract-plugin": "0.10.0",
-    "node-sass": "4.14.1",
+    "node-sass": "7.0.0",
     "prettier": "2.0.5",
     "react": "16.8.6",
     "react-dom": "16.8.6",

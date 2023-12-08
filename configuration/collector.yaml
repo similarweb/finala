@@ -139,6 +139,48 @@ providers:
           constraint:
             operator: "=="
             value: 0
+      neptune:
+        - description: Requests gremlin/sparql
+          enable: true
+          metrics:
+            - name: GremlinRequestsPerSec
+              statistic: Sum
+            - name: SparqlRequestsPerSec
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            formula: GremlinRequestsPerSec + SparqlRequestsPerSec
+            operator: "=="
+            value: 0
+      kinesis:
+        - description: Total put records
+          enable: true
+          metrics:
+            - name: "PutRecords.Bytes"
+              statistic: Sum
+            - name: "PutRecord.Bytes"
+              statistic: Sum              
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            # The go module Knetic/govaluate has a built in escaping
+            # https://github.com/Knetic/govaluate#escaping-characters
+            # [PutRecord.Bytes] will escape the parameter name
+            formula: "[PutRecord.Bytes] + [PutRecords.Bytes]"
+            operator: "=="
+            value: 0
+      redshift:
+        - description: Connection count
+          enable: true
+          metrics:
+            - name: DatabaseConnections
+              statistic: Sum
+          period: 24h 
+          start_time: 168h # 24h * 7d
+          constraint:
+            operator: "=="
+            value: 0
       elasticsearch:
         - description: "IndexRate + SearchRate"
           enable: true

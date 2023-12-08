@@ -234,7 +234,7 @@ func (r *RDSManager) getHourlyStoragePrice(instance *rds.DBInstance, pricingRegi
 			storagePricingFilters = r.getPricingAuroraStorageFilterInput(rdsStorageType, pricingRegionPrefix)
 		default:
 			deploymentOption := r.getPricingDeploymentOption(instance)
-			storagePricingFilters = r.getPricingRDSStorageFilterInput(rdsStorageType, deploymentOption)
+			storagePricingFilters = r.getPricingRDSStorageFilterInput(instance, rdsStorageType, deploymentOption)
 		}
 
 		log.WithField("storage_filters", storagePricingFilters).Debug("pricing storage filters")
@@ -308,8 +308,9 @@ func (r *RDSManager) getPricingDeploymentOption(instance *rds.DBInstance) string
 }
 
 // getPricingRDSStorageFilterInput will set the right filters for RDS Storage pricing
-func (r *RDSManager) getPricingRDSStorageFilterInput(rdsStorageType string, deploymentOption string) pricing.GetProductsInput {
+func (r *RDSManager) getPricingRDSStorageFilterInput(instance *rds.DBInstance, rdsStorageType string, deploymentOption string) pricing.GetProductsInput {
 
+	databaseEngine := r.getPricingDatabaseEngine(instance)
 	return pricing.GetProductsInput{
 		ServiceCode: &r.servicePricingCode,
 		Filters: []*pricing.Filter{
@@ -333,6 +334,11 @@ func (r *RDSManager) getPricingRDSStorageFilterInput(rdsStorageType string, depl
 				Field: awsClient.String("deploymentOption"),
 				Value: awsClient.String(deploymentOption),
 			},
+                        {
+                                Type:  awsClient.String("TERM_MATCH"),
+                                Field: awsClient.String("databaseEngine"),
+                                Value: &databaseEngine,
+                        },
 		},
 	}
 }

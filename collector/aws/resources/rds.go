@@ -48,6 +48,7 @@ type DetectedAWSRDS struct {
 // RDSVolumeType will hold the available volume types for RDS types
 var rdsStorageType = map[string]string{
 	"gp2":      "General Purpose",
+	"gp3":      "General Purpose",
 	"standard": "Magnetic",
 	"io1":      "Provisioned IOPS",
 	"aurora":   "General Purpose-Aurora",
@@ -309,6 +310,7 @@ func (r *RDSManager) getPricingDeploymentOption(instance *rds.DBInstance) string
 
 // getPricingRDSStorageFilterInput will set the right filters for RDS Storage pricing
 func (r *RDSManager) getPricingRDSStorageFilterInput(instance *rds.DBInstance, rdsStorageType string, deploymentOption string) pricing.GetProductsInput {
+	databaseEngine := r.getPricingDatabaseEngine(instance)
 
 	databaseEngine := r.getPricingDatabaseEngine(instance)
 	return pricing.GetProductsInput{
@@ -334,11 +336,11 @@ func (r *RDSManager) getPricingRDSStorageFilterInput(instance *rds.DBInstance, r
 				Field: awsClient.String("deploymentOption"),
 				Value: awsClient.String(deploymentOption),
 			},
-                        {
-                                Type:  awsClient.String("TERM_MATCH"),
-                                Field: awsClient.String("databaseEngine"),
-                                Value: &databaseEngine,
-                        },
+			{
+				Type:  awsClient.String("TERM_MATCH"),
+				Field: awsClient.String("databaseEngine"),
+				Value: &databaseEngine,
+			},
 		},
 	}
 }

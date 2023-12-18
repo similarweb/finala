@@ -6,10 +6,12 @@ services:
       ports:
         - "9200:9200"
         - "5601:5601"
+      environment:
+        SSL_MODE: false
       networks:
         backend:
           aliases:
-            - elasticsearch
+            - elasticsearch:kibana7
   ui:
       build:
         context: .
@@ -40,8 +42,6 @@ services:
           - ./configuration/api.yaml:/etc/finala/config.yaml
       ports:
         - "8081:8081"
-      networks:
-        - backend
       depends_on: 
         - elasticsearch
       networks:
@@ -57,7 +57,7 @@ services:
         - -c 
         - /etc/finala/config.yaml
       environment:
-        - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} 
+        - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
         - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
         - OVERRIDE_API_ENDPOINT=http://api:8081
       volumes:

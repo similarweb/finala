@@ -11,7 +11,7 @@ services:
       networks:
         backend:
           aliases:
-            - elasticsearch:kinana7
+            - elasticsearch:kibana7
   ui:
       build:
         context: .
@@ -57,7 +57,7 @@ services:
         - -c 
         - /etc/finala/config.yaml
       environment:
-        - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} 
+        - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
         - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
         - OVERRIDE_API_ENDPOINT=http://api:8081
       volumes:

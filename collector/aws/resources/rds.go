@@ -310,9 +310,9 @@ func (r *RDSManager) getPricingDeploymentOption(instance *rds.DBInstance) string
 
 // getPricingRDSStorageFilterInput will set the right filters for RDS Storage pricing
 func (r *RDSManager) getPricingRDSStorageFilterInput(instance *rds.DBInstance, rdsStorageType string, deploymentOption string) pricing.GetProductsInput {
-
 	databaseEngine := r.getPricingDatabaseEngine(instance)
 
+	databaseEngine := r.getPricingDatabaseEngine(instance)
 	return pricing.GetProductsInput{
 		ServiceCode: &r.servicePricingCode,
 		Filters: []*pricing.Filter{
